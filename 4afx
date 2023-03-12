@@ -4,13 +4,25 @@ set -u
 
 function _error
 {
+    echo "#####"
     echo "ERROR: $1" 1>&2
+    echo "#####"
     exit $2
 }
 
 function _warn
 {
+    echo "#####"
     echo "WARN: $1" 1>&2
+    echo "#####"
+}
+
+function _info
+{
+    echo "#####"
+    echo "INFO: $1"
+    echo "#####"
+    sleep 5
 }
 
 ###
@@ -19,6 +31,7 @@ function _warn
 which ppc-amigaos-gcc  && _error "ERROR: Remove older ADTOOLS install from your path" 10 ;
 
 BASE_DIR="$(pwd)/build"
+ORIG_DIR="$(pwd)"
 # assume an argument is just the location to the base_dir which is our root for all of this
 if (( $# >= 1 ))
 then
@@ -30,27 +43,31 @@ then
     test -n "${2}" && _warn "All other arguments ignored"
 fi
 
-mkdir -p "$BASE_DIR"
-ORIG_DIR="$(pwd)"
-cd "$BASE_DIR"
-mkdir 4afx
-cd 4afx
-git clone https://github.com/sba1/adtools.git 4afx_adtools
-cd 4afx_adtools
+if [[ ! -d "$BASE_DIR" ]]
+then
+   mkdir "$BASE_DIR"
+   cd "$BASE_DIR"
+   mkdir 4afx
+   cd 4afx
+   git clone https://github.com/sba1/adtools.git 4afx_adtools
+   cd 4afx_adtools
 
-git submodule init
-git submodule update
-gild/bin/gild checkout binutils 2.23.2
-gild/bin/gild checkout gcc 11
+   git submodule init
+   git submodule update
+   gild/bin/gild checkout binutils 2.23.2
+   gild/bin/gild checkout gcc 11
 
-# We shall use the rs6k amigaos.h version from the afxgroup CLIB2
-sed -i '115i\	cp downloads/clib2/misc/amigaos.h ../gcc/repo/gcc/config/rs6000/' native-build/makefile
-# And, we need to remove -Werror when building clib2 due to time cast issue
-sed -i '115i\	sed -i "s|-Werror|# -Werror|g" downloads/clib2/GNUmakefile.os4' native-build/makefile
-# We also want to build SHARED LIBRARIES for CLIB2
-sed -i 's|SHARED=no|SHARED=yes|' native-build/makefile
+   # We shall use the rs6k amigaos.h version from the afxgroup CLIB2
+   sed -i '115i\	cp downloads/clib2/misc/amigaos.h ../gcc/repo/gcc/config/rs6000/' native-build/makefile
+   # And, we need to remove -Werror when building clib2 due to time cast issue
+   sed -i '115i\	sed -i "s|-Werror|# -Werror|g" downloads/clib2/GNUmakefile.os4' native-build/makefile
+   # We also want to build SHARED LIBRARIES for CLIB2
+   sed -i 's|SHARED=no|SHARED=yes|' native-build/makefile
 
-CROSS_PREFIX="$BASE_DIR"/4afx/4afx_build EXP_CLIB2=1  make -j4 -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log
+   CROSS_PREFIX="$BASE_DIR"/4afx/4afx_build EXP_CLIB2=1  make -j4 -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log
+else
+    _warn "\"$BASE_DIR\" already exists, assuming that you just want to re-run the tests"
+fi
 
 cd "$ORIG_DIR"
 ###
@@ -58,10 +75,13 @@ cd "$ORIG_DIR"
 ###
 export PATH="$BASE_DIR"/4afx/4afx_build/bin:"$PATH"
 # Arbitrary check
-which ppc-amigaos-gcc || { echo "Expected to find the cross GCC compiler on the path" ; exit 30 ; }
+which ppc-amigaos-gcc || _error "Expected to find the cross GCC compiler on the path" 30
+
+_info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
 
 cd tests
-make all
+make clean all
+NO_DYN=1 make all
 cd ..
 
 exit 0
