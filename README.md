@@ -1,5 +1,7 @@
 # adtools_testing
 
+You should read and have a setup that is able to build ADTOOLS. See the ADTOOLS repo.
+
 Run the script "./4afx".
 
 This will checkout ADTOOLS building GCC 11 and BINUTILS 2.23.2 using AFXGROUP's CLIB2.
