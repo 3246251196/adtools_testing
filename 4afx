@@ -1,0 +1,58 @@
+#!/bin/bash --
+
+set -u
+set -x
+
+###
+# Step 0: clone ADTOOLS for use with afxgroup CLIB2, build for 11.3 GCC and 2.23.2 binutils
+###
+which ppc-amigaos-gcc && { echo "Remove older ADTOOLS install from your path" ; exit 9 ; }
+
+BASE_DIR="$(pwd)/build"
+# assume an argument is just the location to the base_dir which is our root for all of this
+if (( $# >= 1 ))
+then
+    BASE_DIR="${1}"
+    if [[ "${BASE_DIR:0:1}" != / ]]
+    then
+	echo "BASE_DIR should be a full path"
+	exit 10
+    else
+	mkdir -p "$BASE_DIR"
+    fi
+
+    test -n "${2}" && echo "All other arguments ignored" 1>&2
+else
+    if [[ ! -d "$BASE_DIR" ]]
+    then
+	echo "\"$BASE_DIR\" not accessible" 1>&2
+	exit 20
+    fi
+fi
+
+cd "$BASE_DIR"
+mkdir 4afx
+cd 4afx
+git clone https://github.com/sba1/adtools.git 4afx_adtools
+cd 4afx_adtools
+
+git submodule init
+git submodule update
+gild/bin/gild checkout binutils 2.23.2
+gild/bin/gild checkout gcc 11
+
+# We shall use the rs6k amigaos.h version from the afxgroup CLIB2
+sed -i '115i\	cp downloads/clib2/misc/amigaos.h ../gcc/repo/gcc/config/rs6000/' native-build/makefile
+# And, we need to remove -Werror when building clib2 due to time cast issue
+sed -i '115i\	sed -i "s|-Werror|# -Werror|g" downloads/clib2/GNUmakefile.os4' native-build/makefile
+# We also want to build SHARED LIBRARIES for CLIB2
+sed -i 's|SHARED=no|SHARED=yes|' native-build/makefile
+
+CROSS_PREFIX="$BASE_DIR"/4afx/4afx_build EXP_CLIB2=1  make -j4 -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log
+
+###
+# Step 1: Run some test programs
+###
+export PATH="$BASE_DIR"/4afx/4afx_build/bin:"$PATH"
+which ppc-amigaos-gcc || { echo "Expected to find the cross GCC compiler on the path" ; exit 30 ; }
+

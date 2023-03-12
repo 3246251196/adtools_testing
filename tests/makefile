@@ -1,0 +1,23 @@
+C_LIB?=clib2
+ifeq ($(NO_DYN),)
+DYN=-use-dynld
+INFIX=_with_use_dynld_
+else
+INFIX=_without_use_dynld_
+endif
+CXX=ppc-amigaos-g++
+CXXFLAGS=-mcrt=$(C_LIB) -Wall -Werror -pedantic -std=c++11
+LDFLAGS=-mcrt=$(C_LIB) $(DYN) -athread=native
+ifeq ($(NO_VERBOSE),)
+CXXFLAGS+=-v
+LDFLAGS+=-Wl,--verbose
+endif
+export
+
+tests=$(shell ls -d */)
+.PHONY: all clean
+all:
+	for t in $(tests) ; do $(MAKE) -C $$t all ; done
+
+clean:
+	for t in $(tests) ; do $(MAKE) -C $$t clean ; done
