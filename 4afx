@@ -54,5 +54,11 @@ CROSS_PREFIX="$BASE_DIR"/4afx/4afx_build EXP_CLIB2=1  make -j4 -C native-build/ 
 # Step 1: Run some test programs
 ###
 export PATH="$BASE_DIR"/4afx/4afx_build/bin:"$PATH"
+# Arbitrary check
 which ppc-amigaos-gcc || { echo "Expected to find the cross GCC compiler on the path" ; exit 30 ; }
 
+pushd tests
+make all
+popd
+
+exit 0
