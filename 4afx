@@ -1,12 +1,22 @@
 #!/bin/bash --
 
 set -u
-set -x
+
+function _error
+{
+    echo "ERROR: $1" 1>&2
+    exit $2
+}
+
+function _warn
+{
+    echo "WARN: $1" 1>&2
+}
 
 ###
 # Step 0: clone ADTOOLS for use with afxgroup CLIB2, build for 11.3 GCC and 2.23.2 binutils
 ###
-which ppc-amigaos-gcc && { echo "Remove older ADTOOLS install from your path" ; exit 9 ; }
+which ppc-amigaos-gcc  && _error "ERROR: Remove older ADTOOLS install from your path" 10 ;
 
 BASE_DIR="$(pwd)/build"
 # assume an argument is just the location to the base_dir which is our root for all of this
@@ -15,21 +25,13 @@ then
     BASE_DIR="${1}"
     if [[ "${BASE_DIR:0:1}" != / ]]
     then
-	echo "BASE_DIR should be a full path"
-	exit 10
-    else
-	mkdir -p "$BASE_DIR"
+	_error "BASE_DIR should be a full path" 20
     fi
-
-    test -n "${2}" && echo "All other arguments ignored" 1>&2
-else
-    if [[ ! -d "$BASE_DIR" ]]
-    then
-	echo "\"$BASE_DIR\" not accessible" 1>&2
-	exit 20
-    fi
+    test -n "${2}" && _warn "All other arguments ignored"
 fi
 
+mkdir -p "$BASE_DIR"
+ORIG_DIR="$(pwd)"
 cd "$BASE_DIR"
 mkdir 4afx
 cd 4afx
@@ -50,6 +52,7 @@ sed -i 's|SHARED=no|SHARED=yes|' native-build/makefile
 
 CROSS_PREFIX="$BASE_DIR"/4afx/4afx_build EXP_CLIB2=1  make -j4 -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log
 
+cd "$ORIG_DIR"
 ###
 # Step 1: Run some test programs
 ###
@@ -57,8 +60,8 @@ export PATH="$BASE_DIR"/4afx/4afx_build/bin:"$PATH"
 # Arbitrary check
 which ppc-amigaos-gcc || { echo "Expected to find the cross GCC compiler on the path" ; exit 30 ; }
 
-pushd tests
+cd tests
 make all
-popd
+cd ..
 
 exit 0
