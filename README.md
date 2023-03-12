@@ -9,3 +9,4 @@ It also makes the following modifications:
 - Forces the creation of AFXGROUP'S CLIB2 shared libraries;
 
 After building the CROSS COMPILER, the script will then run all of the tests in the "tests" folder.
+Visit the log*.txt files to look at the verbose logging for COMPILER/LINK phase and also a generated output of readelf.
