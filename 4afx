@@ -75,7 +75,7 @@ cd "$ORIG_DIR"
 ###
 export PATH="$BASE_DIR"/4afx/4afx_build/bin:"$PATH"
 # Arbitrary check
-which ppc-amigaos-gcc || _error "Expected to find the cross GCC compiler on the path" 30
+which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC compiler on the path" 30
 
 _info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
 
