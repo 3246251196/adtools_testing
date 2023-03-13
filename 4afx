@@ -22,7 +22,7 @@ function _info
     echo "#####"
     echo "INFO: $1"
     echo "#####"
-    sleep 5
+    sleep 1
 }
 
 ###
@@ -80,8 +80,9 @@ which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC
 _info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
 
 cd tests
-make clean all
+make clean
 NO_DYN=1 make all
+make all
 cd ..
 
 exit 0
