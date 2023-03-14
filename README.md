@@ -20,4 +20,4 @@ This script/repo was written at the time when
 This is important wrt. to the "modifications" made above, since they may become out of date!
 
 To add a test:
-Just create a directory under tests with a Makefile with an "all" target. Variables are exported in the parent makefile (the one under tests, which include some useful variables if needed).
+Just create a directory under tests with a Makefile with an "all" target and a "clean" target. Variables are exported in the parent makefile (the one under tests, which include some useful variables if needed).
