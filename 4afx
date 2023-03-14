@@ -1,7 +1,5 @@
 #!/bin/bash --
 
-set -u
-
 function _error
 {
     echo "#####"
@@ -32,15 +30,9 @@ which ppc-amigaos-gcc  && _error "ERROR: Remove older ADTOOLS install from your 
 
 BASE_DIR="$(pwd)/build"
 ORIG_DIR="$(pwd)"
-# assume an argument is just the location to the base_dir which is our root for all of this
 if (( $# >= 1 ))
 then
-    BASE_DIR="${1}"
-    if [[ "${BASE_DIR:0:1}" != / ]]
-    then
-	_error "BASE_DIR should be a full path" 20
-    fi
-    test -n "${2}" && _warn "All other arguments ignored"
+    _info "All other arguments will be passed to tests/Makefile"
 fi
 
 if [[ ! -d "$BASE_DIR" ]]
@@ -81,8 +73,8 @@ _info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
 
 cd tests
 make clean
-NO_DYN=1 make all
-make all
+make NO_DYN=1 "$@" all
+make all "$@"
 cd ..
 
 exit 0
