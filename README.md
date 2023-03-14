@@ -18,3 +18,6 @@ This script/repo was written at the time when
 - ADTOOLS last commit: 1501a4a26cf1bcffdd6dd4bcd603167a3e00f51b
 - AFXGROUP CLIB2 commit: ea6adcd010d760b65700036a8b800c38ce8cca1f
 This is important wrt. to the "modifications" made above, since they may become out of date!
+
+To add a test:
+Just create a directory under tests with a Makefile with an "all" target. Variables are exported in the parent makefile (the one under tests, which include some useful variables if needed).
