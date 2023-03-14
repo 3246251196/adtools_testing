@@ -1,10 +1,10 @@
 C_LIB?=clib2
 ifeq ($(NO_DYN),)
 DYN=-use-dynld
-INFIX=_with_use_dynld_
+INFIX=_with_use_dynld_$(C_LIB)
 # LDFLAGS=-shared # Testing out adding -shared to creating an exe
 else
-INFIX=_without_use_dynld_
+INFIX=_without_use_dynld_$(C_LIB)
 LDFLAGS=
 endif
 CXX=ppc-amigaos-g++
