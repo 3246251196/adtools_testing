@@ -25,6 +25,15 @@ function _info
     sleep 1
 }
 
+function BUILD
+{
+   CORES=$(nproc)
+   if [[ -z ${CORES} ]] ; then CORES=1 ; fi
+   
+   CROSS_PREFIX="$BASE_DIR"/4afx/4afx_build EXP_CLIB2=1  make -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log \
+       || _error "The compilation failed. See the log file: \"$BASE_DIR\"/4afx/4afx.log" 40
+}
+
 ###
 # Step 0: clone ADTOOLS for use with afxgroup CLIB2, build for 11.3 GCC and 2.23.2 binutils
 ###
@@ -34,7 +43,10 @@ BASE_DIR="$(pwd)/build"
 ORIG_DIR="$(pwd)"
 if (( $# >= 1 ))
 then
-    _info "All other arguments will be passed to tests/Makefile"
+    if [[ "${1}" != "rebuild" ]]
+    then
+	_info "All other arguments will be passed to tests/Makefile"
+    fi
 fi
 
 if [[ ! -d "$BASE_DIR" ]]
@@ -58,13 +70,15 @@ then
    # We also want to build SHARED LIBRARIES for CLIB2
    sed -i 's|SHARED=no|SHARED=yes|' native-build/makefile
 
-   CORES=$(nproc)
-   if [[ -z ${CORES} ]] ; then CORES=1 ; fi
-   
-   CROSS_PREFIX="$BASE_DIR"/4afx/4afx_build EXP_CLIB2=1  make -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log \
-       || _error "The compilation failed. See the log file: \"$BASE_DIR\"/4afx/4afx.log" 40
+   BUILD
 else
-    _warn "\"$BASE_DIR\" already exists, assuming that you just want to re-run the tests"
+    if [[ "${1}" == "rebuild" ]]
+    then
+	cd "$BASE_DIR/4afx/4afx_adtools"
+	BUILD
+    else
+	_warn "\"$BASE_DIR\" already exists, assuming that you just want to re-run the tests"
+    fi
 fi
 
 cd "$ORIG_DIR"
