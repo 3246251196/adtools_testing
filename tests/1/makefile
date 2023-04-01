@@ -1,23 +1,11 @@
-PROG=main$(INFIX)_test_1.exe
-LOG_FILE=log$(INFIX).txt
-.PHONY: all
-all: $(PROG)
-$(PROG): main$(INFIX).o
-	@echo "#####" >> $(LOG_FILE)
-	@echo "Link phase for $@" >> $(LOG_FILE)
-	@echo "#####" >> $(LOG_FILE)
-	$(CXX) $(LDFLAGS) -o $@ $^ 2>&1 | tee -a $(LOG_FILE)
-	@echo "#####" >> $(LOG_FILE)
-	@echo "ppc-amigaos-readelf -d for $@" >> $(LOG_FILE)
-	@echo "#####" >> $(LOG_FILE)
-	ppc-amigaos-readelf -d $(PROG) | tee -a $(LOG_FILE)
+include ../common.mak
 
-.PHONY: clean
-clean:
-	@-rm *.o *.exe log*.txt
+$(PROG): main$(FILE_INFIX).o
+	$(call LOG_INF,Link,$@)
+	$(call LOG_RUN,$(CXX) $(LDFLAGS) -o $@ $^)
+	$(call LOG_INF,Readelf,$@)
+	$(call LOG_RUN,ppc-amigaos-readelf -d $(PROG))
 
-main$(INFIX).o: main.cpp
-	@echo "#####" >> $(LOG_FILE)
-	@echo "Compile phase for $@" >> $(LOG_FILE)
-	@echo "#####" >> $(LOG_FILE)
-	$(CXX) $(CXXFLAGS) -c -o $@ $^ 2>&1 | tee -a $(LOG_FILE)
+main$(FILE_INFIX).o: main.cpp
+	$(call LOG_INF,Compile,$@)
+	$(call LOG_RUN,$(CXX) $(CXXFLAGS) -c -o $@ $^)

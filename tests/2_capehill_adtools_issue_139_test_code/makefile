@@ -1,46 +1,43 @@
-PROG:=main$(INFIX)_test_2.exe
-CC?=gcc
-AR?=ar
-RANLIB?=ranlib
+include ../common.mak
+
+RELO:=lib.o
 ifeq ($(NO_DYN),)
 LIB:=libf.so
 else
 LIB:=libf.a
 endif
-RELO=lib.o
 
 LDFLAGS+=-L. -lf 
 
-all: $(PROG)
 $(PROG): main.c $(LIB)
-	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
-	@echo "####################"
-	@echo "####################"
-	@echo "####################"
-	@echo "Expected output when invoking \"test_dyn\", \"test_static\": "
-	@echo "--------------------"
-	@echo "ctor"
-	@echo "ctor2"
-	@echo "function 123"
-	@echo "main result 123"
-	@echo "dtor2"
-	@echo "dtor"
-	@echo "--------------------"
-	@echo "####################"
-	@echo "####################"
-	@echo "####################"
+	$(call LOG_INF,Link,$@)
+	$(call LOG_RUN,$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS))
+	$(call LOG_EXT,"####################")
+	$(call LOG_EXT,"####################")
+	$(call LOG_EXT,"####################")
+	$(call LOG_EXT,"Expected output when invoking: $(PROG)")
+	$(call LOG_EXT,"--------------------")
+	$(call LOG_EXT,"ctor")
+	$(call LOG_EXT,"ctor2")
+	$(call LOG_EXT,"function 123")
+	$(call LOG_EXT,"main result 123")
+	$(call LOG_EXT,"dtor2")
+	$(call LOG_EXT,"dtor")
+	$(call LOG_EXT,"--------------------")
+	$(call LOG_EXT,"####################")
+	$(call LOG_EXT,"####################")
+	$(call LOG_EXT,"####################")
 
 $(LIB): $(RELO)
 ifeq ($(NO_DYN),)
-	$(CC) $(CFLAGS) -o libf.so lib.o -shared
+	$(call LOG_INF,Creating Shared Object,$@)
+	$(call LOG_RUN,$(CC) $(CFLAGS) -o libf.so lib.o -shared)
 else
-	$(AR) cruv  libf.a lib.o
-	$(RANLIB) libf.a
+	$(call LOG_INF,Creating Static Library,$@)
+	$(call LOG_RUN,$(AR) cruv  libf.a lib.o)
+	$(call LOG_RUN,$(RANLIB) libf.a)
 endif
 
 $(RELO): lib.c
-	$(CC) $(CFLAGS) -o lib.o -c lib.c -fPIC
-
-.PHONY: clean
-clean:
-	@-rm *.o *.exe log*.txt *.so *.a
+	$(call LOG_INF,Compile,$@)
+	$(call LOG_RUN,$(CC) $(CFLAGS) -o lib.o -c lib.c -fPIC)

@@ -2,6 +2,11 @@
 
 set -o pipefail
 
+BASE_DIR="$(pwd)/build"
+ORIG_DIR="$(pwd)"
+# Exported because this variable is used by the testing framework
+export CROSS_PREFIX="$BASE_DIR"/4afx/4afx_build
+
 function _error
 {
     echo "#####"
@@ -29,8 +34,8 @@ function BUILD
 {
    CORES=$(nproc)
    if [[ -z ${CORES} ]] ; then CORES=1 ; fi
-   
-   CROSS_PREFIX="$BASE_DIR"/4afx/4afx_build EXP_CLIB2=1  make -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log \
+
+   EXP_CLIB2=1  make -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log \
        || _error "The compilation failed. See the log file: \"$BASE_DIR\"/4afx/4afx.log" 40
 }
 
@@ -39,8 +44,6 @@ function BUILD
 ###
 which ppc-amigaos-gcc  && _error "ERROR: Remove older ADTOOLS install from your path" 10 ;
 
-BASE_DIR="$(pwd)/build"
-ORIG_DIR="$(pwd)"
 if (( $# >= 1 ))
 then
     if [[ "${1}" != "rebuild" ]]
@@ -91,10 +94,15 @@ which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC
 
 _info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
 
-cd tests
-make clean
-make NO_DYN=1 "$@" all
-make all "$@" all
-cd ..
+( cd tests && make clean )
+for c_lib in newlib clib2
+do
+    export C_LIB=${c_lib}
+    cd tests
+    make NO_DYN=1 "$@" all
+    make all "$@" all
+    cd ..
+done
+unset C_LIB
 
 exit 0
