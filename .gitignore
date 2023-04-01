@@ -3,4 +3,5 @@
 *.exe
 *.so
 *.a
+*.lha
 build/
