@@ -12,6 +12,8 @@ LDFLAGS+=-L. -lf
 $(PROG): main.c $(LIB)
 	$(call LOG_INF,Link,$@)
 	$(call LOG_RUN,$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS))
+	$(call LOG_INF,Readelf,$@)
+	$(call LOG_RUN,ppc-amigaos-readelf -d $(PROG))
 	$(call LOG_EXT,"####################")
 	$(call LOG_EXT,"####################")
 	$(call LOG_EXT,"####################")

@@ -37,7 +37,7 @@ endif
 $(LHA_FILE):
 	echo $${CROSS_PREFIX}
 ifeq ($(NO_DYN),)
-	ARR_SO=($$(readelf -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
+	ARR_SO=($$(ppc-amigaos-readelf -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
 	for SO in $${ARR_SO[@]} ;                                                  \
 	do                                                                         \
 		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}" | grep $(GREP_CMD)) ;  \
@@ -48,4 +48,4 @@ ifeq ($(NO_DYN),)
 		test -f "$${LOC}" && cp "$${LOC}" . ; lha a $@ "$$(basename "$${LOC}")" ; \
 	done
 endif
-	lha a $@ $(PROG)
+	lha a $@ $(PROG) $(LOG_FILE)
