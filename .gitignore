@@ -1,4 +1,6 @@
 *.txt
 *.o
 *.exe
+*.so
+*.a
 build/
