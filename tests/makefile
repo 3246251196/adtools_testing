@@ -7,9 +7,18 @@ else
 INFIX=_without_use_dynld_$(C_LIB)
 LDFLAGS=
 endif
+
 CXX=ppc-amigaos-g++
 CXXFLAGS=-mcrt=$(C_LIB) -Wall -Werror -pedantic -std=c++11
+
+CC=ppc-amigaos-gcc
+CFLAGS=-mcrt=$(C_LIB) -Wall -Werror -pedantic -std=c11
+
 LDFLAGS+=-mcrt=$(C_LIB) $(DYN) -athread=native
+
+AR=ppc-amigaos-ar
+RANLIB=ppc-amigaos-ranlib
+
 ifeq ($(NO_VERBOSE),)
 CXXFLAGS+=-v
 LDFLAGS+=-Wl,--verbose
@@ -17,6 +26,7 @@ endif
 export
 
 tests=$(shell ls -d */)
+
 .PHONY: all clean
 all:
 ifneq (0,$(shell which ppc-amigaos-gcc 1>/dev/null 2>&1 ; echo $$?))
