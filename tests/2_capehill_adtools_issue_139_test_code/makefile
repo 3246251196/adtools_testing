@@ -1,23 +1,19 @@
-ifeq ($(shell uname),AmigaOS)
-CC:=gcc
+PROG:=main$(INFIX)_test_2.exe
+CC?=gcc
+AR?=ar
+RANLIB?=ranlib
+ifeq ($(NO_DYN),)
+LIB:=libf.so
 else
-ifneq ($(shell uname), Linux)
-$(error Unexpected platform)
-else
-CC:=ppc-amigaos-gcc
-ifneq ($(shell which $(CC) 1>/dev/null 2>&1 ; echo $$?), 0)
-$(error $(CC) was not found on your path)
+LIB:=libf.a
 endif
-endif
-endif
+RELO=lib.o
 
-all:
-	$(CC) -o lib.o -c lib.c -fPIC
-	$(CC) -o libf.so lib.o -shared
-	ar cruv  libf.a lib.o
-	ranlib libf.a
-	$(CC) -o test_dyn main.c -use-dynld -L. -lf -athread=native
-	$(CC) -o test_static main.c -L. -lf -athread=native
+LDFLAGS+=-L. -lf 
+
+all: $(PROG)
+$(PROG): main.c $(LIB)
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 	@echo "####################"
 	@echo "####################"
 	@echo "####################"
@@ -33,3 +29,18 @@ all:
 	@echo "####################"
 	@echo "####################"
 	@echo "####################"
+
+$(LIB): $(RELO)
+ifeq ($(NO_DYN),)
+	$(CC) $(CFLAGS) -o libf.so lib.o -shared
+else
+	$(AR) cruv  libf.a lib.o
+	$(RANLIB) libf.a
+endif
+
+$(RELO): lib.c
+	$(CC) $(CFLAGS) -o lib.o -c lib.c -fPIC
+
+.PHONY: clean
+clean:
+	@-rm *.o *.exe log*.txt *.so *.a
