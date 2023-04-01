@@ -22,6 +22,7 @@ RANLIB:=ppc-amigaos-ranlib
 
 ifeq ($(NO_VERBOSE),)
 CXXFLAGS+=-v
+CFLAGS+=-v
 LDFLAGS+=-Wl,--verbose
 endif
 

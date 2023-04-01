@@ -32,11 +32,14 @@ function _info
 
 function BUILD
 {
-   CORES=$(nproc)
-   if [[ -z ${CORES} ]] ; then CORES=1 ; fi
+    if [[ -z ${CORES} ]]
+    then
+	CORES=$(nproc)
+    fi
+    if [[ -z ${CORES} ]] ; then CORES=1 ; fi
 
-   EXP_CLIB2=1  make -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log \
-       || _error "The compilation failed. See the log file: \"$BASE_DIR\"/4afx/4afx.log" 40
+    EXP_CLIB2=1  make -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log \
+	|| _error "The compilation failed. See the log file: \"$BASE_DIR\"/4afx/4afx.log" 40
 }
 
 ###
