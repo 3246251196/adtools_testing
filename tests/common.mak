@@ -30,17 +30,16 @@ clean:
 # anything that contains "clib2", we assume that is the newlib
 # library. This works for the case that newlib is in the string and is
 # not.
-GREP_CMD:=$(C_LIB)
+GREP_OPT:=$(C_LIB)
 ifeq ($(C_LIB),newlib))
-	GREP_CMD:=-v clib2
+	GREP_OPT:=-v clib2
 endif
 $(LHA_FILE):
-	echo $${CROSS_PREFIX}
 ifeq ($(NO_DYN),)
 	ARR_SO=($$(ppc-amigaos-readelf -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
 	for SO in $${ARR_SO[@]} ;                                                  \
 	do                                                                         \
-		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}" | grep $(GREP_CMD)) ;  \
+		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}" | grep $(GREP_OPT)) ;  \
 		if [[ -z "$${LOC}" ]] ;                                            \
 		then                                                               \
 			LOC=$$(find . -name "$${SO}") ;                            \
