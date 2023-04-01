@@ -23,7 +23,7 @@ clean:
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:
 # "lib/gcc/ppc-amigaos/11.3.0/libgcc.so", unlike clib which is in
-# clib2.  GREP_CMD is a hack to get around this. First, assume that
+# clib2.  GREP_OPT is a hack to get around this. First, assume that
 # for any library we are looking for, we will find it in a location
 # that contains the string of the particular C library being
 # used. Then, in the case that we are newlib, so long as we remove
