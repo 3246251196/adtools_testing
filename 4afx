@@ -94,7 +94,7 @@ _info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
 cd tests
 make clean
 make NO_DYN=1 "$@" all
-make all "$@"
+make all "$@" all
 cd ..
 
 exit 0
