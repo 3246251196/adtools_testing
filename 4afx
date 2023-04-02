@@ -47,7 +47,8 @@ function BUILD
 ###
 which ppc-amigaos-gcc  && _error "Remove existing ADTOOLS from your current path" 10 ;
 ###
-# Step 0:1 ensure that GCC at least exists on the machine running this script
+# Step 0.1: ensure that GCC at least exists on the machine running this script
+#           and check the environment
 ###
 native_gcc_error=0
 which gcc 1>/dev/null 2>&1
@@ -65,6 +66,15 @@ if (( native_gcc_error ))
 then
     _error "Expected native linux x86-64 gcc compiler to be accessible" 11
 fi
+
+# This is unlikely, but these variables will take over in the
+# makefiles, so for this bash process and all of its children lets
+# unset these just incase
+unset CC CFLAGS CXX CXXFLAGS CPPFLAGS AR AS LD RANLIB
+
+###
+# End Step 0.1
+###
 
 if (( $# >= 1 ))
 then
