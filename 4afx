@@ -67,9 +67,9 @@ then
     _error "Expected native linux x86-64 gcc compiler to be accessible" 11
 fi
 
-# This is unlikely, but these variables will take over in the
-# makefiles, so for this bash process and all of its children lets
-# unset these just incase
+# Clear any of these variables in the unlikely event they are set. If not, then
+# they are picked up during the building ADTOOLS and they may not point to the
+# native gcc that we just tested for before.
 export CC=
 export CFLAGS=
 export CXX=
@@ -146,10 +146,11 @@ do
 done
 
 _info "The following test artifacts can be transferred to the AmigaOne. "\
-"Dynamic tests should include the necessary Shared Objects inside the "\
-"LHA file and since ELF.LIBRARY will search in the directory of the "\
-"program in preference then the current environment of the AmigaOne should "\
-"have no effect."
+"Dynamic tests should include the necessary Shared Objects inside the LHA "\
+"file and since ELF.LIBRARY will search in the directory of the program in "\
+"preference then the current environment of the AmigaOne should have no "\
+"effect."
+
 find tests/ -name "*.lha"
 
 exit 0
