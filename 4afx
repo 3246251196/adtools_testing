@@ -144,6 +144,13 @@ do
     make all "$@" all
     cd ..
 done
-unset C_LIB
+
+_info "The following test artifacts can be transferred to the AmigaOne. "\
+"Dynamic tests should include the necessary Shared Objects inside the "\
+"LHA file and since ELF.LIBRARY will search in the directory of the "\
+"program in preference then the current environment of the AmigaOne should "\
+"have no effect."
+find tests/ -name "*.lha"
 
 exit 0
+
