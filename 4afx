@@ -70,7 +70,15 @@ fi
 # This is unlikely, but these variables will take over in the
 # makefiles, so for this bash process and all of its children lets
 # unset these just incase
-unset CC CFLAGS CXX CXXFLAGS CPPFLAGS AR AS LD RANLIB
+export CC=
+export CFLAGS=
+export CXX=
+export CXXFLAGS=
+export CPPFLAGS=
+export AR=
+export AS=
+export LD=
+export RANLIB=
 
 ###
 # End Step 0.1
