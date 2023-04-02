@@ -45,7 +45,26 @@ function BUILD
 ###
 # Step 0: clone ADTOOLS for use with afxgroup CLIB2, build for 11.3 GCC and 2.23.2 binutils
 ###
-which ppc-amigaos-gcc  && _error "ERROR: Remove older ADTOOLS install from your path" 10 ;
+which ppc-amigaos-gcc  && _error "Remove existing ADTOOLS from your current path" 10 ;
+###
+# Step 0:1 ensure that GCC at least exists on the machine running this script
+###
+native_gcc_error=0
+which gcc 1>/dev/null 2>&1
+if (( !${?} ))
+then
+    if [[ $(gcc -dumpmachine) != "x86_64-linux-gnu" ]]
+    then
+	native_gcc_error=1
+    fi
+else
+    native_gcc_error=1
+fi
+   
+if (( native_gcc_error ))
+then
+    _error "Expected native linux x86-64 gcc compiler to be accessible" 11
+fi
 
 if (( $# >= 1 ))
 then
