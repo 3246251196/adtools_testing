@@ -5,27 +5,27 @@ set -o pipefail
 BASE_DIR="$(pwd)/build"
 ORIG_DIR="$(pwd)"
 # Exported because this variable is used by the testing framework
-export CROSS_PREFIX="$BASE_DIR"/4afx/4afx_build
+export CROSS_PREFIX="${BASE_DIR}"/4afx/4afx_build
 
 function _error
 {
     echo "#####"
-    echo "ERROR: $1" 1>&2
+    echo "ERROR: ${1}" 1>&2
     echo "#####"
-    exit $2
+    exit "${2}"
 }
 
 function _warn
 {
     echo "#####"
-    echo "WARN: $1" 1>&2
+    echo "WARN: ${1}" 1>&2
     echo "#####"
 }
 
 function _info
 {
     echo "#####"
-    echo "INFO: $1"
+    echo "INFO: ${1}"
     echo "#####"
     sleep 1
 }
@@ -38,8 +38,8 @@ function BUILD
     fi
     if [[ -z ${CORES} ]] ; then CORES=1 ; fi
 
-    EXP_CLIB2=1  make -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "$BASE_DIR"/4afx/4afx.log \
-	|| _error "The compilation failed. See the log file: \"$BASE_DIR\"/4afx/4afx.log" 40
+    EXP_CLIB2=1  make -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "${BASE_DIR}"/4afx/4afx.log \
+	|| _error "The compilation failed. See the log file: \"${BASE_DIR}\"/4afx/4afx.log" 40
 }
 
 ###
@@ -84,10 +84,10 @@ then
     fi
 fi
 
-if [[ ! -d "$BASE_DIR" ]]
+if [[ ! -d "${BASE_DIR}" ]]
 then
-   mkdir "$BASE_DIR"
-   cd "$BASE_DIR"
+   mkdir "${BASE_DIR}"
+   cd "${BASE_DIR}"
    mkdir 4afx
    cd 4afx
    git clone https://github.com/sba1/adtools.git 4afx_adtools
@@ -109,10 +109,11 @@ then
 else
     if [[ "${1}" == "rebuild" ]]
     then
-	cd "$BASE_DIR/4afx/4afx_adtools"
+	cd "${BASE_DIR}/4afx/4afx_adtools" || \
+	    _error "Requested a rebuild but there is no directory named \"${BASE_DIR}\". Rerun with out the \"rebuild\" argument" 20
 	BUILD
     else
-	_warn "\"$BASE_DIR\" already exists, assuming that you just want to re-run the tests"
+	_warn "\"${BASE_DIR}\" already exists, assuming that you just want to re-run the tests"
     fi
 fi
 
@@ -120,7 +121,7 @@ cd "$ORIG_DIR"
 ###
 # Step 1: Run some test programs
 ###
-export PATH="$BASE_DIR"/4afx/4afx_build/bin:"$PATH"
+export PATH="${BASE_DIR}"/4afx/4afx_build/bin:"${PATH}"
 # Arbitrary check
 which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC compiler on the path" 30
 
