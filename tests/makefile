@@ -10,12 +10,12 @@ LDFLAGS:=
 endif
 
 CXX:=ppc-amigaos-g++
-CXXFLAGS:=-mcrt=$(C_LIB) -Wall -Werror -pedantic -std=c++11
+CXXFLAGS:=-mcrt=$(C_LIB)
 
 CC:=ppc-amigaos-gcc
-CFLAGS:=-mcrt=$(C_LIB) -Wall -Werror -pedantic -std=c11
+CFLAGS:=-mcrt=$(C_LIB)
 
-LDFLAGS+=-mcrt=$(C_LIB) $(DYN) -athread=native
+LDFLAGS:=-mcrt=$(C_LIB) $(DYN)
 
 AR:=ppc-amigaos-ar
 RANLIB:=ppc-amigaos-ranlib

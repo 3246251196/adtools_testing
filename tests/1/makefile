@@ -1,5 +1,8 @@
 include ../common.mak
 
+CXXFLAGS+=-Wall -Werror -pedantic -std=c++11
+LDFLAGS+=-athread=native
+
 $(PROG): main$(FILE_INFIX).o
 	$(call LOG_INF,Link,$@)
 	$(call LOG_RUN,$(CXX) $(LDFLAGS) -o $@ $^)

@@ -7,7 +7,8 @@ else
 LIB:=libf.a
 endif
 
-LDFLAGS+=-L. -lf 
+CFLAGS+=-Wall -Werror -pedantic -std=c11
+LDFLAGS+=-L. -lf
 
 $(PROG): main.c $(LIB)
 	$(call LOG_INF,Link,$@)
