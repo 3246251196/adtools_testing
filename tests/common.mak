@@ -1,5 +1,5 @@
 SHELL:=/bin/bash
-CWD:=$(shell echo $${PWD##*/})
+CWD:=$(shell basename $$(pwd))
 FILE_INFIX:=test_$(CWD)_$(INFIX)
 
 PROG:=main_$(FILE_INFIX).exe
