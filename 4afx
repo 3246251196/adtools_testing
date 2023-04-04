@@ -38,13 +38,15 @@ then
     if [[ "${1}" == -h || "${1}" == --help ]]
     then
 	echo "Usage: ${0} [build|delete|test_clean]"
-	echo "       build:      Invokes MAKE in ADTOOLS. Expects ${BASE_DIR} to exist already. Quits"
-	echo "       delete:     Removes ${BASE_DIR}. Quits"                                       
+	echo "       build:      Invokes MAKE in ADTOOLS. Expects \"${BASE_DIR}\" to exist already. Quits"
+	echo "       delete:     Removes \"${BASE_DIR}\". Quits"                                       
 	echo "       test_clean: Cleans all the tests. Quits"                                          
 	echo "       *:          All other options are assumed to be arguments that will be passed to "
 	echo "                   the parent test makefile"
 	echo "---------------------------------------------------------------------------------------"
 	echo "       Note:       No option will clone ADTOOLS, build it and run the tests and then quit"
+	echo "                   unless \"${BASE_DIR}\" already exists in which case all tests are built."
+	echo ""
 	echo "                   See the README.md file"
 	echo "---------------------------------------------------------------------------------------"
 	exit 0
@@ -70,6 +72,8 @@ function BUILD
     EXP_CLIB2=1  make -O -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "${BASE_DIR}"/4afx/4afx.log \
 	|| _error "The compilation failed. See the log file: \"${BASE_DIR}\"/4afx/4afx.log" 40
 
+    # Update the timestamp so that the test framework knows whether it should rebuild the tests.
+    # Of course, this dir will be touched even if there was nothing to update in ADTOOLS.
     touch "${BASE_DIR}"
 }
 
@@ -148,6 +152,8 @@ else
 	cd "${BASE_DIR}/4afx/4afx_adtools" || \
 	    _error "Requested a build but there is no directory named \"${BASE_DIR}\". Rerun with out the \"build\" argument" 20
 	BUILD
+
+	exit 0
     else
 	_info "\"${BASE_DIR}\" already exists, assuming that you just want to re-run the tests"
     fi
