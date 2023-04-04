@@ -34,7 +34,9 @@ ifeq ($(C_LIB),newlib)
 endif
 
 .PHONY: clean all
-all: $(PROG)
+all: $(LHA_FILE)
+
+$(LHA_FILE): $(PROG)
 ifeq ($(NO_DYN),)
 	ARR_SO=($$(ppc-amigaos-readelf -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
 	for SO in $${ARR_SO[@]} ;                                                  \

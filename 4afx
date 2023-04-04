@@ -166,6 +166,12 @@ _info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
 make -C tests all "$@" || \
     _warn "A failure occurred during the building of the tests but artifacts were still created where possible"
 
+for test_dir in $(ls -d tests/*/)
+do
+    name=$(basename "${test_dir}")
+    ls "${test_dir}"/*.lha 1>/dev/null 2>&1 || _warn "No LHA artifact was found for test: \"${name}\""
+done
+
 _info "The following test artifacts can be transferred to the AmigaOne. "\
 "Dynamic tests should include the necessary Shared Objects inside the LHA "\
 "file and since ELF.LIBRARY will search in the directory of the program in "\
