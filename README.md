@@ -3,6 +3,9 @@
 You should read and have a setup that is able to build ADTOOLS. See the ADTOOLS repo.
 
 ## Using this repository
+### For more information
+Run ./4afx [-h | --help]
+
 ### Running ./4afx should be all that is needed
 Running 4afx will build the ADTOOLS repository and then generate all the tests with logging information and the necessary Shared Objects (where necessary) in a single compressed LHA file per test.
 
