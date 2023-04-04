@@ -31,6 +31,38 @@ function _info
     sleep 1
 }
 
+# No getopts for now!
+if (( $# > 0 ))
+then
+    if [[ "${1}" == -h || "${1}" == --help ]]
+    then
+	echo "Usage: ${0} [build|delete|test_clean]"
+	echo "       build:      Invokes MAKE in ADTOOLS. Expects ${BASE_DIR} to exist already. Quits"
+	echo "       delete:     Removes ${BASE_DIR}. Quits"                                       
+	echo "       test_clean: Cleans all the tests. Quits"                                          
+	echo "       *:          All other options are assumed to be arguments that will be passed to "
+	echo "                   the parent test makefile"
+	echo "---------------------------------------------------------------------------------------"
+	echo "       Note:       No option will clone ADTOOLS, build it and run the tests and then quit"
+	echo "                   See the README.md file"
+	echo "---------------------------------------------------------------------------------------"
+	exit 0
+    elif [[ "${1}" == "build" ]]
+    then
+	ARG=build
+    elif [[ "${1}" == "delete" ]]
+    then
+	rm -rf "${BASE_DIR}"
+	exit 0
+    elif [[ "${1}" == "test_clean" ]]
+    then
+	make -C tests clean
+	exit 0
+    else
+	ARG="$@"
+    fi
+fi
+
 function BUILD
 {
     if [[ -z ${CORES} ]]
@@ -89,10 +121,7 @@ export RANLIB=
 
 if (( $# >= 1 ))
 then
-    if [[ "${1}" != "build" ]]
-    then
-	_info "All other arguments will be passed to tests/Makefile"
-    fi
+    _info "All other arguments will be passed to tests/Makefile"
 fi
 
 if [[ ! -d "${BASE_DIR}" ]]
@@ -118,7 +147,7 @@ then
 
    BUILD
 else
-    if [[ "${1}" == "build" ]]
+    if [[ "${ARG}" == "build" ]]
     then
 	cd "${BASE_DIR}/4afx/4afx_adtools" || \
 	    _error "Requested a build but there is no directory named \"${BASE_DIR}\". Rerun with out the \"build\" argument" 20
@@ -138,7 +167,7 @@ which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC
 
 _info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
 
-make -C tests all "$@"
+make -C tests all "${ARG}"
 
 _info "The following test artifacts can be transferred to the AmigaOne. "\
 "Dynamic tests should include the necessary Shared Objects inside the LHA "\

@@ -32,8 +32,14 @@ endif
 # ENDER EXPORT STRING
 #######
 
+do_clean=                                     \
+	for TEST in $(tests) ;                \
+	do                                    \
+		$(MAKE) -C "$${TEST}" clean ; \
+	done
+
 tests=$(shell ls -d */)
-.PHONY: all
+.PHONY: all clean
 all: clean_stamp
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "4afx" script)
@@ -51,8 +57,8 @@ endif
 	done
 
 clean_stamp: $(BASE_DIR)
-	for TEST in $(tests) ;                \
-	do                                    \
-		$(MAKE) -C "$${TEST}" clean ; \
-	done                                  \
-	&& touch clean_stamp
+	$(do_clean)
+	touch $@
+
+clean:
+	$(do_clean)

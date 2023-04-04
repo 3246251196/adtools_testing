@@ -1,3 +1,6 @@
+ifeq ($(SCRIPT_INVOCATION),)
+$(error This makefile should only be invoked by the "4afx" script)
+endif
 SHELL=/bin/bash
 CWD=$(shell basename $$(pwd))
 FILE_INFIX=test_$(CWD)_$(INFIX)
