@@ -51,10 +51,12 @@ endif
 			$(EXPORT) ;                                      \
 			for TEST in $(tests) ;                           \
 			do                                               \
-				$(MAKE) -C "$${TEST}" all ;              \
+				$(MAKE) -C "$${TEST}" all &              \
+				pids+=( $$! ) ;                          \
 			done ;                                           \
 		done ;                                                   \
-	done
+	done ;                                                           \
+	for p in $${pids[@]} ; do wait $$p ; done
 
 clean_stamp: $(BASE_DIR)
 	$(do_clean)
