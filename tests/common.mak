@@ -51,4 +51,4 @@ endif
 	-lha a $(LHA_FILE) $(PROG) $(LOG_FILE) *.map 2>/dev/null
 
 clean:
-	-rm -f *.o *.exe log*.txt *.a *.so *.lha 2>/dev/null
+	-rm -f *.o *.exe log*.txt *.a *.so *.lha *.map 2>/dev/null

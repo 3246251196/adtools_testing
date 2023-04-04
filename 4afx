@@ -1,5 +1,4 @@
 #!/bin/bash --
-
 set -o pipefail
 
 ORIG_DIR="$(pwd)"
@@ -10,6 +9,7 @@ export SCRIPT_INVOCATION=1 # tell the Makefiles that they were executed from the
 
 function _error
 {
+    echo ""
     echo "#####"
     echo "ERROR: ${1}" 1>&2
     echo "#####"
@@ -18,6 +18,7 @@ function _error
 
 function _warn
 {
+    echo ""
     echo "#####"
     echo "WARN: ${1}" 1>&2
     echo "#####"
@@ -25,10 +26,10 @@ function _warn
 
 function _info
 {
+    echo ""
     echo "#####"
     echo "INFO: ${1}"
     echo "#####"
-    sleep 1
 }
 
 # No getopts for now!
@@ -47,9 +48,6 @@ then
 	echo "                   See the README.md file"
 	echo "---------------------------------------------------------------------------------------"
 	exit 0
-    elif [[ "${1}" == "build" ]]
-    then
-	ARG=build
     elif [[ "${1}" == "delete" ]]
     then
 	rm -rf "${BASE_DIR}"
@@ -58,8 +56,6 @@ then
     then
 	make -C tests clean
 	exit 0
-    else
-	ARG="$@"
     fi
 fi
 
@@ -147,13 +143,13 @@ then
 
    BUILD
 else
-    if [[ "${ARG}" == "build" ]]
+    if [[ "${1}" == "build" ]]
     then
 	cd "${BASE_DIR}/4afx/4afx_adtools" || \
 	    _error "Requested a build but there is no directory named \"${BASE_DIR}\". Rerun with out the \"build\" argument" 20
 	BUILD
     else
-	_warn "\"${BASE_DIR}\" already exists, assuming that you just want to re-run the tests"
+	_info "\"${BASE_DIR}\" already exists, assuming that you just want to re-run the tests"
     fi
 fi
 
@@ -167,15 +163,15 @@ which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC
 
 _info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
 
-make -C tests all "${ARG}"
+make -C tests all "$@" || \
+    _warn "A failure occurred during the building of the tests but artifacts were still created where possible"
 
 _info "The following test artifacts can be transferred to the AmigaOne. "\
 "Dynamic tests should include the necessary Shared Objects inside the LHA "\
 "file and since ELF.LIBRARY will search in the directory of the program in "\
 "preference then the current environment of the AmigaOne should have no "\
-"effect."
+"effect"
 
 find tests/ -name "*.lha" | sort
 
 exit 0
-
