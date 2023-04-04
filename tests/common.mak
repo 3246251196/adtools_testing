@@ -1,10 +1,10 @@
-SHELL:=/bin/bash
-CWD:=$(shell basename $$(pwd))
-FILE_INFIX:=test_$(CWD)_$(INFIX)
+SHELL=/bin/bash
+CWD=$(shell basename $$(pwd))
+FILE_INFIX=test_$(CWD)_$(INFIX)
 
-PROG:=main_$(FILE_INFIX).exe
-LOG_FILE:=log_$(FILE_INFIX).txt
-LHA_FILE:=lha_$(FILE_INFIX).lha
+PROG=main_$(FILE_INFIX).exe
+LOG_FILE=log_$(FILE_INFIX).txt
+LHA_FILE=lha_$(FILE_INFIX).lha
 
 LOG_INF =                                          \
 	echo "\#\#\#\#\#" >> $(LOG_FILE);          \
@@ -14,11 +14,6 @@ LOG_INF =                                          \
 LOG_RUN = $(1) 2>&1 | tee -a $(LOG_FILE)
 
 LOG_EXT = echo "NOTE: "$(1) >> $(LOG_FILE)
-
-.PHONY: clean all
-all: $(PROG) $(LHA_FILE)
-clean:
-	@-rm -f *.o *.exe log*.txt *.a *.so *.lha
 
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:
@@ -30,11 +25,13 @@ clean:
 # anything that contains "clib2", we assume that is the newlib
 # library. This works for the case that newlib is in the string and is
 # not.
-GREP_OPT:=$(C_LIB)
-ifeq ($(C_LIB),newlib))
-	GREP_OPT:=-v clib2
+GREP_OPT=$(C_LIB)
+ifeq ($(C_LIB),newlib)
+	GREP_OPT=-v clib2
 endif
-$(LHA_FILE):
+
+.PHONY: clean all
+all: $(PROG)
 ifeq ($(NO_DYN),)
 	ARR_SO=($$(ppc-amigaos-readelf -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
 	for SO in $${ARR_SO[@]} ;                                                  \
@@ -44,7 +41,11 @@ ifeq ($(NO_DYN),)
 		then                                                               \
 			LOC=$$(find . -name "$${SO}") ;                            \
 		fi ;                                                               \
-		test -f "$${LOC}" && cp "$${LOC}" . ; lha a $@ "$$(basename "$${LOC}")" ; \
+		test -f "$${LOC}" && cp "$${LOC}" . ; lha a $(LHA_FILE) "$$(basename "$${LOC}")" ; \
 	done
 endif
-	lha a $@ $(PROG) $(LOG_FILE)
+	# also add any map files in case they were generated
+	-lha a $(LHA_FILE) $(PROG) $(LOG_FILE) *.map 2>/dev/null
+
+clean:
+	-rm -f *.o *.exe log*.txt *.a *.so *.lha 2>/dev/null

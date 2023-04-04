@@ -4,4 +4,5 @@
 *.so
 *.a
 *.lha
+clean_stamp
 build/

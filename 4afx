@@ -2,10 +2,11 @@
 
 set -o pipefail
 
-BASE_DIR="$(pwd)/build"
 ORIG_DIR="$(pwd)"
-# Exported because this variable is used by the testing framework
+# Used in the Makefile testing framework
+export BASE_DIR="$(pwd)/build"
 export CROSS_PREFIX="${BASE_DIR}"/4afx/4afx_build
+export SCRIPT_INVOCATION=1 # tell the Makefiles that they were executed from the script
 
 function _error
 {
@@ -38,8 +39,10 @@ function BUILD
     fi
     if [[ -z ${CORES} ]] ; then CORES=1 ; fi
 
-    EXP_CLIB2=1  make -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "${BASE_DIR}"/4afx/4afx.log \
+    EXP_CLIB2=1  make -O -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "${BASE_DIR}"/4afx/4afx.log \
 	|| _error "The compilation failed. See the log file: \"${BASE_DIR}\"/4afx/4afx.log" 40
+
+    touch "${BASE_DIR}"
 }
 
 ###
@@ -86,7 +89,7 @@ export RANLIB=
 
 if (( $# >= 1 ))
 then
-    if [[ "${1}" != "rebuild" ]]
+    if [[ "${1}" != "build" ]]
     then
 	_info "All other arguments will be passed to tests/Makefile"
     fi
@@ -115,10 +118,10 @@ then
 
    BUILD
 else
-    if [[ "${1}" == "rebuild" ]]
+    if [[ "${1}" == "build" ]]
     then
 	cd "${BASE_DIR}/4afx/4afx_adtools" || \
-	    _error "Requested a rebuild but there is no directory named \"${BASE_DIR}\". Rerun with out the \"rebuild\" argument" 20
+	    _error "Requested a build but there is no directory named \"${BASE_DIR}\". Rerun with out the \"build\" argument" 20
 	BUILD
     else
 	_warn "\"${BASE_DIR}\" already exists, assuming that you just want to re-run the tests"
@@ -135,15 +138,7 @@ which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC
 
 _info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
 
-( cd tests && make clean )
-for c_lib in newlib clib2
-do
-    export C_LIB=${c_lib}
-    cd tests
-    make NO_DYN=1 "$@" all
-    make all "$@" all
-    cd ..
-done
+make -C tests all "$@"
 
 _info "The following test artifacts can be transferred to the AmigaOne. "\
 "Dynamic tests should include the necessary Shared Objects inside the LHA "\
@@ -151,7 +146,7 @@ _info "The following test artifacts can be transferred to the AmigaOne. "\
 "preference then the current environment of the AmigaOne should have no "\
 "effect."
 
-find tests/ -name "*.lha"
+find tests/ -name "*.lha" | sort
 
 exit 0
 
