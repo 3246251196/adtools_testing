@@ -1,7 +1,7 @@
 include ../common.mak
 
-CXXFLAGS+=-Wall -Werror -pedantic -std=c++11
-LDFLAGS+=-athread=native
+CXXFLAGS+=-ffunction-sections -fdata-sections -std=c++11
+LDFLAGS+=-std=c++11 -athread=native -Wl,-Map=$@.map,--cref -Wl,--gc-sections -Wl,--verbose
 
 $(PROG): main$(FILE_INFIX).o
 	$(call LOG_INF,Link,$@)
