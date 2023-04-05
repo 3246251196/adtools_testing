@@ -44,7 +44,7 @@ all: clean_stamp
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "4afx" script)
 endif
-	for C_LIB in "newlib" "clib" ;                                   \
+	for C_LIB in "newlib" "clib2" ;                                  \
 	do                                                               \
 		for DYN in "-use-dynld" "" ;                             \
 		do                                                       \
