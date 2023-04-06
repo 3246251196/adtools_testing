@@ -105,6 +105,7 @@ export AR=
 export AS=
 export LD=
 export RANLIB=
+export READELF=
 
 ###
 # End Step 0.1

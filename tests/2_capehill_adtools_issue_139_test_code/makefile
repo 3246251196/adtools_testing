@@ -1,34 +1,29 @@
 include ../common.mak
 
 RELO:=lib.o
-ifeq ($(NO_DYN),)
+ifneq ($(DYN),)
 LIB:=libf.so
 else
 LIB:=libf.a
 endif
 
-CFLAGS+=-Wall -Werror -pedantic -std=c11
-LDFLAGS+=-L. -lf
+CFLAGS+=-Wall -Werror -pedantic -std=c11 -fPIC
+LDFLAGS+=-L. -lf -athread=native
 
 $(PROG): main.c $(LIB)
-	$(call LOG_INF,Link,$@)
-	$(call LOG_RUN,$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS))
-	$(call LOG_INF,Readelf,$@)
-	$(call LOG_RUN,ppc-amigaos-readelf -d $(PROG))
+	$(call LOG_RUN,Link,$(CC) -o $@ $^ $(LDFLAGS))
+	$(call LOG_RUN,Readelf,$(READELF) -d $(PROG))
 
 $(LIB): $(RELO)
-ifeq ($(NO_DYN),)
-	$(call LOG_INF,Creating Shared Object,$@)
-	$(call LOG_RUN,$(CC) $(CFLAGS) -o libf.so lib.o -shared)
+ifneq ($(NO_DYN),)
+	$(call LOG_RUN,Creating Shared Object,$(CC) $(CFLAGS) -o libf.so lib.o -shared)
 else
-	$(call LOG_INF,Creating Static Library,$@)
-	$(call LOG_RUN,$(AR) cruv  libf.a lib.o)
-	$(call LOG_RUN,$(RANLIB) libf.a)
+	$(call LOG_RUN,Creating Static Library,$(AR) cruv $(LIB) $(RELO))
+	$(call LOG_RUN,ranlib,$(RANLIB) $(LIB))
 endif
 
 $(RELO): lib.c
-	$(call LOG_INF,Compile,$@)
-	$(call LOG_RUN,$(CC) $(CFLAGS) -o lib.o -c lib.c -fPIC)
+	$(call LOG_RUN,Compile,$(CC) $(CFLAGS) -o $(RELO) -c $<)
 
 #@ ctor
 #@ ctor2

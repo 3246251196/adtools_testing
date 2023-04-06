@@ -15,10 +15,10 @@ INSPECT_STDOUT=inspect_$(FILE_INFIX).stdout
 INSPECT_STDERR=inspect_$(FILE_INFIX).stderr
 INSPECT_EXE_FILE=inspect_$(FILE_INFIX)_$(INSPECT_EXE)
 
-LOG_INF = @echo "\#\#\#\#\#" >> $(LOG_FILE);               \
-		echo "$(1) phase for $(2)" >> $(LOG_FILE); \
-		echo "\#\#\#\#\#" >> $(LOG_FILE)
-LOG_RUN = @$(1) 1> $(LOG_FILE) 2>&1
+LOG_RUN = echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ; \
+	echo  "$(1) phase for $@" >> $(LOG_FILE);                          \
+	echo  "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;  \
+	$(2) 1>> $(LOG_FILE) 2>&1
 
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:
@@ -39,17 +39,17 @@ endif
 all: $(LHA_FILE)
 
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
-ifeq ($(NO_DYN),)
-	@ARR_SO=($$(ppc-amigaos-readelf -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ;    \
-	for SO in $${ARR_SO[@]} ;                                                                  \
-	do                                                                                         \
-		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}" | grep $(GREP_OPT)) ;                  \
-		if [[ -z "$${LOC}" ]] ;                                                            \
-		then                                                                               \
-			LOC=$$(find . -name "$${SO}") ;                                            \
-		fi ;                                                                               \
-		test -f "$${LOC}" && cp "$${LOC}" . ; lha a $(LHA_FILE) "$$(basename "$${LOC}")"   \
-							1>/dev/null 2>&1 ;                         \
+ifneq ($(DYN),)
+	ARR_SO=($$($(READELF) -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
+	for SO in $${ARR_SO[@]} ;                                                      \
+	do                                                                             \
+		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}" | grep $(GREP_OPT)) ;      \
+		if [[ -z "$${LOC}" ]] ;                                                \
+		then                                                                   \
+			LOC=$$(find . -name "$${SO}") ;                                \
+		fi ;                                                                   \
+		test -f "$${LOC}" && cp "$${LOC}" . ;                                  \
+		lha a $(LHA_FILE) "$$(basename "$${LOC}")" 1>/dev/null 2>&1 ;          \
 	done
 endif
 	@cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.

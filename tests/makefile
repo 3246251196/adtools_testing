@@ -18,6 +18,7 @@ EXPORT=INFIX="$${C_LIB}" ;                             \
 	CC=ppc-amigaos-gcc ;                           \
 	AR=ppc-amigaos-ar ;                            \
 	RANLIB=ppc-amigaos-ranlib ;                    \
+	READELF=ppc-amigaos-readelf ;                  \
 	CFLAGS="${CLFLAGS} -mcrt=$${C_LIB}" ;          \
 	CXXFLAGS="${CXXFLAGS} -mcrt=$${C_LIB}" ;       \
 	LDFLAGS="${LDFLAGS} -mcrt=$${C_LIB} $${DYN}" ;
@@ -28,7 +29,7 @@ ifeq ($(NO_VERBOSE),)
 		LDFLAGS+="${LDFLAGS} -Wl,--verbose";
 endif
 	EXPORT+=export \
-		C_LIB DYN INFIX CXX CC AR RANLIB CFLAGS CXXFLAGS LDFLAGS
+		C_LIB DYN INFIX CXX CC AR RANLIB READELF CFLAGS CXXFLAGS LDFLAGS
 #######
 # ENDER EXPORT STRING
 #######
