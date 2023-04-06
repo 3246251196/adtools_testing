@@ -1,6 +1,7 @@
 ifeq ($(SCRIPT_INVOCATION),)
 $(error This makefile should only be invoked by the "4afx" script)
 endif
+
 SHELL=/bin/bash
 CWD=$(shell basename $$(pwd))
 FILE_INFIX=test_$(CWD)_$(INFIX)
@@ -8,15 +9,16 @@ FILE_INFIX=test_$(CWD)_$(INFIX)
 PROG=main_$(FILE_INFIX).exe
 LOG_FILE=log_$(FILE_INFIX).txt
 LHA_FILE=lha_$(FILE_INFIX).lha
+RUN_TEST_SCRIPT=run_$(FILE_INFIX).script
+INSPECT_EXPECTED=inspect_$(FILE_INFIX).expected
+INSPECT_STDOUT=inspect_$(FILE_INFIX).stdout
+INSPECT_STDERR=inspect_$(FILE_INFIX).stderr
+INSPECT_EXE_FILE=inspect_$(FILE_INFIX)_$(INSPECT_EXE)
 
-LOG_INF =                                          \
-	echo "\#\#\#\#\#" >> $(LOG_FILE);          \
-	echo "$(1) phase for $(2)" >> $(LOG_FILE); \
-	echo "\#\#\#\#\#" >> $(LOG_FILE)
-
-LOG_RUN = $(1) 2>&1 | tee -a $(LOG_FILE)
-
-LOG_EXT = echo "NOTE: "$(1) >> $(LOG_FILE)
+LOG_INF = @echo "\#\#\#\#\#" >> $(LOG_FILE);               \
+		echo "$(1) phase for $(2)" >> $(LOG_FILE); \
+		echo "\#\#\#\#\#" >> $(LOG_FILE)
+LOG_RUN = @$(1) 1> $(LOG_FILE) 2>&1
 
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:
@@ -36,21 +38,36 @@ endif
 .PHONY: clean all
 all: $(LHA_FILE)
 
-$(LHA_FILE): $(PROG)
+$(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
 ifeq ($(NO_DYN),)
-	ARR_SO=($$(ppc-amigaos-readelf -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
-	for SO in $${ARR_SO[@]} ;                                                  \
-	do                                                                         \
-		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}" | grep $(GREP_OPT)) ;  \
-		if [[ -z "$${LOC}" ]] ;                                            \
-		then                                                               \
-			LOC=$$(find . -name "$${SO}") ;                            \
-		fi ;                                                               \
-		test -f "$${LOC}" && cp "$${LOC}" . ; lha a $(LHA_FILE) "$$(basename "$${LOC}")" ; \
+	@ARR_SO=($$(ppc-amigaos-readelf -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ;    \
+	for SO in $${ARR_SO[@]} ;                                                                  \
+	do                                                                                         \
+		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}" | grep $(GREP_OPT)) ;                  \
+		if [[ -z "$${LOC}" ]] ;                                                            \
+		then                                                                               \
+			LOC=$$(find . -name "$${SO}") ;                                            \
+		fi ;                                                                               \
+		test -f "$${LOC}" && cp "$${LOC}" . ; lha a $(LHA_FILE) "$$(basename "$${LOC}")"   \
+							1>/dev/null 2>&1 ;                         \
 	done
 endif
-	# also add any map files in case they were generated
-	-lha a $(LHA_FILE) $(PROG) $(LOG_FILE) *.map 2>/dev/null
+	@cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
+	@lha a $(LHA_FILE) $(PROG) $(LOG_FILE) $(RUN_TEST_SCRIPT) $(INSPECT_EXPECTED) \
+		$(INSPECT_EXE_FILE) *.map 1>/dev/null 2>&1
+	@rm  $(INSPECT_EXE_FILE) # Doing this avoids getting warnings when extracting the LHAs on amiga
+
+$(RUN_TEST_SCRIPT):
+	@echo "$(PROG) > $(INSPECT_STDOUT) *> $(INSPECT_STDERR)" > $(RUN_TEST_SCRIPT) ;                           \
+	echo  "IF NOT \`GET RC\` EQ 0" >> $(RUN_TEST_SCRIPT) ;                                                    \
+	echo  "  ECHO \"$(PROG): Failed: Expected RETURN CODE 0\"" >> $(RUN_TEST_SCRIPT) ;                        \
+	echo  "ELSE" >> $(RUN_TEST_SCRIPT) ;                                                                      \
+	echo  "  $(INSPECT_EXE_FILE) $(INSPECT_STDOUT) $(INSPECT_EXPECTED)" >> $(RUN_TEST_SCRIPT) ;               \
+	echo  "  IF NOT \`GET RC\` EQ 0" >> $(RUN_TEST_SCRIPT) ;                                                  \
+	echo  "    ECHO \"$(PROG): Failed: Expected output did not match actual output\"" >> $(RUN_TEST_SCRIPT) ; \
+	echo  "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                   \
+	echo  "ENDIF" >> $(RUN_TEST_SCRIPT)
+	@sed -n 's/^#@ \(.*\)/\1/p' $(firstword $(MAKEFILE_LIST)) > $(INSPECT_EXPECTED)
 
 clean:
-	-rm -f *.o *.exe log*.txt *.a *.so *.lha *.map 2>/dev/null
+	@-rm -f *.o *.exe log*.txt *.a *.so *.lha *.map *.script *.expected 1>/dev/null 2>&1

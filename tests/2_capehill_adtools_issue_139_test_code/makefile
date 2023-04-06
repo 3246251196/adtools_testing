@@ -15,21 +15,6 @@ $(PROG): main.c $(LIB)
 	$(call LOG_RUN,$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS))
 	$(call LOG_INF,Readelf,$@)
 	$(call LOG_RUN,ppc-amigaos-readelf -d $(PROG))
-	$(call LOG_EXT,"####################")
-	$(call LOG_EXT,"####################")
-	$(call LOG_EXT,"####################")
-	$(call LOG_EXT,"Expected output when invoking: $(PROG)")
-	$(call LOG_EXT,"--------------------")
-	$(call LOG_EXT,"ctor")
-	$(call LOG_EXT,"ctor2")
-	$(call LOG_EXT,"function 123")
-	$(call LOG_EXT,"main result 123")
-	$(call LOG_EXT,"dtor2")
-	$(call LOG_EXT,"dtor")
-	$(call LOG_EXT,"--------------------")
-	$(call LOG_EXT,"####################")
-	$(call LOG_EXT,"####################")
-	$(call LOG_EXT,"####################")
 
 $(LIB): $(RELO)
 ifeq ($(NO_DYN),)
@@ -44,3 +29,10 @@ endif
 $(RELO): lib.c
 	$(call LOG_INF,Compile,$@)
 	$(call LOG_RUN,$(CC) $(CFLAGS) -o lib.o -c lib.c -fPIC)
+
+#@ ctor
+#@ ctor2
+#@ function 123
+#@ main result 123
+#@ dtor2
+#@ dtor

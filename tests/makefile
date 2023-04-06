@@ -1,5 +1,6 @@
 SHELL=/bin/bash
-
+INSPECT_EXE=inspect.exe
+export INSPECT_EXE
 # Nothing more than a long string of a bash export command that is used when
 # invoking a specific test
 # 
@@ -33,18 +34,19 @@ endif
 #######
 
 do_clean=                                     \
-	for TEST in $(tests) ;                \
+	@for TEST in $(tests) ;               \
 	do                                    \
 		$(MAKE) -C "$${TEST}" clean ; \
-	done
+	done ;                                \
+	rm -f $(INSPECT_EXE)
 
 tests=$(shell ls -d */)
 .PHONY: all clean
-all: clean_stamp
+all: $(INSPECT_EXE) clean_stamp
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "4afx" script)
 endif
-	for C_LIB in "newlib" "clib2" ;                                  \
+	@for C_LIB in "newlib" "clib2" ;                                 \
 	do                                                               \
 		for DYN in "-use-dynld" "" ;                             \
 		do                                                       \
@@ -60,7 +62,12 @@ endif
 
 clean_stamp: $(BASE_DIR)
 	$(do_clean)
-	touch $@
+	@touch $@
 
 clean:
 	$(do_clean)
+
+# TODO: Use a tool that is available to AmigaOS4 base package to compare lines. ARREX?
+#       Not everyone has the SDK installed, so DIFF is not always available!
+$(INSPECT_EXE): inspect.c
+	@ppc-amigaos-gcc -mcrt=newlib -o $@ $< -Wall -Werror -pedantic -std=c11

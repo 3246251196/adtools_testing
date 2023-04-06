@@ -9,27 +9,18 @@ export SCRIPT_INVOCATION=1 # tell the Makefiles that they were executed from the
 
 function _error
 {
-    echo ""
-    echo "#####"
-    echo "ERROR: ${1}" 1>&2
-    echo "#####"
+    echo "### ERROR: ${1}" 1>&2
     exit "${2}"
 }
 
 function _warn
 {
-    echo ""
-    echo "#####"
-    echo "WARN: ${1}" 1>&2
-    echo "#####"
+    echo "### WARN: ${1}" 1>&2
 }
 
 function _info
 {
-    echo ""
-    echo "#####"
-    echo "INFO: ${1}"
-    echo "#####"
+    echo "### INFO: ${1}"
 }
 
 # No getopts for now!
@@ -56,7 +47,7 @@ then
 	exit 0
     elif [[ "${1}" == "test_clean" ]]
     then
-	make -C tests clean
+	make -s -C tests clean
 	exit 0
     fi
 fi
@@ -167,22 +158,11 @@ export PATH="${BASE_DIR}"/4afx/4afx_build/bin:"${PATH}"
 # Arbitrary check
 which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC compiler on the path" 30
 
-_info "Running tests in $(pwd)/tests. See log (log*.txt) files for details"
+_info "Building tests"
 
-make -C tests all "$@" || \
-    _warn "A failure occurred during the building of the tests but artifacts were still created where possible"
+make -s -C tests all "$@"
 
-for test_dir in $(ls -d tests/*/)
-do
-    name=$(basename "${test_dir}")
-    ls "${test_dir}"/*.lha 1>/dev/null 2>&1 || _warn "No LHA artifact was found for test: \"${name}\""
-done
-
-_info "The following test artifacts can be transferred to the AmigaOne. "\
-"Dynamic tests should include the necessary Shared Objects inside the LHA "\
-"file and since ELF.LIBRARY will search in the directory of the program in "\
-"preference then the current environment of the AmigaOne should have no "\
-"effect"
+_info "Existing artifacts:"
 
 find tests/ -name "*.lha" | sort
 
