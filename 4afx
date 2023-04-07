@@ -6,6 +6,10 @@ ORIG_DIR="$(pwd)"
 export BASE_DIR="$(pwd)/build"
 export CROSS_PREFIX="${BASE_DIR}"/4afx/4afx_build
 export SCRIPT_INVOCATION=1 # tell the Makefiles that they were executed from the script
+export PATH="${BASE_DIR}"/4afx/4afx_build/bin:"${PATH}"
+export FINAL_LHA=4afx_tests.lha
+export RUN_ALL_SCRIPT=run_all.script # script to run all of the test
+export EXECUTE_SCRIPT=user.script # script used by each test
 
 function _error
 {
@@ -54,6 +58,37 @@ fi
 
 function BUILD
 {
+    # Clear any of these variables in the unlikely event they are set. If not, then
+    # they are picked up during the building ADTOOLS and they may not point to the
+    # native gcc that we just tested for before.
+    export CC=
+    export CFLAGS=
+    export CXX=
+    export CXXFLAGS=
+    export CPPFLAGS=
+    export AR=
+    export AS=
+    export LD=
+    export RANLIB=
+    export READELF=
+
+    native_gcc_error=0
+    which gcc 1>/dev/null 2>&1
+    if (( !${?} ))
+    then
+	if [[ $(gcc -dumpmachine) != "x86_64-linux-gnu" ]]
+	then
+	    native_gcc_error=1
+	fi
+    else
+	native_gcc_error=1
+    fi
+
+    if (( native_gcc_error ))
+    then
+	_error "Expected native linux x86-64 gcc compiler to be accessible" 11
+    fi
+
     if [[ -z ${CORES} ]]
     then
 	CORES=$(nproc)
@@ -72,47 +107,8 @@ function BUILD
 }
 
 ###
-# Step 0: clone ADTOOLS for use with afxgroup CLIB2, build for 11.3 GCC and 2.23.2 binutils
-###
-which ppc-amigaos-gcc  && _error "Remove existing ADTOOLS from your current path" 10 ;
-###
-# Step 0.1: ensure that GCC at least exists on the machine running this script
-#           and check the environment
-###
-native_gcc_error=0
-which gcc 1>/dev/null 2>&1
-if (( !${?} ))
-then
-    if [[ $(gcc -dumpmachine) != "x86_64-linux-gnu" ]]
-    then
-	native_gcc_error=1
-    fi
-else
-    native_gcc_error=1
-fi
-   
-if (( native_gcc_error ))
-then
-    _error "Expected native linux x86-64 gcc compiler to be accessible" 11
-fi
-
-# Clear any of these variables in the unlikely event they are set. If not, then
-# they are picked up during the building ADTOOLS and they may not point to the
-# native gcc that we just tested for before.
-export CC=
-export CFLAGS=
-export CXX=
-export CXXFLAGS=
-export CPPFLAGS=
-export AR=
-export AS=
-export LD=
-export RANLIB=
-export READELF=
-
-###
-# End Step 0.1
-###
+# BUILD ADTOOLS
+##
 
 if (( $# >= 1 ))
 then
@@ -141,6 +137,10 @@ then
    sed -i 's|SHARED=no|SHARED=yes|' native-build/makefile
 
    BUILD
+   if [[  "${1}" == "build" ]]
+   then
+       exit 0
+   fi
 else
     if [[ "${1}" == "build" ]]
     then
@@ -154,11 +154,11 @@ else
     fi
 fi
 
+###
+# RUN TESTS
+###
 cd "$ORIG_DIR"
-###
-# Step 1: Run some test programs
-###
-export PATH="${BASE_DIR}"/4afx/4afx_build/bin:"${PATH}"
+
 # Arbitrary check
 which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC compiler on the path" 30
 
@@ -169,8 +169,6 @@ _info "Artifacts:"
 find tests/ -name "*.lha" | sort
 
 _info "Creating the final LHA artifact which may take up to a minute"
-find tests/ -name "*.lha" -exec lha u -q 4afx_tests.lha {} \;
-lha u -q 4afx_tests.lha run_all.script tests/user.script 
 
 _info "\"4afx_tests.lha\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
 _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""

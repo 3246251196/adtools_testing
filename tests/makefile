@@ -1,6 +1,8 @@
 SHELL=/bin/bash
 INSPECT_EXE=inspect.exe
+LHA_ADD=lha u -q 1>/dev/null 2>&1
 export INSPECT_EXE
+export LHA_ADD
 # Nothing more than a long string of a bash export command that is used when
 # invoking a specific test
 # 
@@ -24,9 +26,9 @@ EXPORT=INFIX="$${C_LIB}" ;                             \
 	LDFLAGS="${LDFLAGS} -mcrt=$${C_LIB} $${DYN}" ;
 ifeq ($(NO_VERBOSE),)
 	EXPORT+=                                       \
-		CXXFLAGS="${CXXFLAGS} -v" ;            \
-		CFLAGS="${CFLAGS} -v" ;                \
-		LDFLAGS="${LDFLAGS} -Wl,--verbose";
+		CXXFLAGS+="${CXXFLAGS} -v" ;           \
+		CFLAGS+="${CFLAGS} -v" ;               \
+		LDFLAGS+="${LDFLAGS} -Wl,--verbose" ;
 endif
 	EXPORT+=export \
 		C_LIB DYN INFIX CXX CC AR RANLIB READELF CFLAGS CXXFLAGS LDFLAGS
@@ -42,7 +44,9 @@ do_clean=                                     \
 
 tests=$(shell ls -d */)
 .PHONY: all clean
-all: $(INSPECT_EXE) clean_stamp
+all: $(FINAL_LHA)
+
+$(FINAL_LHA): $(INSPECT_EXE) clean_stamp
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "4afx" script)
 endif
@@ -59,6 +63,7 @@ endif
 		done ;                                      \
 	done ;                                              \
 	for p in $${pids[@]} ; do wait $$p ; done
+	$(LHA_ADD) $(FINAL_LHA) */*.lha $(RUN_ALL_SCRIPT) $(EXECUTE_SCRIPT)
 
 clean_stamp: $(BASE_DIR)
 	$(do_clean)

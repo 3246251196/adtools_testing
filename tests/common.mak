@@ -15,7 +15,6 @@ INSPECT_STDOUT=inspect_$(FILE_INFIX).stdout
 INSPECT_STDERR=inspect_$(FILE_INFIX).stderr
 INSPECT_EXE_FILE=inspect_$(FILE_INFIX)_$(INSPECT_EXE)
 TEMP_DIR=temp_$(FILE_INFIX).tmp # We need this for parallel jobs otherwise the located libraries may become corrupt
-LHA_ADD=lha u -q 1>/dev/null 2>&1
 
 LOG_RUN = echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;            \
 	echo  "TARGET                         : $@" >> $(LOG_FILE) ;                  \
@@ -65,7 +64,6 @@ endif
 	$(LHA_ADD) $(LHA_FILE) $(PROG) $(LOG_FILE) $(RUN_TEST_SCRIPT) $(INSPECT_EXPECTED) \
 		$(INSPECT_EXE_FILE) *.map
 	rm -f $(INSPECT_EXE_FILE) # Doing this avoids getting warnings when extracting the LHAs on amiga since the file names are the same
-	rm -f log*.txt
 	rm -rf $(TEMP_DIR)
 
 $(RUN_TEST_SCRIPT):
