@@ -65,10 +65,10 @@ int main(int argc, char *argv[])
 	char_map[(int)expected_contents[i]]--;
 	if(actual_contents[i]!=expected_contents[i])
 	  {
-	    /* We have a mismatch. The contents may still be the same
-	       though.  This can happen when threading occurs. We use
-	       a different return code for this.
-	       We are now AT LEAST a WARN */
+	    /* We have a mismatch. The contents may still be the same, though,
+	       in a different order.  This can happen when threading occurs. We
+	       use a different return code for this.  We are now AT LEAST a
+	       WARN */
 	    res=WARN;
 	  }
       }
