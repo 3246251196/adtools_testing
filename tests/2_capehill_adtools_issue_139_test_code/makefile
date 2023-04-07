@@ -1,14 +1,25 @@
 include ../common.mak
 
-RELO:=lib.o
+# Notice that FILE_INFIX is used to create separate files depending on the c
+# library / link type contexts. This is important because to get quick build
+# times all the tests are build in parallel. Since each test has 4 dimenions
+# (2*c library * 2*link type) then the same build could be using changing files
+#
+# This is only an issue for any files that the specific test produces everything
+# else is handled by the test framework.
+#
+# In summary, any relocatables or libraries (.o, .so, .a) should use the
+# FILE_INFIX variable in their names
+LIB_NAME=f_$(FILE_INFIX)
+RELO=$(LIB_NAME).o
 ifneq ($(DYN),)
-LIB:=libf.so
+LIB=lib$(LIB_NAME).so
 else
-LIB:=libf.a
+LIB=lib$(LIB_NAME).a
 endif
 
 CFLAGS+=-Wall -Werror -pedantic -std=c11 -fPIC
-LDFLAGS+=-L. -lf -athread=native
+LDFLAGS+=-L. -l$(LIB_NAME) -athread=native
 
 $(PROG): main.c $(LIB)
 	$(call LOG_RUN,Link,$(CC) -o $@ $< $(LDFLAGS))
@@ -16,7 +27,7 @@ $(PROG): main.c $(LIB)
 
 $(LIB): $(RELO)
 ifneq ($(DYN),)
-	$(call LOG_RUN,Creating Shared Object,$(CC) $(CFLAGS) -o libf.so lib.o -shared)
+	$(call LOG_RUN,Creating Shared Object,$(CC) $(CFLAGS) -o $(LIB) $(RELO) -shared)
 else
 	$(call LOG_RUN,Creating Static Library,$(AR) cruv $(LIB) $(RELO))
 	$(call LOG_RUN,ranlib,$(RANLIB) $(LIB))

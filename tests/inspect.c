@@ -1,17 +1,13 @@
 /* rjd */
 /* Inspection test for 4afx */
-/* Two files are provided as input and their contents must be identical*/
-/* This includes case */
-/* We use asserts because we ASSERT this program should only be used as a tool for 4afx */
-/*
-As mentioned in the rule for creating this binary:
-# TODO: Use a tool that is available to AmigaOS4 base package to actual lines. ARREX?
-#       Not everyone has the SDK installed, so DIFF is not always available!
-*/
+/* Two files are provided as input and their contents must be identical */
+/* TODO: Do not use this. Find a program available to AmigaOS4 to add into
+         the script. The SDK comes with diff, but not everyone may have the
+         SDK installed. Consider an AREXX script? */
 #include <stdio.h>
 #include <stdlib.h>
 #define ERR 20
-#define FAIL 5
+#define FAIL 10
 #define SUCC 0
 int main(int argc, char *argv[])
 {
@@ -58,7 +54,6 @@ int main(int argc, char *argv[])
       }
     for(;i<actual_size;i++)
       {
-	    printf("comparing: %c with %c\n",actual_contents[i],expected_contents[i]);
 	if(actual_contents[i]!=expected_contents[i])
 	  {
 	    res = FAIL; goto ENDER;

@@ -163,8 +163,6 @@ _info "Building tests"
 
 make -s -C tests all "$@"
 
-_info "Existing artifacts:"
+_info "Artifacts:"
 
 find tests/ -name "*.lha" | sort
-
-exit 0
