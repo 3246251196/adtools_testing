@@ -36,17 +36,10 @@ endif
 # ENDER EXPORT STRING
 #######
 
-do_clean=                                     \
-	for TEST in $(tests) ;                \
-	do                                    \
-		$(MAKE) -C "$${TEST}" clean ; \
-	done ;                                \
-
 tests=$(shell ls -d */)
 .PHONY: all clean
-all: $(FINAL_LHA)
 
-$(FINAL_LHA): $(INSPECT_EXE) clean_stamp
+all: $(INSPECT_EXE) clean_stamp
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "4afx" script)
 endif
@@ -63,7 +56,7 @@ endif
 		done ;                                      \
 	done ;                                              \
 	for p in $${pids[@]} ; do wait $$p ; done
-	$(LHA_ADD) $(FINAL_LHA) */*.lha $(RUN_ALL_SCRIPT) $(EXECUTE_SCRIPT)
+	$(LHA_ADD) ../$(FINAL_LHA) */*.lha $(RUN_ALL_SCRIPT) $(EXECUTE_SCRIPT)
 
 clean_stamp: $(BASE_DIR)
 	$(do_clean)
@@ -72,7 +65,12 @@ clean_stamp: $(BASE_DIR)
 clean:
 	$(do_clean)
 
-# TODO: Use a tool that is available to AmigaOS4 base package to compare lines. ARREX?
-#       Not everyone has the SDK installed, so DIFF is not always available!
 $(INSPECT_EXE): inspect.c
 	ppc-amigaos-gcc -mcrt=newlib -o $@ $< -Wall -Werror -pedantic -std=c11
+
+do_clean=                                     \
+	for TEST in $(tests) ;                \
+	do                                    \
+		$(MAKE) -C "$${TEST}" clean ; \
+	done ;                                \
+

@@ -1,9 +1,11 @@
 /* rjd */
 /* Inspection test for 4afx */
-/* Two files are provided as input and their contents must be identical */
-/* TODO: Do not use this. Find a program available to AmigaOS4 to add into
-         the script. The SDK comes with diff, but not everyone may have the
-         SDK installed. Consider an AREXX script? */
+/* Two files are compared; STDOUT from the program and the expected file defined
+   in the makefile. If the expected file is empty, the result is a PASS since
+   this implies to inspection test was requested. If the size of the two files
+   are different the result is FAIL. If the size is the same and the content and
+   its order are the same the result is PASS. If the size is the same and the
+   content is the same but in the wrong order, the results is WARN. */
 #include <stdio.h>
 #include <stdlib.h>
 #define ERR 20
