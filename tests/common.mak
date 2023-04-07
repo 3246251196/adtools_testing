@@ -69,25 +69,24 @@ endif
 	rm -rf $(TEMP_DIR)
 
 $(RUN_TEST_SCRIPT):
-	echo "FAILAT 21" >> $(RUN_TEST_SCRIPT) ;                                                                 \
-	echo "$(PROG) > $(INSPECT_STDOUT) *> $(INSPECT_STDERR)" > $(RUN_TEST_SCRIPT) ;                           \
-	echo "IF NOT \`GET RC\` EQ 0" >> $(RUN_TEST_SCRIPT) ;                                                    \
+	echo "FAILAT 21" > $(RUN_TEST_SCRIPT) ;                                                                  \
+	echo "$(PROG) > $(INSPECT_STDOUT) *> $(INSPECT_STDERR)" >> $(RUN_TEST_SCRIPT) ;                          \
+	echo "IF NOT \$${RC} EQ 0" >> $(RUN_TEST_SCRIPT) ;                                                       \
 	echo "  ECHO \"$(PROG): Failed: Expected RETURN CODE 0\"" >> $(RUN_TEST_SCRIPT) ;                        \
 	echo "ELSE" >> $(RUN_TEST_SCRIPT) ;                                                                      \
 	echo "  $(INSPECT_EXE_FILE) $(INSPECT_STDOUT) $(INSPECT_EXPECTED)" >> $(RUN_TEST_SCRIPT) ;               \
-	echo "  SET RET=${RC}\"" >> $(RUN_TEST_SCRIPT) ;                                                         \
-	echo "  IF ${RET} EQ 0" >> $(RUN_TEST_SCRIPT) ;                                                          \
+	echo "  SET RET=\$${RC}" >> $(RUN_TEST_SCRIPT) ;                                                         \
+	echo "  IF \$${RET} EQ 0" >> $(RUN_TEST_SCRIPT) ;                                                        \
 	echo "    ECHO \"$(PROG): Passed: \"" >> $(RUN_TEST_SCRIPT) ;                                            \
 	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                   \
-	echo "  IF ${RET} EQ 5" >> $(RUN_TEST_SCRIPT) ;                                                          \
+	echo "  IF \$${RET} EQ 5" >> $(RUN_TEST_SCRIPT) ;                                                        \
 	echo "    ECHO \"$(PROG): Partial: Same size, contents, but different order. Manual inspection.\""       \
 			>> $(RUN_TEST_SCRIPT) ;                                                                  \
 	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                   \
-	echo "  IF ${RET} EQ 10" >> $(RUN_TEST_SCRIPT) ;                                                         \
+	echo "  IF \$${RET} EQ 10" >> $(RUN_TEST_SCRIPT) ;                                                       \
 	echo "    ECHO \"$(PROG): Failed: Expected output did not match actual output\"" >> $(RUN_TEST_SCRIPT) ; \
-	echo "    ECHO \"See $(INSPECT_STDOUT) and $(INSPECT_EXPECTED)\"" >> $(RUN_TEST_SCRIPT) ;                \
 	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                   \
-	echo "  IF ${RET} EQ 20" >> $(RUN_TEST_SCRIPT) ;                                                         \
+	echo "  IF \$${RET} EQ 20" >> $(RUN_TEST_SCRIPT) ;                                                       \
 	echo "    ECHO \"$(PROG): Error: $(INSPECT_EXE_FILE) returned unexpectedly\"" >> $(RUN_TEST_SCRIPT) ;    \
 	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                   \
 	echo "ENDIF" >> $(RUN_TEST_SCRIPT)
