@@ -60,8 +60,11 @@ function BUILD
     fi
     if [[ -z ${CORES} ]] ; then CORES=1 ; fi
 
-    EXP_CLIB2=1  make -O -j${CORES} -C native-build/ gcc-cross  2>&1 | tee "${BASE_DIR}"/4afx/4afx.log \
-	|| _error "The compilation failed. See the log file: \"${BASE_DIR}\"/4afx/4afx.log" 40
+    BUILD_CMD="CROSS_PREFIX=${CROSS_PREFIX} EXP_CLIB2=1  make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${BASE_DIR}/4afx/4afx.log\""
+    echo "####################" > ${BASE_DIR}/4afx/4afx.log
+    echo "RUNNING COMMAND: ${BUILD_CMD}" >> ${BASE_DIR}/4afx/4afx.log
+    echo "####################" >> ${BASE_DIR}/4afx/4afx.log
+    eval "${BUILD_CMD} || _error \"The ADTOOLS build failed. See the log file: \"${BASE_DIR}\"/4afx/4afx.log\" 40"
 
     # Update the timestamp so that the test framework knows whether it should rebuild the tests.
     # Of course, this dir will be touched even if there was nothing to update in ADTOOLS.
@@ -165,7 +168,7 @@ make -s -C tests all "$@"
 _info "Artifacts:"
 find tests/ -name "*.lha" | sort
 
-_info "Creating the final LHA artifact which may take upto a minute"
+_info "Creating the final LHA artifact which may take up to a minute"
 find tests/ -name "*.lha" -exec lha u -q 4afx_tests.lha {} \;
 lha u -q 4afx_tests.lha run_all.script tests/user.script 
 

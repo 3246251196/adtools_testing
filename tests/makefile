@@ -26,7 +26,7 @@ ifeq ($(NO_VERBOSE),)
 	EXPORT+=                                       \
 		CXXFLAGS="${CXXFLAGS} -v" ;            \
 		CFLAGS="${CFLAGS} -v" ;                \
-		LDFLAGS+="${LDFLAGS} -Wl,--verbose";
+		LDFLAGS="${LDFLAGS} -Wl,--verbose";
 endif
 	EXPORT+=export \
 		C_LIB DYN INFIX CXX CC AR RANLIB READELF CFLAGS CXXFLAGS LDFLAGS
@@ -39,7 +39,6 @@ do_clean=                                     \
 	do                                    \
 		$(MAKE) -C "$${TEST}" clean ; \
 	done ;                                \
-	rm -f $(INSPECT_EXE)
 
 tests=$(shell ls -d */)
 .PHONY: all clean
