@@ -28,24 +28,24 @@ if (( $# > 0 ))
 then
     if [[ "${1}" == -h || "${1}" == --help ]]
     then
-	echo "Usage: ${0} [build|delete|test_clean]"
-	echo "       build:      Invokes MAKE in ADTOOLS. Expects \"${BASE_DIR}\" to exist already. Quits"
-	echo "       delete:     Removes \"${BASE_DIR}\". Quits"                                       
-	echo "       test_clean: Cleans all the tests. Quits"                                          
-	echo "       *:          All other options are assumed to be arguments that will be passed to "
-	echo "                   the parent test makefile"
-	echo "---------------------------------------------------------------------------------------"
-	echo "       Note:       No option will clone ADTOOLS, build it and run the tests and then quit"
-	echo "                   unless \"${BASE_DIR}\" already exists in which case all tests are built."
+	echo "Usage: ${0} [build|delete|clean_tests]"
+	echo "       build:       Invokes MAKE in ADTOOLS. Expects \"${BASE_DIR}\" to exist already. Quits"
+	echo "       delete:      Removes \"${BASE_DIR}\". Quits"                                       
+	echo "       clean_tests: Cleans all the tests. Quits"                                          
+	echo "       *:           All other options are assumed to be arguments that will be passed to "
+	echo "                    the parent test makefile"
+	echo "---------------------------------------------------------------------------------------------"
+	echo "       Note:        No options will clone ADTOOLS build it and run the tests and then quit"
+	echo "                    unless \"${BASE_DIR}\" already exists in which case the tests are run"
 	echo ""
-	echo "                   See the README.md file"
-	echo "---------------------------------------------------------------------------------------"
+	echo "                    See the README.md file"
+	echo "---------------------------------------------------------------------------------------------"
 	exit 0
     elif [[ "${1}" == "delete" ]]
     then
 	rm -rf "${BASE_DIR}"
 	exit 0
-    elif [[ "${1}" == "test_clean" ]]
+    elif [[ "${1}" == "clean_tests" ]]
     then
 	make -s -C tests clean
 	exit 0
