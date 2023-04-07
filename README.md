@@ -11,21 +11,20 @@ Running 4afx will build the ADTOOLS repository and then generate all the tests w
 
 If the "build" directory already exists then 4afx assumes that ADTOOLS is already built and that only the tests should be regenerated. In the case that there was an issue during the build of ADTOOLS and you want to continue building, issue "./4afx build" which will continue the build and then stop without running the tests. In the case that build is not the first argument to the script, then all arguments are passed to the testing framework makefile.
 
-By default, the script will consume all the available threads available on your machine. You can override this by setting a variables CORES to an amount you desire. For example, if you have 6 physical cores, and 12 logical cores, the script will consume all resources. You can, instead, supply CORES=4 to the environment if desired.
+By default, the script will cause the make system to consume all the available threads available on your machine. You can override this by setting a variables CORES to an amount you desire. For example, if you have 6 physical cores, and 12 logical cores, the script will consume all resources. You can, instead, supply CORES=4 to the environment if desired.
 
-The general idea is that this repository / script builds ADTOOLS etc all restricted to the scope of the directory on your local machine where this repository is checked out. That is to say that it will not interfere with your environment outside; kind of like a CHROOT.
+The general idea is that this script builds ADTOOLS and all is restricted to the scope of this directory on your local machine. That is to say that it will not interfere with your environment outside; kind of like a CHROOT. It is not recommended to replace the "build" folder with a symbolic link to another build system you may have, since that could affect the referenced build system if using options like "delete" with the script.
 
 The steps are that it will checkout ADTOOLS building GCC 11 and BINUTILS 2.23.2 using AFXGROUP's CLIB2.
 It also makes the following modifications (for now):
 - Copies over the AMIGAOS.H file from AFXGROUP's CLIB2 to the GCC rs6000 (linker script);
 - Currently hacks out -Werror in AFXGROUP's CLIB2 due to an issue with timeval cast;
 - Forces the creation of AFXGROUP'S CLIB2 shared libraries;
-- After building the CROSS COMPILER, the script will then run all of the tests in the "tests" folder.
+- After building the CROSS COMPILER, the script will then build all of the tests in the "tests" folder;
+- Finally, a single LHA file is generated that can be copied over to an AmigaOne and extracted which includes a single "run_all.script" that can be executed.
 
 ### Artifacts
-The artifacts of interest are the LHA files that are created in each test folder. They should be able to be transferred to your AmigaOne machine for immediate execution. In the case that the test require SHARED OBJECTS, they will be available in the LHA file, and since "elf.library" should look into the current working directory in preference, then they should be picked up there: standalone - without any affect of your environment on your cross compilation machine or AmigaOne machine.
-
-Inside each artifact will be 4 binaries; clib, newlib (2) * dynamic, static (2). Along with those binaries with be a corresponding script, name prepended with "run_". Rather than executing the binary the script should be executed since it will handle the invocation of the binary and report back whether the test passed including automatic inspection tests. See below (section: Integration into the test framework) for more information.
+Inside each tst will be 4 binaries; clib, newlib (2) * dynamic, static (2). Along with those binaries with be a corresponding script whose name is prepended with "run_". Rather than executing the binary the script should be executed since it will handle the invocation of the binary and report back whether the test passed including automatic inspection tests. See below (section: Integration into the test framework) for more information. A step above is the already mentioned "run_all.script" which contains all of these artifacts.
 
 ## Important
 This script/repo was written at the time when

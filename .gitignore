@@ -5,7 +5,7 @@
 *.a
 *.lha
 *.map
-*.script
+tests/*/*.script
 *.expected
 clean_stamp
 build/

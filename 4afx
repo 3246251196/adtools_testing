@@ -160,9 +160,15 @@ export PATH="${BASE_DIR}"/4afx/4afx_build/bin:"${PATH}"
 which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC compiler on the path" 30
 
 _info "Building tests"
-
 make -s -C tests all "$@"
 
 _info "Artifacts:"
-
 find tests/ -name "*.lha" | sort
+
+_info "Creating the final LHA artifact which may take upto a minute"
+find tests/ -name "*.lha" -exec lha u -q 4afx_tests.lha {} \;
+lha u -q 4afx_tests.lha run_all.script tests/user.script 
+
+_info "\"4afx_tests.lha\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
+_info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
+_info "which acts on each variant but is commented out. The \"run_all.script\" is designed to be re-run again"

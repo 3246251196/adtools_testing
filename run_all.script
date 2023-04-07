@@ -1,0 +1,16 @@
+FAILAT 21
+CD tests
+SET ts `LIST DIRS QUICK NOHEAD`
+FOREACH t IN ${ts}
+	CD ${t}
+	SET vs `LIST FILES LFORMAT="%M"`
+	FOREACH v IN ${vs}
+		LHA -t x ${v} ${v}/
+		CD ${v}
+		; //user.script contents is commented out
+		EXECUTE //user.script
+		CD /
+	END
+	CD /
+END
+CD /
