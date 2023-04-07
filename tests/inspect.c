@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #define ERR 20
 #define FAIL 10
+#define WARN 5
 #define SUCC 0
 int main(int argc, char *argv[])
 {
@@ -15,6 +16,8 @@ int main(int argc, char *argv[])
   FILE *actual=NULL,*expected=NULL;
   char *actual_contents=NULL,*expected_contents=NULL;
   long actual_size=-1,expected_size=-1;
+  /* assuming any output will be ASCII characters 0-127 */
+  int char_map[128]={0};
   if(argc!=3)
     {
       res=ERR; goto ENDER;
@@ -47,6 +50,10 @@ int main(int argc, char *argv[])
     int i=0;
     actual_contents=(char*)malloc(actual_size);
     expected_contents=(char*)malloc(expected_size);
+    if(!(actual_contents&&expected_contents))
+      {
+	res=ERR; goto ENDER;
+      }
     if((1!=(long)fread(&actual_contents[0],actual_size,1,actual))||
        (1!=(long)fread(&expected_contents[0],expected_size,1,expected)))
       {
@@ -54,9 +61,23 @@ int main(int argc, char *argv[])
       }
     for(;i<actual_size;i++)
       {
+	char_map[(int)actual_contents[i]]++;
+	char_map[(int)expected_contents[i]]--;
 	if(actual_contents[i]!=expected_contents[i])
 	  {
-	    res = FAIL; goto ENDER;
+	    /* We have a mismatch. The contents may still be the same
+	       though.  This can happen when threading occurs. We use
+	       a different return code for this.
+	       We are now AT LEAST a WARN */
+	    res=WARN;
+	  }
+      }
+    i=0;
+    for(;i<128;i++)
+      {
+	if(char_map[i]!=0)
+	  {
+	    res=FAIL; goto ENDER;
 	  }
       }
   }

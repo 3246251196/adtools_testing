@@ -9,3 +9,8 @@ $(PROG): main$(FILE_INFIX).o
 
 main$(FILE_INFIX).o: main.cpp
 	$(call LOG_RUN,Compile,$(CXX) $(CXXFLAGS) -c -o $@ $^)
+
+#@ Simple example: called once
+#@ throw: call_once will retry
+#@ throw: call_once will retry
+#@ Didn't throw, call_once will not attempt again
