@@ -37,9 +37,10 @@ endif
 #######
 
 tests=$(shell ls -d */)
-.PHONY: all clean
+.PHONY: all $(FINAL_LHA) clean
+all: $(FINAL_LHA)
 
-all: $(INSPECT_EXE) clean_stamp
+$(FINAL_LHA): $(INSPECT_EXE) clean_stamp
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "4afx" script)
 endif
@@ -56,7 +57,8 @@ endif
 		done ;                                      \
 	done ;                                              \
 	for p in $${pids[@]} ; do wait $$p ; done
-	$(LHA_ADD) ../$(FINAL_LHA) */*.lha $(RUN_ALL_SCRIPT) $(EXECUTE_SCRIPT)
+	cd .. && $(LHA_ADD) $@ tests/*/*.lha tests/$(EXECUTE_SCRIPT) && \
+		cd - && $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)
 
 clean_stamp: $(BASE_DIR)
 	$(do_clean)
