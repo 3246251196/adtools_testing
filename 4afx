@@ -62,7 +62,10 @@ Usage: ${0} [b|c|t|u]
                         This script will not attempt to build ADTOOLS in-place
                         and will assume that the current ppc-amigaos-gcc is the
                         cross-compiler of choice. It does not make sense to set
-                        this option in combination with the option "b"
+                        this option in combination with the option "b". This
+                        option is required when a different cross-compiler is
+                        desired for running the tests. It only makes sense to
+                        use this option in combination with option "t"
        *              : Any other arguments are assumed to be arguments that
                         are to be passed to the testing framework when using
                         the option "t" or the building of ADTOOLS when using the
@@ -130,7 +133,7 @@ function BUILD
     if [[ -z ${CORES} ]] ; then CORES=1 ; fi
 
     LOG_FILE="${BASE_DIR}/4afx.log"
-    BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" EXP_CLIB2=1 \"${args}\" make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${LOG_FILE}\""
+    BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" EXP_CLIB2=1 ${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${LOG_FILE}\""
     echo "####################" > "${LOG_FILE}"
     echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
     echo "####################" >> "${LOG_FILE}"
@@ -150,12 +153,7 @@ function TESTS
 
     _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
 
-    if [[ -n "${args}" ]]
-    then
-	"${args}" make -s -C "${TESTS_DIR}" all
-    else
-	make -s -C "${TESTS_DIR}" all
-    fi
+    ${args} make -s -C "${TESTS_DIR}" all
 
     _info "Generating artifacts:"
     find "${TESTS_DIR}/" -name "*.lha" | sort
