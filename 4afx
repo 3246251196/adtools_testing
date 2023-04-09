@@ -3,6 +3,7 @@ set -o pipefail
 
 do_build=0
 do_tests=0
+do_clean_tests=0
 use_this_adtools=0
 args=
 
@@ -17,7 +18,6 @@ readonly RUN_ALL_SCRIPT=run_all.script
 readonly EXECUTE_SCRIPT=user.script
 BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
 CROSS_PREFIX="${BASE_DIR}/4afx_build"
-PATH="${CROSS_PREFIX}/bin:${PATH}"
 
 function _error
 {
@@ -62,11 +62,11 @@ Usage: ${0} [b|c|t|u]
                         This script will not attempt to build ADTOOLS in-place
                         and will assume that the current ppc-amigaos-gcc is the
                         cross-compiler of choice. It does not make sense to set
-                        this option in combination with "b"
+                        this option in combination with the option "b"
        *              : Any other arguments are assumed to be arguments that
-                        are be passed to the testing framework when using the
-                        option "t" or the building of ADTOOLS when using the
-                        "b" option
+                        are to be passed to the testing framework when using
+                        the option "t" or the building of ADTOOLS when using the
+                        the option "b"
 EOF
 }
 
@@ -144,10 +144,11 @@ function BUILD
 function TESTS
 {
     # Arbitrary check
-    which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC compiler on the path."\
-" Has ADTOOLS been build yet?" 50
+    which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross-compiler on the path." 50
 
     _info "Building tests"
+
+    _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
 
     if [[ -n "${args}" ]]
     then
@@ -177,8 +178,7 @@ do
 	    do_build=1
 	    ;;
 	c)
-	    make -s -C "${TESTS_DIR}" clean
-	    exit 0
+	    do_clean_tests=1
 	    ;;
 	t)
 	    do_tests=1
@@ -191,6 +191,7 @@ do
 	    ;;
     esac
 done
+
 if (( do_build && do_tests ))
 then
     _error "Building the tests and building ADTOOLS is mutually exclusive" 20
@@ -199,18 +200,28 @@ if (( do_build && use_this_adtools ))
 then
     _error "Request to build ADTOOLS in-place, yet provided with alternate ADTOOLS" 80
 fi
-if (( !do_build && !do_tests ))
+if (( !do_build && !do_tests && !do_clean_tests ))
 then
     _warn "No action performed"
     exit 0
 fi
-if (( use_this_adtools ))
+if (( !do_clean_tests ))
 then
-    BASE_DIR=
-    CROSS_PREFIX="$(which ppc-amigaos-gcc)/../"
-    PATH="${CROSS_PREFIX}/bin:${PATH}"
+   if (( use_this_adtools ))
+   then
+       this_adtools="$(dirname $(which ppc-amigaos-gcc))"
+       if (( $? ))
+       then
+	   _error "ADTOOLS cross-compiler not found on PATH" 70
+       fi
+       CROSS_PREFIX="${this_adtools}/../"
+       BASE_DIR=
+   else
+       which ppc-amigaos-gcc 1>/dev/null 2>&1 \
+	   && _error "Did not expect to find a cross-compiler on the path" 90
+   fi
 fi
-
+   
 # Variables that are used further on in the testing framework
 export BASE_DIR
 export SCRIPT_INVOCATION
@@ -218,7 +229,12 @@ export FINAL_LHA
 export RUN_ALL_SCRIPT
 export EXECUTE_SCRIPT
 export CROSS_PREFIX
-export PATH
+export PATH="${CROSS_PREFIX}/bin:${PATH}"
 
+if (( do_clean_tests ))
+then
+    make -s -C "${TESTS_DIR}" clean
+    exit 0
+fi
 if (( do_build )) ; then BUILD ; fi
 if (( do_tests)) ; then TESTS ; fi
