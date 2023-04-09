@@ -75,4 +75,4 @@ do_clean=                                     \
 	do                                    \
 		$(MAKE) -C "$${TEST}" clean ; \
 	done ;                                \
-
+	rm $(INSPECT_EXE) clean_stamp

@@ -1,0 +1,10 @@
+#!/bin/bash --
+
+# Insert any modifications to ADTOOLS before building it here:
+
+# We shall use the rs6k amigaos.h version from the afxgroup CLIB2
+sed -i '115i\	cp downloads/clib2/misc/amigaos.h ../gcc/repo/gcc/config/rs6000/' native-build/makefile
+# And, we need to remove -Werror when building clib2 due to time cast issue
+sed -i '115i\	sed -i "s|-Werror|# -Werror|g" downloads/clib2/GNUmakefile.os4' native-build/makefile
+# We also want to build SHARED LIBRARIES for CLIB2
+sed -i 's|SHARED=no|SHARED=yes|' native-build/makefile

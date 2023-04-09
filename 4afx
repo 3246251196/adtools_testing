@@ -1,12 +1,14 @@
 #!/bin/bash --
 set -o pipefail
 
-ORIG_DIR="$(pwd)"
+readonly ORIG_DIR="$(pwd)"
+readonly BUILD_DIR=build
+readonly TESTS_DIR=tests
 # Used in the Makefile testing framework
-export BASE_DIR="$(pwd)/build"
-export CROSS_PREFIX="${BASE_DIR}"/4afx/4afx_build
+export BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
+export CROSS_PREFIX="${BASE_DIR}"/4afx_build
 export SCRIPT_INVOCATION=1 # tell the Makefiles that they were executed from the script
-export PATH="${BASE_DIR}"/4afx/4afx_build/bin:"${PATH}"
+export PATH="${CROSS_PREFIX}/bin:${PATH}"
 export FINAL_LHA=4afx_tests.lha
 export RUN_ALL_SCRIPT=run_all.script # script to run all of the test
 export EXECUTE_SCRIPT=user.script # script used by each test
@@ -27,51 +29,120 @@ function _info
     echo "### INFO: ${1}"
 }
 
-# No getopts for now!
-if (( $# > 0 ))
+function _usage
+{
+    cat << EOF
+Usage: ${0} [b|c|d|t]
+       [b] build      : Clones and builds ADTOOLS performing the following
+                        modifications:
+                        - Clones ADTOOLS using GCC 11, AFXGROUP's CLIB2
+                          repository, and BINTUILS 2.23.2, then,
+                        - Copies over the linker script provided in AFXGROUP's
+                          CLIB2 repository to the GCC download
+                        - Forces the removal of -Werror during the building of
+                          AFXGROUP's CLIB2.
+                        - Enables the generation of Shared Objects of AFGROUP's
+                          CLIB2
+                        The cloning and building of ADTOOLS all happen in the
+                        directory named \"${BUILD_DIR}\". If the directory
+                        already exists then this script invokes a build in
+                        ADTOOLS (without cleaning first). In either case, this
+                        script then exits
+       [c] clean_tests: Performs a cleaning on all tests and then exits
+       [d] delete     : Removes the directory named \"${BUILD_DIR}\",
+                        effectively deleting ADTOOLS and then exits
+       [t] tests      : Builds all of the tests under the \"${TESTS_DIR}\"
+                        folder and then exits
+       *              : Any other arguments are assumed to be arguments that
+                        are be passed to the testing framework when using the
+                        option "t" or the building of ADTOOLS when using the
+                        "b" option
+EOF
+}
+
+if (( $# == 0 ))
 then
-    if [[ "${1}" == -h || "${1}" == --help ]]
-    then
-	echo "Usage: ${0} [build|delete|clean_tests]"
-	echo "       build:       Invokes MAKE in ADTOOLS. Expects \"${BASE_DIR}\" to exist already. Quits"
-	echo "       delete:      Removes \"${BASE_DIR}\". Quits"                                       
-	echo "       clean_tests: Cleans all the tests. Quits"                                          
-	echo "       *:           All other options are assumed to be arguments that will be passed to "
-	echo "                    the parent test makefile"
-	echo "---------------------------------------------------------------------------------------------"
-	echo "       Note:        No options will clone ADTOOLS build it and run the tests and then quit"
-	echo "                    unless \"${BASE_DIR}\" already exists in which case the tests are run"
-	echo ""
-	echo "                    See the README.md file"
-	echo "---------------------------------------------------------------------------------------------"
-	exit 0
-    elif [[ "${1}" == "delete" ]]
-    then
-	rm -rf "${BASE_DIR}"
-	exit 0
-    elif [[ "${1}" == "clean_tests" ]]
-    then
-	make -s -C tests clean
-	exit 0
-    fi
+    _usage
+    _error "No options provided" 10
 fi
+
+do_build=0
+do_tests=0
+args=
+while getopts bcdt opt
+do
+    case $opt in
+	b)
+	    do_build=1
+	    ;;
+	c)
+	    make -s -C "${TESTS_DIR}" clean
+	    exit 0
+	    ;;
+	d)
+	    rm -rf "${BASE_DIR}"
+	    exit 0
+	    ;;
+	t)
+	    do_tests=1
+	    ;;
+	*)
+	    args="${args} ${OPTARG}"
+	    ;;
+    esac
+done
+if (( do_build && do_tests ))
+then
+    _error "Building the tests and building ADTOOLS is mutually exclusive" 20
+elif (( !do_build && !do_tests ))
+then
+    _warn "No action performed"
+    exit 0
+fi
+
+if (( do_build )) ; then BUILD ; fi
+if (( do_tests)) ; then TESTS ; fi
 
 function BUILD
 {
-    # Clear any of these variables in the unlikely event they are set. If not, then
-    # they are picked up during the building ADTOOLS and they may not point to the
-    # native gcc that we just tested for before.
-    export CC=
-    export CFLAGS=
-    export CXX=
-    export CXXFLAGS=
-    export CPPFLAGS=
-    export AR=
-    export AS=
-    export LD=
-    export RANLIB=
-    export READELF=
+    if [[ ! -d "${BASE_DIR}" ]]
+    then
+	mkdir "${BASE_DIR}"
+	cd "${BASE_DIR}"
+	mkdir 4afx
+	cd 4afx
+	git clone https://github.com/sba1/adtools.git 4afx_adtools
+	cd 4afx_adtools
 
+	git submodule init
+	git submodule update
+	gild/bin/gild checkout binutils 2.23.2
+	gild/bin/gild checkout gcc 11
+
+	# Performs the modification (if any) that are provided in the
+	# following script
+	./adtools_mod
+
+	BUILD
+	if [[  "${1}" == "build" ]]
+	then
+	    exit 0
+	fi
+	# Clear any of these variables in the unlikely event they are set. If not, then
+	# they are picked up during the building ADTOOLS and they may not point to the
+	# native gcc that we just tested for before.
+	export CC=
+	export CFLAGS=
+	export CXX=
+	export CXXFLAGS=
+	export CPPFLAGS=
+	export AR=
+	export AS=
+	export LD=
+	export RANLIB=
+	export READELF=
+    fi
+    
     native_gcc_error=0
     which gcc 1>/dev/null 2>&1
     if (( !${?} ))
@@ -86,7 +157,7 @@ function BUILD
 
     if (( native_gcc_error ))
     then
-	_error "Expected native linux x86-64 gcc compiler to be accessible" 11
+	_error "Expected native linux x86-64 gcc compiler to be accessible" 30
     fi
 
     if [[ -z ${CORES} ]]
@@ -95,7 +166,7 @@ function BUILD
     fi
     if [[ -z ${CORES} ]] ; then CORES=1 ; fi
 
-    BUILD_CMD="CROSS_PREFIX=${CROSS_PREFIX} EXP_CLIB2=1  make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${BASE_DIR}/4afx/4afx.log\""
+    BUILD_CMD="CROSS_PREFIX=${CROSS_PREFIX} EXP_CLIB2=1  make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${BASE_DIR}/build/4afx.log\""
     echo "####################" > ${BASE_DIR}/4afx/4afx.log
     echo "RUNNING COMMAND: ${BUILD_CMD}" >> ${BASE_DIR}/4afx/4afx.log
     echo "####################" >> ${BASE_DIR}/4afx/4afx.log
@@ -106,70 +177,20 @@ function BUILD
     touch "${BASE_DIR}"
 }
 
-###
-# BUILD ADTOOLS
-##
+function TESTS
+{
+    # Arbitrary check
+    which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC compiler on the path" 50
 
-if (( $# >= 1 ))
-then
-    _info "All other arguments will be passed to tests/Makefile"
-fi
+    _info "Building tests"
+    make -s -C "${TESTS_DIR}" all "$@"
 
-if [[ ! -d "${BASE_DIR}" ]]
-then
-   mkdir "${BASE_DIR}"
-   cd "${BASE_DIR}"
-   mkdir 4afx
-   cd 4afx
-   git clone https://github.com/sba1/adtools.git 4afx_adtools
-   cd 4afx_adtools
+    _info "Artifacts:"
+    find "${TESTS_DIR}/" -name "*.lha" | sort
 
-   git submodule init
-   git submodule update
-   gild/bin/gild checkout binutils 2.23.2
-   gild/bin/gild checkout gcc 11
+    _info "Creating the final LHA artifact which may take up to a minute"
 
-   # We shall use the rs6k amigaos.h version from the afxgroup CLIB2
-   sed -i '115i\	cp downloads/clib2/misc/amigaos.h ../gcc/repo/gcc/config/rs6000/' native-build/makefile
-   # And, we need to remove -Werror when building clib2 due to time cast issue
-   sed -i '115i\	sed -i "s|-Werror|# -Werror|g" downloads/clib2/GNUmakefile.os4' native-build/makefile
-   # We also want to build SHARED LIBRARIES for CLIB2
-   sed -i 's|SHARED=no|SHARED=yes|' native-build/makefile
-
-   BUILD
-   if [[  "${1}" == "build" ]]
-   then
-       exit 0
-   fi
-else
-    if [[ "${1}" == "build" ]]
-    then
-	cd "${BASE_DIR}/4afx/4afx_adtools" || \
-	    _error "Requested a build but there is no directory named \"${BASE_DIR}\". Rerun with out the \"build\" argument" 20
-	BUILD
-
-	exit 0
-    else
-	_info "\"${BASE_DIR}\" already exists, assuming that you just want to re-run the tests"
-    fi
-fi
-
-###
-# RUN TESTS
-###
-cd "$ORIG_DIR"
-
-# Arbitrary check
-which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC compiler on the path" 30
-
-_info "Building tests"
-make -s -C tests all "$@"
-
-_info "Artifacts:"
-find tests/ -name "*.lha" | sort
-
-_info "Creating the final LHA artifact which may take up to a minute"
-
-_info "\"4afx_tests.lha\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
-_info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
-_info "which acts on each variant but is commented out. The \"run_all.script\" is designed to be re-run again"
+    _info "\"4afx_tests.lha\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
+    _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
+    _info "which acts on each variant but is commented out. The \"run_all.script\" is designed to be re-run again"
+}
