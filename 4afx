@@ -3,20 +3,21 @@ set -o pipefail
 
 do_build=0
 do_tests=0
+use_this_adtools=0
 args=
+
 
 readonly ORIG_DIR="$(pwd)"
 readonly BUILD_DIR=build
 readonly TESTS_DIR=tests
 readonly ADTOOLS_DIR=4afx_adtools
-# Used in the Makefile testing framework
-export BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
-export CROSS_PREFIX="${BASE_DIR}"/4afx_build
-export SCRIPT_INVOCATION=1 # tell the Makefiles that they were executed from the script
-export PATH="${CROSS_PREFIX}/bin:${PATH}"
-export FINAL_LHA=4afx_tests.lha
-export RUN_ALL_SCRIPT=run_all.script # script to run all of the test
-export EXECUTE_SCRIPT=user.script # script used by each test
+readonly SCRIPT_INVOCATION=1
+readonly FINAL_LHA=4afx_tests.lha
+readonly RUN_ALL_SCRIPT=run_all.script
+readonly EXECUTE_SCRIPT=user.script
+BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
+CROSS_PREFIX="${BASE_DIR}/4afx_build"
+PATH="${CROSS_PREFIX}/bin:${PATH}"
 
 function _error
 {
@@ -37,7 +38,7 @@ function _info
 function _usage
 {
     cat << EOF
-Usage: ${0} [b|c|d|t]
+Usage: ${0} [b|c|t|u]
        [b] build      : Clones and builds ADTOOLS performing the following
                         modifications:
                         - Clones ADTOOLS using GCC 11, AFXGROUP's CLIB2
@@ -55,10 +56,13 @@ Usage: ${0} [b|c|d|t]
                         ADTOOLS modification script. In either case, this
                         script then exits
        [c] clean_tests: Performs a cleaning on all tests and then exits
-       [d] delete     : Removes the directory named \"${BUILD_DIR}\",
-                        effectively deleting ADTOOLS and then exits
        [t] tests      : Builds all of the tests under the \"${TESTS_DIR}\"
                         folder and then exits
+       [u] use_adtools: Use the ADTOOLS that is already on the existing path.
+                        This script will not attempt to build ADTOOLS in-place
+                        and will assume that the current ppc-amigaos-gcc is the
+                        cross-compiler of choice. It does not make sense to set
+                        this option in combination with "b"
        *              : Any other arguments are assumed to be arguments that
                         are be passed to the testing framework when using the
                         option "t" or the building of ADTOOLS when using the
@@ -166,9 +170,9 @@ then
     _error "No options provided" 10
 fi
 
-while getopts bcdt opt
+while getopts bctu opt
 do
-    case $opt in
+    case ${opt} in
 	b)
 	    do_build=1
 	    ;;
@@ -176,12 +180,11 @@ do
 	    make -s -C "${TESTS_DIR}" clean
 	    exit 0
 	    ;;
-	d)
-	    rm -rf "${BASE_DIR}"
-	    exit 0
-	    ;;
 	t)
 	    do_tests=1
+	    ;;
+	u)
+	    use_this_adtools=1
 	    ;;
 	*)
 	    args="${args} ${OPTARG}"
@@ -191,11 +194,31 @@ done
 if (( do_build && do_tests ))
 then
     _error "Building the tests and building ADTOOLS is mutually exclusive" 20
-elif (( !do_build && !do_tests ))
+fi
+if (( do_build && use_this_adtools ))
+then
+    _error "Request to build ADTOOLS in-place, yet provided with alternate ADTOOLS" 80
+fi
+if (( !do_build && !do_tests ))
 then
     _warn "No action performed"
     exit 0
 fi
+if (( use_this_adtools ))
+then
+    BASE_DIR=
+    CROSS_PREFIX="$(which ppc-amigaos-gcc)/../"
+    PATH="${CROSS_PREFIX}/bin:${PATH}"
+fi
+
+# Variables that are used further on in the testing framework
+export BASE_DIR
+export SCRIPT_INVOCATION
+export FINAL_LHA
+export RUN_ALL_SCRIPT
+export EXECUTE_SCRIPT
+export CROSS_PREFIX
+export PATH
 
 if (( do_build )) ; then BUILD ; fi
 if (( do_tests)) ; then TESTS ; fi
