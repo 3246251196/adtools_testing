@@ -58,7 +58,7 @@ endif
 	done ;                                              \
 	for p in $${pids[@]} ; do wait $$p ; done
 	cd .. && $(LHA_ADD) $@ tests/*/*.lha tests/$(EXECUTE_SCRIPT) && \
-		cd - && $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)
+		cd - 1>/dev/null 2>&1 && $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)
 
 clean_stamp: $(BASE_DIR)
 	$(do_clean)
@@ -74,5 +74,4 @@ do_clean=                                     \
 	for TEST in $(tests) ;                \
 	do                                    \
 		$(MAKE) -C "$${TEST}" clean ; \
-	done ;                                \
-	rm $(INSPECT_EXE) clean_stamp
+	done ;

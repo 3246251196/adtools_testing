@@ -1,6 +1,6 @@
 #!/bin/bash --
-
 # Insert any modifications to ADTOOLS before building it here:
+set -e
 
 # We shall use the rs6k amigaos.h version from the afxgroup CLIB2
 sed -i '115i\	cp downloads/clib2/misc/amigaos.h ../gcc/repo/gcc/config/rs6000/' native-build/makefile

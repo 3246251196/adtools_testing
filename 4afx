@@ -1,9 +1,14 @@
 #!/bin/bash --
 set -o pipefail
 
+do_build=0
+do_tests=0
+args=
+
 readonly ORIG_DIR="$(pwd)"
 readonly BUILD_DIR=build
 readonly TESTS_DIR=tests
+readonly ADTOOLS_DIR=4afx_adtools
 # Used in the Makefile testing framework
 export BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
 export CROSS_PREFIX="${BASE_DIR}"/4afx_build
@@ -46,7 +51,8 @@ Usage: ${0} [b|c|d|t]
                         The cloning and building of ADTOOLS all happen in the
                         directory named \"${BUILD_DIR}\". If the directory
                         already exists then this script invokes a build in
-                        ADTOOLS (without cleaning first). In either case, this
+                        ADTOOLS without cleaning first and does not invoke the
+                        ADTOOLS modification script. In either case, this
                         script then exits
        [c] clean_tests: Performs a cleaning on all tests and then exits
        [d] delete     : Removes the directory named \"${BUILD_DIR}\",
@@ -60,15 +66,106 @@ Usage: ${0} [b|c|d|t]
 EOF
 }
 
+function BUILD
+{
+    if [[ ! -d "${BASE_DIR}" ]]
+    then
+	mkdir "${BASE_DIR}"
+	cd "${BASE_DIR}"
+	git clone https://github.com/sba1/adtools.git "${ADTOOLS_DIR}"
+	cd "${ADTOOLS_DIR}"
+
+	git submodule init
+	git submodule update
+	gild/bin/gild checkout binutils 2.23.2
+	gild/bin/gild checkout gcc 11
+
+	# Performs the modification (if any) that are provided in the
+	# following script
+	"${ORIG_DIR}"/adtools_mod || _error "Modification script to ADTOOLS failed" 60
+
+	BUILD
+	# Clear any of these variables in the unlikely event they are set. If not, then
+	# they are picked up during the building ADTOOLS and they may not point to the
+	# native gcc that we just tested for before.
+	export CC=
+	export CFLAGS=
+	export CXX=
+	export CXXFLAGS=
+	export CPPFLAGS=
+	export AR=
+	export AS=
+	export LD=
+	export RANLIB=
+	export READELF=
+    else
+	cd "${BASE_DIR}/${ADTOOLS_DIR}"
+    fi
+    
+    native_gcc_error=0
+    which gcc 1>/dev/null 2>&1
+    if (( !${?} ))
+    then
+	if [[ $(gcc -dumpmachine) != "x86_64-linux-gnu" ]]
+	then
+	    native_gcc_error=1
+	fi
+    else
+	native_gcc_error=1
+    fi
+
+    if (( native_gcc_error ))
+    then
+	_error "Expected native linux x86-64 gcc compiler to be accessible" 30
+    fi
+
+    if [[ -z ${CORES} ]]
+    then
+	CORES=$(nproc)
+    fi
+    if [[ -z ${CORES} ]] ; then CORES=1 ; fi
+
+    LOG_FILE="${BASE_DIR}/4afx.log"
+    BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" EXP_CLIB2=1 \"${args}\" make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${LOG_FILE}\""
+    echo "####################" > "${LOG_FILE}"
+    echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
+    echo "####################" >> "${LOG_FILE}"
+    eval "${BUILD_CMD} || _error \"The ADTOOLS build failed. See the log file: \"${LOG_FILE}\"\" 40"
+
+    # Update the timestamp so that the test framework knows whether it should rebuild the tests.
+    # Of course, this dir will be touched even if there was nothing to update in ADTOOLS.
+    touch "${BASE_DIR}"
+}
+
+function TESTS
+{
+    # Arbitrary check
+    which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC compiler on the path."\
+" Has ADTOOLS been build yet?" 50
+
+    _info "Building tests"
+
+    if [[ -n "${args}" ]]
+    then
+	"${args}" make -s -C "${TESTS_DIR}" all
+    else
+	make -s -C "${TESTS_DIR}" all
+    fi
+
+    _info "Generating artifacts:"
+    find "${TESTS_DIR}/" -name "*.lha" | sort
+    _info "Creating the final LHA"
+    _info "\"${FINAL_LHA}\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
+    _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
+    _info "which acts on each variant but is commented out. The \"run_all.script\" is designed to be re-run again"
+}
+
 if (( $# == 0 ))
 then
     _usage
     _error "No options provided" 10
 fi
 
-do_build=0
-do_tests=0
-args=
 while getopts bcdt opt
 do
     case $opt in
@@ -102,95 +199,3 @@ fi
 
 if (( do_build )) ; then BUILD ; fi
 if (( do_tests)) ; then TESTS ; fi
-
-function BUILD
-{
-    if [[ ! -d "${BASE_DIR}" ]]
-    then
-	mkdir "${BASE_DIR}"
-	cd "${BASE_DIR}"
-	mkdir 4afx
-	cd 4afx
-	git clone https://github.com/sba1/adtools.git 4afx_adtools
-	cd 4afx_adtools
-
-	git submodule init
-	git submodule update
-	gild/bin/gild checkout binutils 2.23.2
-	gild/bin/gild checkout gcc 11
-
-	# Performs the modification (if any) that are provided in the
-	# following script
-	./adtools_mod
-
-	BUILD
-	if [[  "${1}" == "build" ]]
-	then
-	    exit 0
-	fi
-	# Clear any of these variables in the unlikely event they are set. If not, then
-	# they are picked up during the building ADTOOLS and they may not point to the
-	# native gcc that we just tested for before.
-	export CC=
-	export CFLAGS=
-	export CXX=
-	export CXXFLAGS=
-	export CPPFLAGS=
-	export AR=
-	export AS=
-	export LD=
-	export RANLIB=
-	export READELF=
-    fi
-    
-    native_gcc_error=0
-    which gcc 1>/dev/null 2>&1
-    if (( !${?} ))
-    then
-	if [[ $(gcc -dumpmachine) != "x86_64-linux-gnu" ]]
-	then
-	    native_gcc_error=1
-	fi
-    else
-	native_gcc_error=1
-    fi
-
-    if (( native_gcc_error ))
-    then
-	_error "Expected native linux x86-64 gcc compiler to be accessible" 30
-    fi
-
-    if [[ -z ${CORES} ]]
-    then
-	CORES=$(nproc)
-    fi
-    if [[ -z ${CORES} ]] ; then CORES=1 ; fi
-
-    BUILD_CMD="CROSS_PREFIX=${CROSS_PREFIX} EXP_CLIB2=1  make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${BASE_DIR}/build/4afx.log\""
-    echo "####################" > ${BASE_DIR}/4afx/4afx.log
-    echo "RUNNING COMMAND: ${BUILD_CMD}" >> ${BASE_DIR}/4afx/4afx.log
-    echo "####################" >> ${BASE_DIR}/4afx/4afx.log
-    eval "${BUILD_CMD} || _error \"The ADTOOLS build failed. See the log file: \"${BASE_DIR}\"/4afx/4afx.log\" 40"
-
-    # Update the timestamp so that the test framework knows whether it should rebuild the tests.
-    # Of course, this dir will be touched even if there was nothing to update in ADTOOLS.
-    touch "${BASE_DIR}"
-}
-
-function TESTS
-{
-    # Arbitrary check
-    which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross GCC compiler on the path" 50
-
-    _info "Building tests"
-    make -s -C "${TESTS_DIR}" all "$@"
-
-    _info "Artifacts:"
-    find "${TESTS_DIR}/" -name "*.lha" | sort
-
-    _info "Creating the final LHA artifact which may take up to a minute"
-
-    _info "\"4afx_tests.lha\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
-    _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
-    _info "which acts on each variant but is commented out. The \"run_all.script\" is designed to be re-run again"
-}
