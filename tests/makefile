@@ -9,29 +9,26 @@ export LHA_ADD
 #######
 # START EXPORT STRING
 #######
-EXPORT=INFIX="$${C_LIB}" ;                             \
-	if [[ -z "$${DYN}" ]] ;                        \
-	then                                           \
-		INFIX="$${INFIX}_STATIC" ;             \
-	else                                           \
-		INFIX="$${INFIX}_DYNAMIC" ;            \
-	fi ;                                           \
-	CXX=ppc-amigaos-g++ ;                          \
-	CC=ppc-amigaos-gcc ;                           \
-	AR=ppc-amigaos-ar ;                            \
-	RANLIB=ppc-amigaos-ranlib ;                    \
-	READELF=ppc-amigaos-readelf ;                  \
-	CFLAGS="${CLFLAGS} -mcrt=$${C_LIB}" ;          \
-	CXXFLAGS="${CXXFLAGS} -mcrt=$${C_LIB}" ;       \
-	LDFLAGS="${LDFLAGS} -mcrt=$${C_LIB} $${DYN}" ;
 ifeq ($(NO_VERBOSE),)
-	EXPORT+=                                       \
-		CXXFLAGS+="${CXXFLAGS} -v" ;           \
-		CFLAGS+="${CFLAGS} -v" ;               \
-		LDFLAGS+="${LDFLAGS} -Wl,--verbose" ;
+CFLAGS_VERBOSE=-v
+LDFLAGS_VERBOSE=-Wl,--verbose
 endif
-	EXPORT+=export \
-		C_LIB DYN INFIX CXX CC AR RANLIB READELF CFLAGS CXXFLAGS LDFLAGS
+EXPORT=INFIX="$${C_LIB}" ;                                                      \
+	if [[ -z "$${DYN}" ]] ;                                                 \
+	then                                                                    \
+		INFIX="$${INFIX}_STATIC" ;                                      \
+	else                                                                    \
+		INFIX="$${INFIX}_DYNAMIC" ;                                     \
+	fi ;                                                                    \
+	CXX=ppc-amigaos-g++ ;                                                   \
+	CC=ppc-amigaos-gcc ;                                                    \
+	AR=ppc-amigaos-ar ;                                                     \
+	RANLIB=ppc-amigaos-ranlib ;                                             \
+	READELF=ppc-amigaos-readelf ;                                           \
+	CFLAGS="${CLFLAGS} -mcrt=$${C_LIB} $(CFLAGS_VERBOSE)" ;                 \
+	CXXFLAGS="${CXXFLAGS} -mcrt=$${C_LIB} $(CFLAGS_VERBOSE)" ;              \
+	LDFLAGS="${LDFLAGS} -mcrt=$${C_LIB} $${DYN} $(LDFLAGS_VERBOSE)" ;       \
+	export C_LIB DYN INFIX CXX CC AR RANLIB READELF CFLAGS CXXFLAGS LDFLAGS
 #######
 # ENDER EXPORT STRING
 #######
@@ -74,4 +71,4 @@ do_clean=                                     \
 	for TEST in $(tests) ;                \
 	do                                    \
 		$(MAKE) -C "$${TEST}" clean ; \
-	done ;
+	done ; rm -f ../$(FINAL_LHA)
