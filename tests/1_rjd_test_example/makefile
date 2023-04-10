@@ -2,7 +2,7 @@
 include ../common.mak
 
 # Further overriding flags. The default already contains the necessary C LIBRARY
-# and any other flags passed by the user via the 4afx script
+# and any other flags passed by the user via the adt script
 CXXFLAGS+=-Wall -Werror -pedantic -std=c++11
 LDFLAGS+=-athread=native
 

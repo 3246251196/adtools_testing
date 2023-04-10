@@ -1,5 +1,5 @@
 ifeq ($(SCRIPT_INVOCATION),)
-$(error This makefile should only be invoked by the "4afx" script)
+$(error This makefile should only be invoked by the "adt" script)
 endif
 
 SHELL=/bin/bash

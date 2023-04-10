@@ -1,5 +1,5 @@
 /* rjd */
-/* Inspection test for 4afx */
+/* Inspection test for adt */
 /* Two files are compared; STDOUT from the program and the expected file defined
    in the makefile. If the expected file is empty, the result is a PASS since
    this implies to inspection test was requested. If the size of the two files

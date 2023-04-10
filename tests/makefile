@@ -42,7 +42,7 @@ all: $(FINAL_LHA)
 
 $(FINAL_LHA): $(INSPECT_EXE) clean_stamp
 ifeq ($(SCRIPT_INVOCATION),)
-	$(error This makefile should only be invoked by the "4afx" script)
+	$(error This makefile should only be invoked by the "adt" script)
 endif
 	for C_LIB in "newlib" "clib2" ;                     \
 	do                                                  \

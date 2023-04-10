@@ -11,13 +11,13 @@ args=
 readonly ORIG_DIR="$(pwd)"
 readonly BUILD_DIR=build
 readonly TESTS_DIR=tests
-readonly ADTOOLS_DIR=4afx_adtools
+readonly ADTOOLS_DIR=adt_adtools
 readonly SCRIPT_INVOCATION=1
-readonly FINAL_LHA=4afx_tests.lha
+readonly FINAL_LHA=adt_tests.lha
 readonly RUN_ALL_SCRIPT=run_all.script
 readonly EXECUTE_SCRIPT=user.script
 BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
-CROSS_PREFIX="${BASE_DIR}/4afx_build"
+CROSS_PREFIX="${BASE_DIR}/adt_build"
 
 function _error
 {
@@ -132,7 +132,7 @@ function BUILD
     fi
     if [[ -z ${CORES} ]] ; then CORES=1 ; fi
 
-    LOG_FILE="${BASE_DIR}/4afx.log"
+    LOG_FILE="${BASE_DIR}/adt.log"
     BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" EXP_CLIB2=1 ${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${LOG_FILE}\""
     echo "####################" > "${LOG_FILE}"
     echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
