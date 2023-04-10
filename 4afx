@@ -50,14 +50,14 @@ Usage: ${0} [b|c|t|u]
                         - Enables the generation of Shared Objects of AFGROUP's
                           CLIB2
                         The cloning and building of ADTOOLS all happen in the
-                        directory named \"${BUILD_DIR}\". If the directory
+                        directory named "${BUILD_DIR}". If the directory
                         already exists then this script invokes a build in
                         ADTOOLS without cleaning first and does not invoke the
                         ADTOOLS modification script. In either case, this
                         script then exits
        [c] clean_tests: Performs a cleaning on all tests and then exits
-       [t] tests      : Builds all of the tests under the \"${TESTS_DIR}\"
-                        folder and then exits
+       [t] tests      : Builds all of the tests under the "${TESTS_DIR}" folder
+                        and then exits
        [u] use_adtools: Use the ADTOOLS that is already on the existing path.
                         This script will not attempt to build ADTOOLS in-place
                         and will assume that the current ppc-amigaos-gcc is the
