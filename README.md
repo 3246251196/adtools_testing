@@ -1,7 +1,5 @@
 # adtools_testing
 
-You should read and have a setup that is able to build ADTOOLS. See the ADTOOLS repo.
-
 ## Using this repository
 ### For more information
 Run "./adt"
@@ -39,4 +37,4 @@ Or, use the existing framework which "attempts" to make life easier. The only ta
 
 Inspections can be added to tests by simply providing commented lines in the makefile of the test being added. See 1_rjd_test_example for an example. Also, see 0_rjd_simplest_example for the simplest example.
 
-Lastly, since the testing framework runs all the building of the tests in parallel, it is important to rename any test specific artifacts - such as relocatable object files, archives files or shared objects - with a unique name. This allows parallel builds where the same files are not being incorrectly linked with or added to the incorrect archive. See 2_capehill_adtools_issue_139_test_code for an example of how to name any specific test artifacts using the already provided FILE_INFIX variable. Recall that for every test there are 4 dimensions as described above (newlib,clib * dynamic,static) running in parallel which is also running in parellel with every other test case. The test framework handles contention everywhere else using this exact approach.
+Lastly, since the testing framework runs all the building of the tests in parallel, it is important to rename any test specific artifacts - such as relocatable object files, archives files or shared objects - with a unique name. This allows parallel builds where the same files are not being incorrectly linked with or added to the incorrect archive. See 2_capehill_adtools_issue_139_test_code for an example of how to name any specific test artifacts using the already provided FILE_INFIX variable. Recall that for every test there are 4 dimensions as described above (newlib,clib * dynamic,static) running in parallel which is also running in parallel with every other test case. The test framework handles contention everywhere else using this exact approach.
