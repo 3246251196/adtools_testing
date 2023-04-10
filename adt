@@ -38,7 +38,7 @@ function _info
 function _usage
 {
     cat << EOF
-Usage: ${0} [b|c|t|u]
+Usage: ${0} -[b|c|t|u]
        [b] build      : Clones and builds ADTOOLS performing the following
                         modifications:
                         - Clones ADTOOLS using GCC 11, AFXGROUP's CLIB2
