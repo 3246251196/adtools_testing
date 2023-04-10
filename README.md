@@ -4,27 +4,24 @@ You should read and have a setup that is able to build ADTOOLS. See the ADTOOLS 
 
 ## Using this repository
 ### For more information
-Run ./4afx [-h | --help]
+Run "./4afx"
 
-### Running ./4afx should be all that is needed
-Running 4afx will build the ADTOOLS repository and then generate all the tests with logging information and the necessary Shared Objects (where necessary) in a single compressed LHA file per test.
+The script is designed to do two things:
+- Build ADTOOLS (GCC 11, BINUTILS 2.23.2 and use AFXGROUP's CLIB) after making some modifications that can be specified
+- Run the tests in this repository either using the newly built ADTOOLS, or using your own ADTOOLS somewhere else
 
-If the "build" directory already exists then 4afx assumes that ADTOOLS is already built and that only the tests should be regenerated. In the case that there was an issue during the build of ADTOOLS and you want to continue building, issue "./4afx build" which will continue the build and then stop without running the tests. In the case that build is not the first argument to the script, then all arguments are passed to the testing framework makefile.
+Whatever is inside adtools_mod is executed before building ADTOOLS. At the moment, this is needed to apply necessary changes after cloning ADTOOLS and can further modified if required.
+
+When running the tests, the script will do just, finally creating an artifact: "4afx_tests.lha". This file can be sent to your AmigaOne machine and extracted. The extraction will cause a folder named "tests" and a script named "run_all.script" (see that script inside "tests"). Said script will finalise the unpacking of the tests and automatically invoke "user.script" (see that script inside "tests") on each test case variant. By default, the script is commented out but can be modified. Each variant is standalone and for each test there are 4 variants; 2 variants of c library version (newlib and clib2) and 2 variants of link type (dynamic and static). In the case of Shared Object creation, the test framework will copy any necessary SO files into the directory for that variant. The ELF.LIBRARY will load local SO files in preference.
+
+Ideally it should be as easy is the following steps:
+./4afx -b # to build ADTOOLS in-place
+./4afx -t # to build all the tests
+# copy the 4afx_tests.lha to the AmigaOne machine
+lha x 4afx_tests.lha # resulting in tests/ and run_all.script
+run_all_script
 
 By default, the script will cause the make system to consume all the available threads available on your machine. You can override this by setting a variables CORES to an amount you desire. For example, if you have 6 physical cores, and 12 logical cores, the script will consume all resources. You can, instead, supply CORES=4 to the environment if desired.
-
-The general idea is that this script builds ADTOOLS and all is restricted to the scope of this directory on your local machine. That is to say that it will not interfere with your environment outside; kind of like a CHROOT. It is not recommended to replace the "build" folder with a symbolic link to another build system you may have, since that could affect the referenced build system if using options like "delete" with the script.
-
-The steps are that it will checkout ADTOOLS building GCC 11 and BINUTILS 2.23.2 using AFXGROUP's CLIB2.
-It also makes the following modifications (for now):
-- Copies over the AMIGAOS.H file from AFXGROUP's CLIB2 to the GCC rs6000 (linker script);
-- Currently hacks out -Werror in AFXGROUP's CLIB2 due to an issue with timeval cast;
-- Forces the creation of AFXGROUP'S CLIB2 shared libraries;
-- After building the CROSS COMPILER, the script will then build all of the tests in the "tests" folder;
-- Finally, a single LHA file is generated that can be copied over to an AmigaOne and extracted which includes a single "run_all.script" that can be executed.
-
-### Artifacts
-Inside each tst will be 4 binaries; clib, newlib (2) * dynamic, static (2). Along with those binaries with be a corresponding script whose name is prepended with "run_". Rather than executing the binary the script should be executed since it will handle the invocation of the binary and report back whether the test passed including automatic inspection tests. See below (section: Integration into the test framework) for more information. A step above is the already mentioned "run_all.script" which contains all of these artifacts.
 
 ## Important
 This script/repo was written at the time when
