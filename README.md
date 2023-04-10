@@ -5,7 +5,7 @@
 Run "./adt"
 
 The script is designed to do two things:
-- Build ADTOOLS (GCC 11, BINUTILS 2.23.2 and use AFXGROUP's CLIB) after making some modifications that can be specified
+- Build ADTOOLS (GCC 11, BINUTILS 2.23.2 and use AFXGROUP's CLIB) after making some modifications that can be specified (see adtools_mod)
 - Run the tests in this repository either using the newly built ADTOOLS, or using your own ADTOOLS somewhere else
 
 Whatever is inside adtools_mod is executed before building ADTOOLS. At the moment, this is needed to apply necessary changes after cloning ADTOOLS and can further modified if required.
