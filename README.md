@@ -12,14 +12,19 @@ Whatever is inside adtools_mod is executed before building ADTOOLS. At the momen
 
 When running the tests, the script will do just, finally creating an artifact: "adt_tests.lha". This file can be sent to your AmigaOne machine and extracted. The extraction will cause a folder named "tests" and a script named "run_all.script" (see that script inside "tests") which is designed to be run with "execute" on the AmigaOne machine. Said script will finalise the unpacking of the tests and automatically invoke "user.script" (see that script inside "tests") on each test case variant. By default, the script is commented out but can be modified. Each variant is standalone and for each test there are 4 variants; 2 variants of c library version (newlib and clib2) and 2 variants of link type (dynamic and static). In the case of Shared Object creation, the test framework will copy any necessary SO files into the directory for that variant. The ELF.LIBRARY will load local SO files in preference.
 
-Ideally it should be as easy is the following steps:
+By default, the script will cause the make system to consume all the available threads available on your machine. You can override this by setting a variables CORES to an amount you desire. For example, if you have 6 physical cores, and 12 logical cores, the script will consume all resources. You can, instead, supply CORES=4 to the environment if desired.
+
+### Ideal scenario
+It should be as easy is the following steps:
 - ./adt -b
 - ./adt -t
 - (copy the adt_tests.lha to the AmigaOne machine)
 - lha x adt_tests.lha
 - execute run_all_script
 
-By default, the script will cause the make system to consume all the available threads available on your machine. You can override this by setting a variables CORES to an amount you desire. For example, if you have 6 physical cores, and 12 logical cores, the script will consume all resources. You can, instead, supply CORES=4 to the environment if desired.
+Where you may want to:
+- modify adtools_mod to make modifications to the ADTOOLS repository before building it, see adtools_mod (IFF you wish to use an in-place built version of ADTOOLS versus your own via the -u option)
+- modify the user.script which is currently commented out to perform an action on each variant of each test
 
 ## Important
 This script/repo was written at the time when
