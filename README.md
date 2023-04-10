@@ -8,7 +8,7 @@ The script is designed to do two things:
 - Build ADTOOLS (GCC 11, BINUTILS 2.23.2 and use AFXGROUP's CLIB) after making some modifications that can be specified (see adtools_mod)
 - Run the tests in this repository either using the newly built ADTOOLS, or using your own ADTOOLS somewhere else
 
-Whatever is inside adtools_mod is executed before building ADTOOLS. At the moment, this is needed to apply necessary changes after cloning ADTOOLS and can further modified if required.
+Whatever is inside adtools_mod is executed before building ADTOOLS. At the moment, this is needed to apply necessary changes after cloning ADTOOLS and can be modified if desired.
 
 When running the tests, the script will do just, finally creating an artifact: "adt_tests.lha". This file can be sent to your AmigaOne machine and extracted. The extraction will cause a folder named "tests" and a script named "run_all.script" (see that script inside "tests") which is designed to be run with "execute" on the AmigaOne machine. Said script will finalise the unpacking of the tests and automatically invoke "user.script" (see that script inside "tests") on each test case variant. By default, the script is commented out but can be modified. Each variant is standalone and for each test there are 4 variants; 2 variants of c library version (newlib and clib2) and 2 variants of link type (dynamic and static). In the case of Shared Object creation, the test framework will copy any necessary SO files into the directory for that variant. The ELF.LIBRARY will load local SO files in preference.
 
