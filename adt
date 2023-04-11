@@ -64,7 +64,7 @@ Usage: ${0} -[b|c|t|u]
                         cross-compiler of choice. It does not make sense to set
                         this option in combination with the option "b". This
                         option is required when a different cross-compiler is
-                        desired for running the tests. It only makes sense to
+                        desired for building the tests. It only makes sense to
                         use this option in combination with option "t"
        *              : Any other arguments are assumed to be arguments that
                         are to be passed to the testing framework when using
@@ -149,18 +149,16 @@ function TESTS
     # Arbitrary check
     which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross-compiler on the path." 50
 
-    _info "Building tests"
-
+    _info "Building tests..."
     _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
-
+    _info "If errors occur the look at the relevant log file in the test directory"
     ${args} make -s -C "${TESTS_DIR}" all
-
-    _info "Generating artifacts:"
-    find "${TESTS_DIR}/" -name "*.lha" | sort
-    _info "Creating the final LHA"
+    _info "Finished building tests"
+    _info "Creating final LHA file..."
     _info "\"${FINAL_LHA}\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
     _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
-    _info "which acts on each variant but is commented out. The \"run_all.script\" is designed to be re-run again"
+    _info "which acts on each variant but is commented out. The \"run_all.script\" is designed to be re-run again."
+    _info "Alternatively, copy over the individual test/variant LHA"
 }
 
 if (( $# == 0 ))

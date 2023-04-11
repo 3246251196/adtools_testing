@@ -65,6 +65,7 @@ endif
 		$(INSPECT_EXE_FILE) *.map
 	rm -f $(INSPECT_EXE_FILE) # Doing this avoids getting warnings when extracting the LHAs on amiga since the file names are the same
 	rm -rf $(TEMP_DIR)
+	echo "	(Re)Built test/variant \"$(LHA_FILE)\""
 
 $(RUN_TEST_SCRIPT):
 	echo "FAILAT 21" > $(RUN_TEST_SCRIPT) ;                                                                  \
@@ -78,11 +79,12 @@ $(RUN_TEST_SCRIPT):
 	echo "    ECHO \"$(PROG): Passed: \"" >> $(RUN_TEST_SCRIPT) ;                                            \
 	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                   \
 	echo "  IF \$${RET} EQ 5" >> $(RUN_TEST_SCRIPT) ;                                                        \
-	echo "    ECHO \"$(PROG): Partial: Same size, contents, but different order. Manual inspection.\""       \
-			>> $(RUN_TEST_SCRIPT) ;                                                                  \
+	echo "    ECHO \"$(PROG): Partial: Same size, contents, but different order\"" >> $(RUN_TEST_SCRIPT) ;     \
+	echo "    ECHO \"Inspect \"$(INSPECT_STDOUT)\" against \"$(INSPECT_EXPECTED)\"" >> $(RUN_TEST_SCRIPT) ;  \
 	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                   \
 	echo "  IF \$${RET} EQ 10" >> $(RUN_TEST_SCRIPT) ;                                                       \
 	echo "    ECHO \"$(PROG): Failed: Expected output did not match actual output\"" >> $(RUN_TEST_SCRIPT) ; \
+	echo "    ECHO \"Inspect \"$(INSPECT_STDOUT)\" against \"$(INSPECT_EXPECTED)\"" >> $(RUN_TEST_SCRIPT) ;  \
 	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                   \
 	echo "  IF \$${RET} EQ 20" >> $(RUN_TEST_SCRIPT) ;                                                       \
 	echo "    ECHO \"$(PROG): Error: $(INSPECT_EXE_FILE) returned unexpectedly\"" >> $(RUN_TEST_SCRIPT) ;    \
