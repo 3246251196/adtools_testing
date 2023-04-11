@@ -1,12 +1,12 @@
-#include <stdio.h>
+#include <proto/dos.h>
 
-int function(int);
+extern int function(int);
 
 int main()
 {
     int result = function(123);
 
-    printf("%s result %d\n", __func__, result);
+    IDOS->Printf("%s result %ld\n", __func__, result);
 
     return 0;
 }
