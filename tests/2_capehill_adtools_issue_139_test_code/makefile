@@ -22,19 +22,19 @@ CFLAGS+=-Wall -Werror -pedantic -std=c11 -fPIC
 LDFLAGS+=-L. -l$(LIB_NAME) -athread=native
 
 $(PROG): main.c $(LIB)
-	$(call LOG_RUN,Link,$(CC) -o $@ $< $(LDFLAGS))
-	$(call LOG_RUN,Readelf,$(READELF) -d $(PROG))
+	$(call LOG_CMD,Link,$(CC) -o $@ $< $(LDFLAGS))
+	$(call LOG_CMD,Readelf,$(READELF) -d $(PROG))
 
 $(LIB): $(RELO)
 ifneq ($(DYN),)
-	$(call LOG_RUN,Creating Shared Object,$(CC) $(CFLAGS) -o $(LIB) $(RELO) -shared)
+	$(call LOG_CMD,Creating Shared Object,$(CC) $(CFLAGS) -o $(LIB) $(RELO) -shared)
 else
-	$(call LOG_RUN,Creating Static Library,$(AR) cruv $(LIB) $(RELO))
-	$(call LOG_RUN,ranlib,$(RANLIB) $(LIB))
+	$(call LOG_CMD,Creating Static Library,$(AR) cruv $(LIB) $(RELO))
+	$(call LOG_CMD,ranlib,$(RANLIB) $(LIB))
 endif
 
 $(RELO): lib.c
-	$(call LOG_RUN,Compile Library Relocatable -fPIC,$(CC) $(CFLAGS) -o $(RELO) -c $<)
+	$(call LOG_CMD,Compile Library Relocatable -fPIC,$(CC) $(CFLAGS) -o $(RELO) -c $<)
 
 #@ ctor
 #@ ctor2

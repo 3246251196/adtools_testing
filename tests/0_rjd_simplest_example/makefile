@@ -1,4 +1,4 @@
 include ../common.mak
 
 $(PROG): main.c
-	$(call LOG_RUN,Link,$(CC) $(CFLAGS) -o $@ $<)
+	$(call LOG_CMD,Link,$(CC) $(CFLAGS) -o $@ $<)
