@@ -3,7 +3,7 @@
 set -e
 set -u
 
-# if (( EXP_CLIB ))
+# if (( EXP_CLIB2 ))
 # then
 #     # We shall use the rs6k amigaos.h version from the afxgroup CLIB2
 #     sed -i '115i\	cp downloads/clib2/misc/amigaos.h ../gcc/repo/gcc/config/rs6000/' native-build/makefile

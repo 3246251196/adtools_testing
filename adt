@@ -41,7 +41,6 @@ function _usage
 {
     cat << EOF
 Usage: ${0} [ -b [ -e | -g<VER> | -n<VER> ] ] | [ -t [ -u ] ] | -c
-
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. Also invokes the script
                         named "adtools_mod" which enabled modifications to be
@@ -59,16 +58,18 @@ Usage: ${0} [ -b [ -e | -g<VER> | -n<VER> ] ] | [ -t [ -u ] ] | -c
        [n] BINUTILS   : Selects the version BINUTILS to use when building
                         in-place ADTOOLS (DEFAULT: 2.23.2)
        [t] tests      : Builds all of the tests under the "${TESTS_DIR}" folder
-                        and then exits
+                        and then exits. Logging of each build of each variant is
+                        appended to the log file
        [u] use_adtools: Use the ADTOOLS that is already on the existing path.
                         This script will not attempt to build ADTOOLS in-place
                         and will assume that the desired cross compiler is
-			the location of "ppc-amigaos-gcc" on the PATH
+                        the location of "ppc-amigaos-gcc" on the PATH
        [c] clean_tests: Performs a cleaning on all tests and then exits
        *              : Any other arguments are assumed to be arguments that
                         are to be passed to the testing framework when using
                         the option "t" or the building of ADTOOLS when using the
-                        the option "b"
+                        the option "b". The arguments are passed in to the
+                        respective makefiles
 EOF
 }
 
@@ -76,58 +77,62 @@ function BUILD
 {
     if [[ ! -d "${BASE_DIR}" ]]
     then
-	mkdir "${BASE_DIR}"
-	cd "${BASE_DIR}"
-	git clone https://github.com/sba1/adtools.git "${ADTOOLS_DIR}"
-	cd "${ADTOOLS_DIR}"
+        local INFO_STRING="Building ADTOOLS using GCC version ${gcc_ver}, BINUTILS version ${binutils_ver}"
+        if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2" ; fi
+        _info "${INFO_STRING}"
+        
+        mkdir "${BASE_DIR}"
+        cd "${BASE_DIR}"
+        git clone https://github.com/sba1/adtools.git "${ADTOOLS_DIR}"
+        cd "${ADTOOLS_DIR}"
 
-	git submodule init
-	git submodule update
-	gild/bin/gild checkout binutils "${binutils_ver}"
-	gild/bin/gild checkout gcc "${gcc_ver}"
+        git submodule init
+        git submodule update
+        gild/bin/gild checkout binutils "${binutils_ver}"
+        gild/bin/gild checkout gcc "${gcc_ver}"
 
-	# Performs the modification (if any) that are provided in the
-	# following script
-	"${ORIG_DIR}"/adtools_mod || _error "Modification script to ADTOOLS failed" 60
+        # Performs the modification (if any) that are provided in the
+        # following script
+        "${ORIG_DIR}"/adtools_mod || _error "Modification script to ADTOOLS failed" 60
 
-	BUILD
-	# Clear any of these variables in the unlikely event they are set. If not, then
-	# they are picked up during the building ADTOOLS and they may not point to the
-	# native gcc that we just tested for before.
-	export CC=
-	export CFLAGS=
-	export CXX=
-	export CXXFLAGS=
-	export CPPFLAGS=
-	export AR=
-	export AS=
-	export LD=
-	export RANLIB=
-	export READELF=
+        BUILD
+        # Clear any of these variables in the unlikely event they are set. If not, then
+        # they are picked up during the building ADTOOLS and they may not point to the
+        # native gcc that we just tested for before.
+        export CC=
+        export CFLAGS=
+        export CXX=
+        export CXXFLAGS=
+        export CPPFLAGS=
+        export AR=
+        export AS=
+        export LD=
+        export RANLIB=
+        export READELF=
     else
-	cd "${BASE_DIR}/${ADTOOLS_DIR}"
+        cd "${BASE_DIR}/${ADTOOLS_DIR}"
     fi
     
     native_gcc_error=0
     which gcc 1>/dev/null 2>&1
     if (( !${?} ))
     then
-	if [[ $(gcc -dumpmachine) != "x86_64-linux-gnu" ]]
-	then
-	    native_gcc_error=1
-	fi
+        if [[ $(gcc -dumpmachine) != "x86_64-linux-gnu" ]]
+        then
+            native_gcc_error=1
+        fi
     else
-	native_gcc_error=1
+        native_gcc_error=1
     fi
 
     if (( native_gcc_error ))
     then
-	_error "Expected native linux x86-64 gcc compiler to be accessible" 30
+        _error "Expected native linux x86-64 gcc compiler to be accessible" 30
     fi
 
     if [[ -z ${CORES} ]]
     then
-	CORES=$(nproc)
+        CORES=$(nproc)
     fi
     if [[ -z ${CORES} ]] ; then CORES=1 ; fi
 
@@ -169,30 +174,30 @@ fi
 while getopts beg:n:tuc opt
 do
     case "${opt}" in
-	b)
-	    do_build=1
-	    ;;
-	e)
-	    export EXP_CLIB=1
-	    ;;
-	g)
-	    gcc_ver="${OPTARG}"
-	    ;;
-	n)
-	    binutils_ver="${OPTARG}"
-	    ;;
-	t)
-	    do_tests=1
-	    ;;
-	u)
-	    use_this_adtools=1
-	    ;;
-	c)
-	    do_clean_tests=1
-	    ;;
-	*)
-	    args="${args} ${OPTARG}"
-	    ;;
+    b)
+        do_build=1
+        ;;
+    e)
+        export EXP_CLIB2=1
+        ;;
+    g)
+        gcc_ver="${OPTARG}"
+        ;;
+    n)
+        binutils_ver="${OPTARG}"
+        ;;
+    t)
+        do_tests=1
+        ;;
+    u)
+        use_this_adtools=1
+        ;;
+    c)
+        do_clean_tests=1
+        ;;
+    *)
+        args="${args} ${OPTARG}"
+        ;;
     esac
 done
 
@@ -216,13 +221,13 @@ then
        this_adtools="$(dirname $(which ppc-amigaos-gcc))"
        if (( $? ))
        then
-	   _error "ADTOOLS cross-compiler not found on PATH" 70
+       _error "ADTOOLS cross-compiler not found on PATH" 70
        fi
        CROSS_PREFIX="${this_adtools}/../"
        BASE_DIR=
    else
-       which ppc-amigaos-gcc 1>/dev/null 2>&1 \
-	   && _error "Did not expect to find a cross-compiler on the path" 90
+       which ppc-amigaos-gcc 1>/dev/null 2>&1 && \
+           _error "Did not expect to find a cross-compiler on the path" 90
    fi
 fi
    
