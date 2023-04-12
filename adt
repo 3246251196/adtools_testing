@@ -5,6 +5,8 @@ do_build=0
 do_tests=0
 do_clean_tests=0
 use_this_adtools=0
+gcc_ver=11 # default
+binutils_ver=2.23.2
 args=
 
 
@@ -38,34 +40,31 @@ function _info
 function _usage
 {
     cat << EOF
-Usage: ${0} -[b|c|t|u]
-       [b] build      : Clones and builds ADTOOLS performing the following
-                        modifications:
-                        - Clones ADTOOLS using GCC 11, AFXGROUP's CLIB2
-                          repository, and BINTUILS 2.23.2, then,
-                        - Copies over the linker script provided in AFXGROUP's
-                          CLIB2 repository to the GCC download
-                        - Forces the removal of -Werror during the building of
-                          AFXGROUP's CLIB2.
-                        - Enables the generation of Shared Objects of AFGROUP's
-                          CLIB2
-                        The cloning and building of ADTOOLS all happen in the
-                        directory named "${BUILD_DIR}". If the directory
-                        already exists then this script invokes a build in
-                        ADTOOLS without cleaning first and does not invoke the
-                        ADTOOLS modification script. In either case, this
-                        script then exits
-       [c] clean_tests: Performs a cleaning on all tests and then exits
+Usage: ${0} [ -b [ -e | -g<VER> | -n<VER> ] ] | [ -t [ -u ] ] | -c
+
+       [b] build      : Clones and builds ADTOOLS in-place respecting the
+                        additionally supplied options. Also invokes the script
+                        named "adtools_mod" which enabled modifications to be
+                        applied on top of the cloned ADTOOLS repository. The
+                        in-place location is the folder named "${BUILD_DIR}".
+                        If the directory already exists then this script invokes
+                        a build in the already existing in-place ADTOOLS without
+                        firstly performing a clean and does not invoke the
+                        ADTOOLS modification script. In either case, this script
+                        then exits
+       [e] AFXGROUP C : Enables the experimental AFXGROUP's version of C
+                        Library, CLIB2, when building in-place ADTOOLS
+       [g] GCC        : Selects the version of GCC to use when building
+                        in-place ADTOOLS (DEFAULT: 11)
+       [n] BINUTILS   : Selects the version BINUTILS to use when building
+                        in-place ADTOOLS (DEFAULT: 2.23.2)
        [t] tests      : Builds all of the tests under the "${TESTS_DIR}" folder
                         and then exits
        [u] use_adtools: Use the ADTOOLS that is already on the existing path.
                         This script will not attempt to build ADTOOLS in-place
-                        and will assume that the current ppc-amigaos-gcc is the
-                        cross-compiler of choice. It does not make sense to set
-                        this option in combination with the option "b". This
-                        option is required when a different cross-compiler is
-                        desired for building the tests. It only makes sense to
-                        use this option in combination with option "t"
+                        and will assume that the desired cross compiler is
+			the location of "ppc-amigaos-gcc" on the PATH
+       [c] clean_tests: Performs a cleaning on all tests and then exits
        *              : Any other arguments are assumed to be arguments that
                         are to be passed to the testing framework when using
                         the option "t" or the building of ADTOOLS when using the
@@ -84,8 +83,8 @@ function BUILD
 
 	git submodule init
 	git submodule update
-	gild/bin/gild checkout binutils 2.23.2
-	gild/bin/gild checkout gcc 11
+	gild/bin/gild checkout binutils "${binutils_ver}"
+	gild/bin/gild checkout gcc "${gcc_ver}"
 
 	# Performs the modification (if any) that are provided in the
 	# following script
@@ -133,7 +132,7 @@ function BUILD
     if [[ -z ${CORES} ]] ; then CORES=1 ; fi
 
     LOG_FILE="${BASE_DIR}/adt.log"
-    BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" EXP_CLIB2=1 ${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${LOG_FILE}\""
+    BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" ${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${LOG_FILE}\""
     echo "####################" > "${LOG_FILE}"
     echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
     echo "####################" >> "${LOG_FILE}"
@@ -167,20 +166,29 @@ then
     _error "No options provided" 10
 fi
 
-while getopts bctu opt
+while getopts beg:n:tuc opt
 do
-    case ${opt} in
+    case "${opt}" in
 	b)
 	    do_build=1
 	    ;;
-	c)
-	    do_clean_tests=1
+	e)
+	    export EXP_CLIB=1
+	    ;;
+	g)
+	    gcc_ver="${OPTARG}"
+	    ;;
+	n)
+	    binutils_ver="${OPTARG}"
 	    ;;
 	t)
 	    do_tests=1
 	    ;;
 	u)
 	    use_this_adtools=1
+	    ;;
+	c)
+	    do_clean_tests=1
 	    ;;
 	*)
 	    args="${args} ${OPTARG}"
@@ -194,7 +202,7 @@ then
 fi
 if (( do_build && use_this_adtools ))
 then
-    _error "Request to build ADTOOLS in-place, yet provided with alternate ADTOOLS" 80
+    _error "Specifying a particular version of ADTOOLS only makes sense when building the tests" 80
 fi
 if (( !do_build && !do_tests && !do_clean_tests ))
 then

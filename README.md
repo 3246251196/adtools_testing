@@ -4,34 +4,36 @@
 ### For more information
 Run "./adt"
 
-The script is designed to do two things:
-- Build ADTOOLS (GCC 11, BINUTILS 2.23.2 and use AFXGROUP's CLIB) after making some modifications that can be specified (see adtools_mod)
-- Build the tests in this repository either using the newly built ADTOOLS, or using your own ADTOOLS somewhere else
+At the heart of it, this script does two things:
+- Builds ADTOOLS in-place
+- And/Or, builds the tests in this repository
 
-Whatever is inside adtools_mod is executed before building ADTOOLS. At the moment, this is needed to apply necessary changes after cloning ADTOOLS and can be modified if desired.
+It acts like a CHROOT almost, in the sense that everything is performed at the location, or under the location of where this repository, adtools_test, is cloned. Nothing in your environment is molested since everything is initiated from the process of the script "adt". It is meant to enable the rapid development and testing of ADTOOLS. Hopefully, a lot of the laborious work has been wrapped up in the scripts and makefiles contained herein. But, it is completely capable of using an already existing version of ADTOOLS on your machine versus building or using the in-place version if desired.
 
-After building the tests the script will create an artifact: "adt_tests.lha". This file can be sent to your AmigaOne machine and extracted. The extraction will cause a folder named "tests" and a script named "run_all.script" (see that script inside "tests") which is designed to be run with "execute" on the AmigaOne machine. Said script will finalise the unpacking of the tests and automatically invoke "user.script" (see that script inside "tests") on each test case variant. By default, the script is commented out but can be modified. Each variant is standalone and for each test there are 4 variants; 2 variants of c library version (newlib and clib2) and 2 variants of link type (dynamic and static). In the case of Shared Object creation, the test framework will copy any necessary SO files into the directory for that variant. The ELF.LIBRARY will load local SO files in preference.
+The usage of the "adt" script can be seen by merely invoking "./atd". The only thing worth mentioning is that modification to the in-place ADTOOLS can be performed automatically using the script named "adtools_mod" and there are already some commented-out modifications in there that you may wish to change; said script is automatically invoked by the "adt" script before building ADTOOLS.
 
-By default, the script will cause the make system to consume all the available threads available on your machine. You can override this by setting a variables CORES to an amount you desire. For example, if you have 6 physical cores, and 12 logical cores, the script will consume all resources. You can, instead, supply CORES=4 to the environment if desired.
+When using the "adt" script to build in-place ADTOOLS, you can supply CORES=<N> to control how many Make jobs will be used to build ADTOOLS. By default, this value is the results of the command NPROC.
+
+With regards to building the tests, the "adt" script will create an artifact, finally, named "adt_tests.lha". This file can be sent to your AmigaOne machine and extracted. The extraction will cause the creation of a folder named "tests" and a script (without executable permissions) named "run_all.script" which can be invoked with "execute run_all.script" on the AmigaOne machine. "run_all.script" will finalise the unpacking of the tests and automatically invoke "user.script" (see that script inside "tests") on each test case variant. By default, the actions of the "user.script" are commented out but this can be modified. Each variant is standalone and for each test there are 4 variants; 2 variants of c library version (newlib and clib2) and 2 variants of link type (dynamic and static). In the case of Shared Object creation, the test framework will copy any necessary SO files into the directory for that variant. The ELF.LIBRARY will load local SO files in preference.
+
+The script named "run_<test case variant name>.script" executes the test executable, records the STDOUT and STDERR, compares STDOUT to an expected set of results and reports the result as:
+- PASS (there was no difference),
+- PARTIAL (there was a difference but only in order; this can be useful for multi threaded tests where some threads may report output before the other thread without prediction),
+- FAIL (there was a difference in order or content),
+- ERROR (the inspection exeutable, whose source code is in this repository, unexpectedly failed).
 
 ### Ideal scenario
 It should be as easy is the following steps:
-- ./adt -b
+- ./adt -b -e (Building defaults: GCC 11, BINUTILS 2.23.2 ; these values can be changed. See contents of "./adt". "-e" makes use of AFXGROUP's CLIB2 fork)
 - ./adt -t
 - (copy the adt_tests.lha to the AmigaOne machine)
-- lha x adt_tests.lha
-- execute run_all_script
+- lha x adt_tests.lha 
+- execute run_all_script || OR, cd into the specific test case variant of interest and invoke "execute run_<test case variant name>.script" || OR, run the exectuable directly, yourself.
 
-Where you may want to:
-- modify adtools_mod to make modifications to the ADTOOLS repository before building it, see adtools_mod (IFF you wish to use an in-place built version of ADTOOLS versus your own via the -u option)
-- modify the user.script which is currently commented out to perform an action on each variant of each test
-
-## Important
+## FYI
 This script/repo was written at the time when
 - ADTOOLS last commit: 1501a4a26cf1bcffdd6dd4bcd603167a3e00f51b
 - AFXGROUP CLIB2 last commit: ea6adcd010d760b65700036a8b800c38ce8cca1f
-
-This is important wrt. to the "modifications" made above, since they may become out of date!
 
 ## Adding tests
 ### Standalone
