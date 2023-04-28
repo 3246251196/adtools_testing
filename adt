@@ -10,7 +10,8 @@ binutils_ver=2.23.2
 expclib2_branch=master
 ignore_depends=0
 args=
-
+orig_EXP_CLIB2="${EXP_CLIB2}"
+orig_CLIB2_SHA1="${CLIB2_SHA1}"
 
 readonly ORIG_DIR="$(pwd)"
 readonly BUILD_DIR=build
@@ -184,6 +185,17 @@ function BUILD
     fi
     if [[ -z ${CORES} ]] ; then CORES=1 ; fi
 
+    if [[ -n "${orig_EXP_CLIB2}" && "${orig_EXP_CLIB2}" != "${EXP_CLIB2}" ]]
+    then
+	_info "Variable \"EXP_CLIB2\" was originally \"${orig_EXP_CLIB2}\" and has been reset to \"${EXP_CLIB2}\""
+    fi
+    if [[ -n "${orig_CLIB2_SHA1}" && "${orig_CLIB2_SHA1}" != "${CLIB2_SHA1}" ]]
+    then
+	_info "Variable \"CLIB2_SHA1\" was originally \"${orig_CLIB2_SHA1}\" and has been reset to reset to \"${CLIB2_SHA1}\""
+    fi
+
+    sleep 2 # let the user at least notice if there were some messages
+    
     LOG_FILE="${BASE_DIR}/adt.log"
     BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" ${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${LOG_FILE}\""
     echo "####################" > "${LOG_FILE}"
@@ -220,16 +232,8 @@ then
 fi
 
 # Clear these variables to avoid unnecessary confusion. They must be set using this script
-if [[ -n ${EXP_CLIB2} ]]
-then
-    _info "Unsetting variable \"EXP_CLIB2\" and then honouring the options provided"
-    export EXP_CLIB2=
-fi
-if [[ -n ${CLIB2_SHA1} ]]
-then
-    _info "Unsetting variable \"CLIB2_SHA1\" and then honouring the options provided"
-    export CLIB2_SHA1=
-fi
+export EXP_CLIB2=
+export CLIB2_SHA1=
 
 while getopts beg:n:ituc opt
 do
