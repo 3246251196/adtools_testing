@@ -46,7 +46,7 @@ function _usage
 Usage: ${0} [ -b [ -e<BRANCH> | -g<VER> | -n<VER> ] -i ] | [ -t [ -u ] ] | -c
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. Also invokes the script
-                        named "adtools_mod" which enabled modifications to be
+                        named "adtools_mod" which enables modifications to be
                         applied on top of the cloned ADTOOLS repository. The
                         in-place location is the folder named "${BUILD_DIR}".
                         If the directory already exists then this script invokes
