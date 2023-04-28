@@ -7,6 +7,8 @@ do_clean_tests=0
 use_this_adtools=0
 gcc_ver=11 # default
 binutils_ver=2.23.2
+expclib2_branch=master
+ignore_depends=0
 args=
 
 
@@ -40,7 +42,7 @@ function _info
 function _usage
 {
     cat << EOF
-Usage: ${0} [ -b [ -e | -g<VER> | -n<VER> ] ] | [ -t [ -u ] ] | -c
+Usage: ${0} [ -b [ -e<BRANCH> | -g<VER> | -n<VER> ] -i ] | [ -t [ -u ] ] | -c
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. Also invokes the script
                         named "adtools_mod" which enabled modifications to be
@@ -51,12 +53,14 @@ Usage: ${0} [ -b [ -e | -g<VER> | -n<VER> ] ] | [ -t [ -u ] ] | -c
                         firstly performing a clean and does not invoke the
                         ADTOOLS modification script. In either case, this script
                         then exits
-       [e] AFXGROUP C : Enables the experimental AFXGROUP's version of C
-                        Library, CLIB2, when building in-place ADTOOLS
+       [e] AFXGROUP C : Enables the experimental AFXGROUP's version of the C
+                        Library, CLIB2, when building in-place ADTOOLS using
+                        the branch specified (DEFAULT: master)
        [g] GCC        : Selects the version of GCC to use when building
                         in-place ADTOOLS (DEFAULT: 11)
        [n] BINUTILS   : Selects the version BINUTILS to use when building
                         in-place ADTOOLS (DEFAULT: 2.23.2)
+       [i] no depends : Ignore dependency checker
        [t] tests      : Builds all of the tests under the "${TESTS_DIR}" folder
                         and then exits. Logging of each build of each variant is
                         appended to the log file
@@ -73,8 +77,52 @@ Usage: ${0} [ -b [ -e | -g<VER> | -n<VER> ] ] | [ -t [ -u ] ] | -c
 EOF
 }
 
+function CHECK_DEPENDS
+{
+    local _continue=1
+    local _selection
+    local _packages="libgmp-dev libmpc-dev libmpfr-dev bison flex"
+
+    _info "Checking for ${_packages} and a suitable version of LHA"
+    
+    if [[ ! "$(lha --version 2>&1)" =~ "LHa for UNIX version" ]]
+    then
+	_warn "Unexpected or no version of \"LHA\". Please use \"https://github.com/jca02266/lha\""
+	_continue=0
+    fi
+
+    # Only supporting dpkg for now
+    if [[ $(dpkg-query --version ) ]]
+    then
+	for package in ${_packages}
+	do
+	    if [[ $(dpkg-query --showformat '${db:Status-Status}' --show "${package}" 2>/dev/null) != installed ]]
+	    then
+		_warn "Package \"${package}\" does not seem to be installed and it is required to build ADTOOLS"
+		_continue=0
+	    fi
+	done
+    else
+	_warn "Prebuild dependency checking is only supported with \"dpkg\". Dependency checks ignored."
+	_continue=0
+    fi
+    if (( !_continue ))
+    then
+	_info "Dependency check was not clean. Continue (y/n)?"
+	read _selection
+	if [[ "${_selection}" != y ]]
+	then
+	    _error "Not continuing due to issues with the dependency checker" 100
+	fi
+    fi
+}
+
 function BUILD
 {
+    if (( !ignore_depends ))
+    then
+	CHECK_DEPENDS
+    fi
     if [[ ! -d "${BASE_DIR}" ]]
     then
         local INFO_STRING="Building ADTOOLS using GCC version ${gcc_ver}, BINUTILS version ${binutils_ver}"
@@ -171,7 +219,7 @@ then
     _error "No options provided" 10
 fi
 
-while getopts beg:n:tuc opt
+while getopts beg:n:ituc opt
 do
     case "${opt}" in
     b)
@@ -179,6 +227,12 @@ do
         ;;
     e)
         export EXP_CLIB2=1
+	next="${!OPTIND}"
+	if [[ -n "${next}" && "${next}" != -* ]] ; then
+	    OPTIND=$((OPTIND + 1))
+	    expclib2_branch="${next}"
+	fi
+	export CLIB2_SHA1="${expclib2_branch}"
         ;;
     g)
         gcc_ver="${OPTARG}"
@@ -186,6 +240,9 @@ do
     n)
         binutils_ver="${OPTARG}"
         ;;
+    i)
+	ignore_depends=1
+	;;
     t)
         do_tests=1
         ;;
