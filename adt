@@ -57,9 +57,9 @@ Usage: ${0} [ -b [ -e<BRANCH> | -g<VER> | -n<VER> | -i ] ] | [ -t [ -u ] ] | -c
        [e] AFXGROUP C : Enables the experimental AFXGROUP's version of the C
                         Library, CLIB2, when building in-place ADTOOLS using
                         the branch specified (DEFAULT: master)
-       [g] GCC        : Selects the version of GCC to use when building
+       [g] gcc        : Selects the version of GCC to use when building
                         in-place ADTOOLS (DEFAULT: 11)
-       [n] BINUTILS   : Selects the version BINUTILS to use when building
+       [n] binutils   : Selects the version of BINUTILS to use when building
                         in-place ADTOOLS (DEFAULT: 2.23.2)
        [i] no depends : Ignore dependency checker
        [t] tests      : Builds all of the tests under the "${TESTS_DIR}" folder
