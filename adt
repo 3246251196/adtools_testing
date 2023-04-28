@@ -219,6 +219,18 @@ then
     _error "No options provided" 10
 fi
 
+# Clear these variables to avoid unnecessary confusion. They must be set using this script
+if [[ -n ${EXP_CLIB2} ]]
+then
+    _info "Unsetting variable \"EXP_CLIB2\" and then honouring the options provided"
+    export EXP_CLIB2=
+fi
+if [[ -n ${CLIB2_SHA1} ]]
+then
+    _info "Unsetting variable \"CLIB2_SHA1\" and then honouring the options provided"
+    export CLIB2_SHA1=
+fi
+
 while getopts beg:n:ituc opt
 do
     case "${opt}" in
