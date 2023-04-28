@@ -43,7 +43,7 @@ function _info
 function _usage
 {
     cat << EOF
-Usage: ${0} [ -b [ -e<BRANCH> | -g<VER> | -n<VER> ] -i ] | [ -t [ -u ] ] | -c
+Usage: ${0} [ -b [ -e<BRANCH> | -g<VER> | -n<VER> | -i ] ] | [ -t [ -u ] ] | -c
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. Also invokes the script
                         named "adtools_mod" which enables modifications to be
