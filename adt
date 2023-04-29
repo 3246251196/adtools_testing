@@ -7,22 +7,25 @@ do_clean_tests=0
 use_this_adtools=0
 gcc_ver=11 # default
 binutils_ver=2.23.2
+SDK_VERSION=54.16
 expclib2_branch=master
-ignore_depends=0
 args=
 orig_EXP_CLIB2="${EXP_CLIB2}"
 orig_CLIB2_SHA1="${CLIB2_SHA1}"
+session_prefix=
+no_prompt=0
 
 readonly ORIG_DIR="$(pwd)"
-readonly BUILD_DIR=build
-readonly TESTS_DIR=tests
 readonly ADTOOLS_DIR=adt_adtools
+readonly TESTS_DIR=tests
 readonly SCRIPT_INVOCATION=1
-readonly FINAL_LHA=adt_tests.lha
 readonly RUN_ALL_SCRIPT=run_all.script
 readonly EXECUTE_SCRIPT=user.script
-BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
-CROSS_PREFIX="${BASE_DIR}/adt_build"
+BUILD_DIR=
+FINAL_LHA=
+BASE_DIR=
+CROSS_PREFIX=
+ADTOOLS_MOD_SCRIPT=
 
 function _error
 {
@@ -43,17 +46,32 @@ function _info
 function _usage
 {
     cat << EOF
-Usage: ${0} [ -b [ -e<BRANCH> | -g<VER> | -n<VER> | -i ] ] | [ -t [ -u ] ] | -c
+Usage: ${0} [-p<PREFIX>] [-y] ( [-b[-e<BRANCH>|-g<VER>|-n<VER>|-s<VER>]] | [-t[-u]] ) [-c] [-C]
+       [p] prefix     : Sets the prefix of the build, test or clean session.
+                        This may be useful if you wish to build another version
+                        of ADTOOLS and/or perform tests on another version. For
+                        example, building an ADTOOLS with GCC 11 and building
+                        the tests for it and also building another version with
+                        GCC 8 which would result in two build directories and 
+                        two final test LHA files, one for each version 
+                        (DEFAULT: ""; i.e. no prefix)
+       !! NOTE !!     : It is important to use this option when invoking a
+                        build, test or clean action so as to ensure operation
+                        on the expected session/prefix unless multiple prefixes
+                        or not desired in which case it can be ignored
+       [y] no prompt  : Answer YES to all prompts
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. Also invokes the script
-                        named "adtools_mod" which enables modifications to be
-                        applied on top of the cloned ADTOOLS repository. The
-                        in-place location is the folder named "${BUILD_DIR}".
-                        If the directory already exists then this script invokes
-                        a build in the already existing in-place ADTOOLS without
-                        firstly performing a clean and does not invoke the
-                        ADTOOLS modification script. In either case, this script
-                        then exits
+                        named "<PREFIX>adtools_mod" which enables modifications
+                        to be applied on top of the cloned ADTOOLS repository.
+			It is your responsibility to ensure that the script
+                        exists and it named correctly. The in-place location is
+                        the folder named "<PREFIX>build". If the directory 
+                        already exists then this script invokes a build in the
+                        already existing in-place ADTOOLS without firstly 
+                        performing a clean and does not invoke the ADTOOLS 
+                        modification script. In either case, this script then 
+                        exits
        [e] AFXGROUP C : Enables the experimental AFXGROUP's version of the C
                         Library, CLIB2, when building in-place ADTOOLS using
                         the branch specified (DEFAULT: master)
@@ -61,21 +79,34 @@ Usage: ${0} [ -b [ -e<BRANCH> | -g<VER> | -n<VER> | -i ] ] | [ -t [ -u ] ] | -c
                         in-place ADTOOLS (DEFAULT: 11)
        [n] binutils   : Selects the version of BINUTILS to use when building
                         in-place ADTOOLS (DEFAULT: 2.23.2)
-       [i] no depends : Ignore dependency checker
-       [t] tests      : Builds all of the tests under the "${TESTS_DIR}" folder
-                        and then exits. Logging of each build of each variant is
+       [s] SDK        : Selects the version of the SDK to use when building
+                        in-place ADTOOLS (DEFAULT: 54.16)
+       [t] tests      : Builds all of the tests under the "tests" folder and
+                        then exits. Logging of each build of each variant is
                         appended to the log file
        [u] use_adtools: Use the ADTOOLS that is already on the existing path.
                         This script will not attempt to build ADTOOLS in-place
                         and will assume that the desired cross compiler is
                         the location of "ppc-amigaos-gcc" on the PATH
        [c] clean_tests: Performs a cleaning on all tests and then exits
+       [C] clean_build: Performs a cleaning on the in-place ADTOOLS which will
+                        also remove the built cross-compiler binaries and then
+                        exits
        *              : Any other arguments are assumed to be arguments that
                         are to be passed to the testing framework when using
                         the option "t" or the building of ADTOOLS when using the
                         the option "b". The arguments are passed in to the
                         respective makefiles
 EOF
+}
+
+function SETUP_PATHS
+{
+    BUILD_DIR="${session_prefix}build"
+    FINAL_LHA="${session_prefix}adt_tests.lha"
+    BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
+    CROSS_PREFIX="${BASE_DIR}/adt_build"
+    ADTOOLS_MOD_SCRIPT="${session_prefix}adtools_mod"
 }
 
 function CHECK_DEPENDS
@@ -110,23 +141,25 @@ function CHECK_DEPENDS
     if (( !_continue ))
     then
 	_info "Dependency check was not clean. Continue (y/n)?"
-	read _selection
-	if [[ "${_selection}" != y ]]
+	if (( !no_prompt ))
 	then
-	    _error "Not continuing due to issues with the dependency checker" 100
+	    read _selection
+	    if [[ "${_selection}" != y ]]
+	    then
+		_error "Not continuing due to issues with the dependency checker" 100
+	    fi
+	else
+	    _info "Assuming YES"
 	fi
     fi
 }
 
 function BUILD
 {
-    if (( !ignore_depends ))
-    then
-	CHECK_DEPENDS
-    fi
+    CHECK_DEPENDS
     if [[ ! -d "${BASE_DIR}" ]]
     then
-        local INFO_STRING="Building ADTOOLS using GCC version ${gcc_ver}, BINUTILS version ${binutils_ver}"
+        local INFO_STRING="Building ADTOOLS using GCC version ${gcc_ver}, BINUTILS version ${binutils_ver}, SDK version ${SDK_VERSION}"
         if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2" ; fi
         _info "${INFO_STRING}"
         
@@ -142,9 +175,13 @@ function BUILD
 
         # Performs the modification (if any) that are provided in the
         # following script
-        "${ORIG_DIR}"/adtools_mod || _error "Modification script to ADTOOLS failed" 60
+	if [[ -f "${ORIG_DIR}/{session_prefix}adtools_mod" ]]
+	then
+            "${ORIG_DIR}/{session_prefix}adtools_mod" || _error "Modification script to ADTOOLS failed" 60
+	else
+	    _info "No modification script was supplied for session \"${session_prefix}\""
+	fi
 
-        BUILD
         # Clear any of these variables in the unlikely event they are set. If not, then
         # they are picked up during the building ADTOOLS and they may not point to the
         # native gcc that we just tested for before.
@@ -211,12 +248,13 @@ function BUILD
 function TESTS
 {
     # Arbitrary check
-    which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross-compiler on the path." 50
+    which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross-compiler on the path."\
+" You may have forgotten to set the prefix with option -p or build the cross compiler or specify the -u option" 50
 
     _info "Building tests..."
     _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
     _info "If errors occur the look at the relevant log file in the test directory"
-    ${args} make -s -C "${TESTS_DIR}" all
+    ${args} make -s -C "${TESTS_DIR}" all || _error "An error occurred while trying to build the tests" 120
     _info "Finished building tests"
     _info "Creating final LHA file..."
     _info "\"${FINAL_LHA}\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
@@ -235,44 +273,54 @@ fi
 export EXP_CLIB2=
 export CLIB2_SHA1=
 
-while getopts beg:n:ituc opt
+while getopts p:ybeg:n:s:tucC opt
 do
     case "${opt}" in
-    b)
-        do_build=1
-        ;;
-    e)
-        export EXP_CLIB2=1
-	next="${!OPTIND}"
-	if [[ -n "${next}" && "${next}" != -* ]] ; then
-	    OPTIND=$((OPTIND + 1))
-	    expclib2_branch="${next}"
-	fi
-	export CLIB2_SHA1="${expclib2_branch}"
-        ;;
-    g)
-        gcc_ver="${OPTARG}"
-        ;;
-    n)
-        binutils_ver="${OPTARG}"
-        ;;
-    i)
-	ignore_depends=1
-	;;
-    t)
-        do_tests=1
-        ;;
-    u)
-        use_this_adtools=1
-        ;;
-    c)
-        do_clean_tests=1
-        ;;
-    *)
-        args="${args} ${OPTARG}"
-        ;;
+	p)
+	    session_prefix="${OPTARG}"
+	    ;;
+	y)
+	    no_prompt=1
+	    ;;
+	b)
+            do_build=1
+            ;;
+	e)
+            export EXP_CLIB2=1
+	    next="${!OPTIND}"
+	    if [[ -n "${next}" && "${next}" != -* ]] ; then
+		OPTIND=$((OPTIND + 1))
+		expclib2_branch="${next}"
+	    fi
+	    export CLIB2_SHA1="${expclib2_branch}"
+            ;;
+	g)
+            gcc_ver="${OPTARG}"
+            ;;
+	n)
+            binutils_ver="${OPTARG}"
+            ;;
+	s)
+	    SDK_VERSION="${OPTARG}"
+	    ;;
+	t)
+            do_tests=1
+            ;;
+	u)
+            use_this_adtools=1
+            ;;
+	c)
+            do_clean_tests=1
+            ;;
+	C)
+	    do_clean_build=1
+	    ;;
+	*)
+            args="${args} ${OPTARG}"
+            ;;
     esac
 done
+SETUP_PATHS
 
 if (( do_build && do_tests ))
 then
@@ -282,19 +330,19 @@ if (( do_build && use_this_adtools ))
 then
     _error "Specifying a particular version of ADTOOLS only makes sense when building the tests" 80
 fi
-if (( !do_build && !do_tests && !do_clean_tests ))
+if (( !do_build && !do_tests && !do_clean_tests && !do_clean_build ))
 then
     _warn "No action performed"
     exit 0
 fi
-if (( !do_clean_tests ))
+if (( !do_clean_tests && !do_clean_build ))
 then
    if (( use_this_adtools ))
    then
-       this_adtools="$(dirname $(which ppc-amigaos-gcc))"
+       this_adtools="$(dirname $(which ppc-amigaos-gcc) 2>/dev/null)"
        if (( $? ))
        then
-       _error "ADTOOLS cross-compiler not found on PATH" 70
+       _error "Desired ADTOOLS cross-compiler not found on PATH" 70
        fi
        CROSS_PREFIX="${this_adtools}/../"
        BASE_DIR=
@@ -311,12 +359,33 @@ export FINAL_LHA
 export RUN_ALL_SCRIPT
 export EXECUTE_SCRIPT
 export CROSS_PREFIX
+export SDK_VERSION
 export PATH="${CROSS_PREFIX}/bin:${PATH}"
 
 if (( do_clean_tests ))
 then
     make -s -C "${TESTS_DIR}" clean
     exit 0
+fi
+if (( do_clean_build ))
+then
+    if (( use_this_adtools ))
+    then
+	_error "Cannot use option \"-C\" with \"-u\"" 110
+    else
+	_selection=y
+	_info "Are you sure you want to clean ADTOOLS which will also delete the build (y/n)?"
+	if (( !no_prompt ))
+	then
+	    read _selection
+	else
+	    _info "Assuming YES"
+	fi
+	if [[ "${_selection}" == y ]]
+	then
+	    make clean -C "${BASE_DIR}/${ADTOOLS_DIR}/native-build"
+	fi
+    fi
 fi
 if (( do_build )) ; then BUILD ; fi
 if (( do_tests)) ; then TESTS ; fi
