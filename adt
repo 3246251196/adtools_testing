@@ -401,14 +401,14 @@ then
     if (( use_this_adtools ))
     then
 	this_adtools="$(dirname $(which ppc-amigaos-gcc) 2>/dev/null)"
-	if (( $? ))
+	if [[ -z "${this_adtools}" ]]
 	then
 	    _error "Desired ADTOOLS cross-compiler not found on PATH" 70
 	fi
 	CROSS_PREFIX="${this_adtools}/../"
     else
 	which ppc-amigaos-gcc 1>/dev/null 2>&1 && \
-            _error "Did not expect to find a cross-compiler on the path" 90
+            _warn "Did not expect to find a cross-compiler on the path"
     fi
 fi
 if (( use_this_adtools ))
