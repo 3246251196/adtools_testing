@@ -67,8 +67,8 @@ clean:
 $(INSPECT_EXE): inspect.c
 	ppc-amigaos-gcc -mcrt=newlib -o $@ $< -Wall -Werror -pedantic -std=c11
 
-do_clean=                                     \
-	for TEST in $(tests) ;                \
-	do                                    \
-		$(MAKE) -C "$${TEST}" clean ; \
-	done ; rm -f ../$(FINAL_LHA)
+do_clean=                                                                  \
+	for TEST in $(tests) ;                                             \
+	do                                                                 \
+		$(MAKE) -C "$${TEST}" clean ;                              \
+	done
