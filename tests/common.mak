@@ -43,25 +43,35 @@ all: $(LHA_FILE)
 
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
 	mkdir -p $(TEMP_DIR)
-	# We may not have been able to build the EXE file. If so, exit now!
-	if [[ ! -f $(PROG) ]] ; then exit 1 ; fi
 ifneq ($(DYN),)
-	ARR_SO=($$($(READELF) -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
-	for SO in $${ARR_SO[@]} ;                                                     \
-	do                                                                            \
-		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}" | grep $(GREP_OPT)) ;     \
-		if [[ -z "$${LOC}" ]] ;                                               \
-		then                                                                  \
-			LOC=$$(find . -name "$${SO}") ;                               \
-			test -f "$${LOC}" && $(LHA_ADD) $(LHA_FILE) "$${LOC}" ;       \
-		else                                                                  \
-			test -f "$${LOC}" && cp "$${LOC}" $(TEMP_DIR) ;               \
-			cd $(TEMP_DIR) ;                                              \
-			$(LHA_ADD) ../$(LHA_FILE) "$$(basename "$${LOC}")" ;          \
-			cd .. ;                                                       \
-		fi ;                                                                  \
+	echo "####################" >> $(LOG_FILE)
+	echo "LISTING OF SHARED OBJECTS" >> $(LOG_FILE)
+	echo ""  >> $(LOG_FILE)
+	ARR_SO=($$($(READELF) -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ;    \
+	for SO in $${ARR_SO[@]} ;                                                        \
+	do                                                                               \
+		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}" | grep $(GREP_OPT)) ;        \
+		if [[ -z "$${LOC}" ]] ;                                                  \
+		then                                                                     \
+			LOC=$$(find . -name "$${SO}") ;                                  \
+			{ test -f "$${LOC}" && $(LHA_ADD) $(LHA_FILE) "$${LOC}" &&       \
+				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } || \
+				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;  \
+		else                                                                     \
+			{ test -f "$${LOC}" && cp "$${LOC}" $(TEMP_DIR) &&               \
+				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } || \
+				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;  \
+			cd $(TEMP_DIR) ;                                                 \
+			$(LHA_ADD) ../$(LHA_FILE) "$$(basename "$${LOC}")" ;             \
+			cd .. ;                                                          \
+		fi ;                                                                     \
 	done
 endif
+	echo "####################" >> $(LOG_FILE)
+	echo "LISTING OF POTENTIALLY REQUIRED SHARED LIBRARIES" >> $(LOG_FILE)
+	echo ""  >> $(LOG_FILE)
+	grep -a -o -E "[A-Za-z_0-9]+\.library" $(PROG) >> $(LOG_FILE)
+
 	cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
 	$(LHA_ADD) $(LHA_FILE) $(PROG) $(LOG_FILE) $(RUN_TEST_SCRIPT) $(INSPECT_EXPECTED) \
 		$(INSPECT_EXE_FILE) *.map
@@ -81,7 +91,7 @@ $(RUN_TEST_SCRIPT):
 	echo "    ECHO \"$(PROG): Passed: \"" >> $(RUN_TEST_SCRIPT) ;                                            \
 	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                   \
 	echo "  IF \$${RET} EQ 5" >> $(RUN_TEST_SCRIPT) ;                                                        \
-	echo "    ECHO \"$(PROG): Partial: Same size, contents, but different order\"" >> $(RUN_TEST_SCRIPT) ;     \
+	echo "    ECHO \"$(PROG): Partial: Same size, contents, but different order\"" >> $(RUN_TEST_SCRIPT) ;   \
 	echo "    ECHO \"Inspect \"$(INSPECT_STDOUT)\" against \"$(INSPECT_EXPECTED)\"" >> $(RUN_TEST_SCRIPT) ;  \
 	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                   \
 	echo "  IF \$${RET} EQ 10" >> $(RUN_TEST_SCRIPT) ;                                                       \
