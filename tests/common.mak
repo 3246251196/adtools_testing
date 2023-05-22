@@ -21,7 +21,7 @@ LOG_CMD = echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;      
 	echo  "PHASE                          : $(1)" >> $(LOG_FILE) ;                \
 	echo  "COMMAND                        : $(2)" >> $(LOG_FILE) ;                \
 	echo  "COMMAND OUTPUT (STDOUT/STDERR) : See following lines" >> $(LOG_FILE) ; \
-	$(2) 1>> $(LOG_FILE) 2>&1
+	$(2) 1>> $(LOG_FILE) 2>&1 || echo "Failed to build $$(pwd) : $(PROG)" 1>&2
 
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:
@@ -43,6 +43,8 @@ all: $(LHA_FILE)
 
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
 	mkdir -p $(TEMP_DIR)
+	# We may not have been able to build the EXE file. If so, exit now!
+	if [[ ! -f $(PROG) ]] ; then exit 1 ; fi
 ifneq ($(DYN),)
 	ARR_SO=($$($(READELF) -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
 	for SO in $${ARR_SO[@]} ;                                                     \
