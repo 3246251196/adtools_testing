@@ -67,7 +67,10 @@ Usage: ${0} [-p <PREFIX>] [-y] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VE
                         (DEFAULT: the result of the command NPROC)
        [u] use_adtools: Use the ADTOOLS that is already on the existing path
                         for building the tests or use this when performing a
-                        clean of a build of ADTOOLS
+                        clean of a build of ADTOOLS. In the case ADTOOLS was
+                        built by using the -o option, you will need to add the
+                        cross-compiler to the path and then use this option
+                        along with -t
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. Also invokes the script
                         named "<PREFIX>adtools_mod" which enables modifications
@@ -98,7 +101,10 @@ Usage: ${0} [-p <PREFIX>] [-y] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VE
                         everything else will remain self-contained and the
                         cloning of ADTOOLS will still be self-contained only
                         the installation of the cross compiler will be put into
-                        <PATH>
+                        <PATH>. In the case a modification script is desired
+                        then it should be named <PATH>adtools_mod where <PATH>
+                        is the same as <PATH> for this option, but where '/' is
+                        replaced with '_'
        !! NOTE !!     : Rather than supplying this option you can just set an
                         environment variable named ADTOOLS_GCC_PATH which will
                         have the same effect as supplying -o <PATH>
@@ -125,9 +131,12 @@ function SETUP_PATHS
     FINAL_LHA="${session_prefix}adt_tests.lha"
     BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
     CROSS_PREFIX="${BASE_DIR}/adt_build"
+    ADTOOLS_MOD_SCRIPT="${session_prefix}adtools_mod"
     # Rather than correctly applying logic above to check if the
     # gcc_path should be honoured, just perform a one-shot change to
-    # the CROSS_PREFIX here:
+    # the CROSS_PREFIX/BASE_DIR/ADTOOLS_MOD_SCRIPT here:
+    #
+    # The -o option is a total hack and should not be used!
     if [[ -n "${gcc_path}" ]]
     then
 	if [[ -n "${session_prefix}" ]]
@@ -135,8 +144,9 @@ function SETUP_PATHS
             _error "The prefix (-p) option cannot be used in conjunction with a user defined gcc_path option (-o)" 101
 	fi
 	CROSS_PREFIX="${gcc_path}"
+	BASE_DIR="${ORIG_DIR}/$(echo "${gcc_path}" | sed 's,/,_,g' )build"
+	ADTOOLS_MOD_SCRIPT="$(echo "${gcc_path}" | sed 's,/,_,g' )adtools_mod"
     fi
-    ADTOOLS_MOD_SCRIPT="${session_prefix}adtools_mod"
 }
 
 function CHECK_DEPENDS
@@ -205,7 +215,7 @@ function BUILD
 	
         # Performs the modification (if any) that are provided in the
         # following script
-	if [[ -f "${ORIG_DIR}/${session_prefix}adtools_mod" ]]
+	if [[ -f "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}" ]]
 	then
             "${ORIG_DIR}/${session_prefix}adtools_mod" || _error "Modification script to ADTOOLS failed" 60
 	else
