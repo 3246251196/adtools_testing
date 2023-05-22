@@ -14,6 +14,8 @@ orig_EXP_CLIB2="${EXP_CLIB2}"
 orig_CLIB2_SHA1="${CLIB2_SHA1}"
 session_prefix=
 no_prompt=0
+gcc_path=
+CORES=$(nproc)
 
 readonly ORIG_DIR="$(pwd)"
 readonly ADTOOLS_DIR=adt_adtools
@@ -46,7 +48,7 @@ function _info
 function _usage
 {
     cat << EOF
-Usage: ${0} [-p<PREFIX>] [-y] ( [-b[-e<BRANCH>|-g<VER>|-n<VER>|-s<VER>]] | [-t[-u]] ) [-c] [-C]
+Usage: ${0} [-p <PREFIX>] [-y] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VER>|-s <VER>|-o <PATH>]] | [-t] ) [-c] [-C]
        [p] prefix     : Sets the prefix of the build, test or clean session.
                         This may be useful if you wish to build another version
                         of ADTOOLS and/or perform tests on another version. For
@@ -54,17 +56,23 @@ Usage: ${0} [-p<PREFIX>] [-y] ( [-b[-e<BRANCH>|-g<VER>|-n<VER>|-s<VER>]] | [-t[-
                         the tests for it and also building another version with
                         GCC 8 which would result in two build directories and 
                         two final test LHA files, one for each version 
-                        (DEFAULT: ""; i.e. no prefix)
        !! NOTE !!     : It is important to use this option when invoking a
                         build, test or clean action so as to ensure operation
-                        on the expected session/prefix unless multiple prefixes
-                        or not desired in which case it can be ignored
+                        on the expected session/prefix. Rather than supplying
+                        this option you can just set an environment variable
+                        named ADTOOLS_PREFIX which will have the same effect as
+                        supplying -p <PREFIX>
        [y] no prompt  : Answer YES to all prompts
+       [k] cores      : Number of cores/jobs to pass to Makefiles
+                        (DEFAULT: the result of the command NPROC)
+       [u] use_adtools: Use the ADTOOLS that is already on the existing path
+                        for building the tests or use this when performing a
+                        clean of a build of ADTOOLS
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. Also invokes the script
                         named "<PREFIX>adtools_mod" which enables modifications
                         to be applied on top of the cloned ADTOOLS repository.
-			It is your responsibility to ensure that the script
+                        It is your responsibility to ensure that the script
                         exists and it named correctly. The in-place location is
                         the folder named "<PREFIX>build". If the directory 
                         already exists then this script invokes a build in the
@@ -81,17 +89,28 @@ Usage: ${0} [-p<PREFIX>] [-y] ( [-b[-e<BRANCH>|-g<VER>|-n<VER>|-s<VER>]] | [-t[-
                         in-place ADTOOLS (DEFAULT: 2.23.2)
        [s] SDK        : Selects the version of the SDK to use when building
                         in-place ADTOOLS (DEFAULT: 54.16)
+       [o] gcc path   : This is a deviation to the principle of this repository
+                        because the idea is that everything is self-contained
+                        inside the directory you have cloned this repository
+                        to. But, if desired, you can supply this option with a
+                        path and the cross-compiler will be installed into that
+                        location. For example, -o /usr/amiga/gcc. But,
+                        everything else will remain self-contained and the
+                        cloning of ADTOOLS will still be self-contained only
+                        the installation of the cross compiler will be put into
+                        <PATH>
+       !! NOTE !!     : Rather than supplying this option you can just set an
+                        environment variable named ADTOOLS_GCC_PATH which will
+                        have the same effect as supplying -o <PATH>
        [t] tests      : Builds all of the tests under the "tests" folder and
                         then exits. Logging of each build of each variant is
                         appended to the log file
-       [u] use_adtools: Use the ADTOOLS that is already on the existing path.
-                        This script will not attempt to build ADTOOLS in-place
-                        and will assume that the desired cross compiler is
-                        the location of "ppc-amigaos-gcc" on the PATH
        [c] clean_tests: Performs a cleaning on all tests and then exits
        [C] clean_build: Performs a cleaning on the in-place ADTOOLS which will
                         also remove the built cross-compiler binaries and then
-                        exits
+                        exits. In the case that you are using a cross-compiler
+                        outside the self-contained directory then it is not
+                        recommended to use this option
        *              : Any other arguments are assumed to be arguments that
                         are to be passed to the testing framework when using
                         the option "t" or the building of ADTOOLS when using the
@@ -106,6 +125,17 @@ function SETUP_PATHS
     FINAL_LHA="${session_prefix}adt_tests.lha"
     BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
     CROSS_PREFIX="${BASE_DIR}/adt_build"
+    # Rather than correctly applying logic above to check if the
+    # gcc_path should be honoured, just perform a one-shot change to
+    # the CROSS_PREFIX here:
+    if [[ -n "${gcc_path}" ]]
+    then
+	if [[ -n "${session_prefix}" ]]
+	then
+            _error "The prefix (-p) option cannot be used in conjunction with a user defined gcc_path option (-o)" 101
+	fi
+	CROSS_PREFIX="${gcc_path}"
+    fi
     ADTOOLS_MOD_SCRIPT="${session_prefix}adtools_mod"
 }
 
@@ -128,11 +158,11 @@ function CHECK_DEPENDS
     then
 	for package in ${_packages}
 	do
-	    if [[ $(dpkg-query --showformat '${db:Status-Status}' --show "${package}" 2>/dev/null) != installed ]]
-	    then
+            if [[ $(dpkg-query --showformat '${db:Status-Status}' --show "${package}" 2>/dev/null) != installed ]]
+            then
 		_warn "Package \"${package}\" does not seem to be installed and it is required to build ADTOOLS"
 		_continue=0
-	    fi
+            fi
 	done
     else
 	_warn "Prebuild dependency checking is only supported with \"dpkg\". Dependency checks ignored."
@@ -143,13 +173,13 @@ function CHECK_DEPENDS
 	_info "Dependency check was not clean. Continue (y/n)?"
 	if (( !no_prompt ))
 	then
-	    read _selection
-	    if [[ "${_selection}" != y ]]
-	    then
+            read _selection
+            if [[ "${_selection}" != y ]]
+            then
 		_error "Not continuing due to issues with the dependency checker" 100
-	    fi
+            fi
 	else
-	    _info "Assuming YES"
+            _info "Assuming YES"
 	fi
     fi
 }
@@ -159,29 +189,29 @@ function BUILD
     CHECK_DEPENDS
     if [[ ! -d "${BASE_DIR}" ]]
     then
-        local INFO_STRING="Building ADTOOLS using GCC version ${gcc_ver}, BINUTILS version ${binutils_ver}, SDK version ${SDK_VERSION}"
-        if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2" ; fi
+        local INFO_STRING="Building ADTOOLS using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\""
+        if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\"" ; fi
         _info "${INFO_STRING}"
         
         mkdir "${BASE_DIR}"
         cd "${BASE_DIR}"
         git clone https://github.com/sba1/adtools.git "${ADTOOLS_DIR}"
         cd "${ADTOOLS_DIR}"
-
+	
         git submodule init
         git submodule update
         gild/bin/gild checkout binutils "${binutils_ver}"
         gild/bin/gild checkout gcc "${gcc_ver}"
-
+	
         # Performs the modification (if any) that are provided in the
         # following script
-	if [[ -f "${ORIG_DIR}/{session_prefix}adtools_mod" ]]
+	if [[ -f "${ORIG_DIR}/${session_prefix}adtools_mod" ]]
 	then
-            "${ORIG_DIR}/{session_prefix}adtools_mod" || _error "Modification script to ADTOOLS failed" 60
+            "${ORIG_DIR}/${session_prefix}adtools_mod" || _error "Modification script to ADTOOLS failed" 60
 	else
-	    _info "No modification script was supplied for session \"${session_prefix}\""
+            _info "No modification script was supplied for session \"${session_prefix}\""
 	fi
-
+	
         # Clear any of these variables in the unlikely event they are set. If not, then
         # they are picked up during the building ADTOOLS and they may not point to the
         # native gcc that we just tested for before.
@@ -215,13 +245,7 @@ function BUILD
     then
         _error "Expected native linux x86-64 gcc compiler to be accessible" 30
     fi
-
-    if [[ -z ${CORES} ]]
-    then
-        CORES=$(nproc)
-    fi
-    if [[ -z ${CORES} ]] ; then CORES=1 ; fi
-
+    
     if [[ -n "${orig_EXP_CLIB2}" && "${orig_EXP_CLIB2}" != "${EXP_CLIB2}" ]]
     then
 	_info "Variable \"EXP_CLIB2\" was originally \"${orig_EXP_CLIB2}\" and has been reset to \"${EXP_CLIB2}\""
@@ -230,12 +254,26 @@ function BUILD
     then
 	_info "Variable \"CLIB2_SHA1\" was originally \"${orig_CLIB2_SHA1}\" and has been reset to reset to \"${CLIB2_SHA1}\""
     fi
-
-    sleep 2 # let the user at least notice if there were some messages
+    
+    if [[ -n "${session_prefix}" ]]
+    then
+	_info "Using influential environment variable for PREFIX whose value is: \"${session_prefix}\""
+    fi
+    
+    if [[ -n "${gcc_path}" ]]
+    then
+	_info "Using influential environment variable for GCC PATH whose value is: \"${gcc_path}\""
+    fi
+    
+    sleep 5 # let the user at least notice if there were some messages
     
     LOG_FILE="${BASE_DIR}/adt.log"
+    echo "####################" >> "${LOG_FILE}"
+    echo "${INFO_STRING}" >> "${LOG_FILE}"
+    echo "export EXP_CLIB2=${EXP_CLIB2}" >> "${LOG_FILE}"
+    echo "export CLIB2_SHA1=${CLIB2_SHA1}" >> "${LOG_FILE}"
     BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" ${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${LOG_FILE}\""
-    echo "####################" > "${LOG_FILE}"
+    echo "####################" >> "${LOG_FILE}"
     echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
     echo "####################" >> "${LOG_FILE}"
     eval "${BUILD_CMD} || _error \"The ADTOOLS build failed. See the log file: \"${LOG_FILE}\"\" 40"
@@ -273,62 +311,75 @@ fi
 export EXP_CLIB2=
 export CLIB2_SHA1=
 
-while getopts p:ybeg:n:s:tucC opt
+while getopts p:o:yk:beg:n:s:tucC opt
 do
     case "${opt}" in
-	p)
-	    session_prefix="${OPTARG}"
-	    ;;
-	y)
-	    no_prompt=1
-	    ;;
-	b)
-            do_build=1
-            ;;
-	e)
-            export EXP_CLIB2=1
-	    next="${!OPTIND}"
-	    if [[ -n "${next}" && "${next}" != -* ]] ; then
-		OPTIND=$((OPTIND + 1))
-		expclib2_branch="${next}"
-	    fi
-	    export CLIB2_SHA1="${expclib2_branch}"
-            ;;
-	g)
-            gcc_ver="${OPTARG}"
-            ;;
-	n)
-            binutils_ver="${OPTARG}"
-            ;;
-	s)
-	    SDK_VERSION="${OPTARG}"
-	    ;;
-	t)
-            do_tests=1
-            ;;
-	u)
-            use_this_adtools=1
-            ;;
-	c)
-            do_clean_tests=1
-            ;;
-	C)
-	    do_clean_build=1
-	    ;;
-	*)
-            args="${args} ${OPTARG}"
-            ;;
+    p)
+        session_prefix="${OPTARG}"
+        ;;
+    o)
+        gcc_path="${OPTARG}"
+        ;;
+    y)
+        no_prompt=1
+        ;;
+    k)
+        CORES="${OPTARG}"
+        ;;
+    b)
+        do_build=1
+        ;;
+    e)
+        export EXP_CLIB2=1
+        next="${!OPTIND}"
+        if [[ -n "${next}" && "${next}" != -* ]] ; then
+            OPTIND=$((OPTIND + 1))
+            expclib2_branch="${next}"
+        fi
+        export CLIB2_SHA1="${expclib2_branch}"
+        ;;
+    g)
+        gcc_ver="${OPTARG}"
+        ;;
+    n)
+        binutils_ver="${OPTARG}"
+        ;;
+    s)
+        SDK_VERSION="${OPTARG}"
+        ;;
+    t)
+        do_tests=1
+        ;;
+    u)
+        use_this_adtools=1
+        ;;
+    c)
+        do_clean_tests=1
+        ;;
+    C)
+        do_clean_build=1
+        ;;
+    *)
+        args="${args} ${OPTARG}"
+        ;;
     esac
 done
+
+# Check for any influention environment variables before continuing
+if [[ -n "${ADTOOLS_PREFIX}" ]]
+then
+    session_prefix="${ADTOOLS_PREFIX}"
+fi
+if [[ -n "${ADTOOLS_GCC_PATH}" ]]
+then
+    gcc_path="${ADTOOLS_GCC_PATH}"
+fi
+
 SETUP_PATHS
 
 if (( do_build && do_tests ))
 then
     _error "Building the tests and building ADTOOLS is mutually exclusive" 20
-fi
-if (( do_build && use_this_adtools ))
-then
-    _error "Specifying a particular version of ADTOOLS only makes sense when building the tests" 80
 fi
 if (( !do_build && !do_tests && !do_clean_tests && !do_clean_build ))
 then
@@ -337,21 +388,24 @@ then
 fi
 if (( !do_clean_tests && !do_clean_build ))
 then
-   if (( use_this_adtools ))
-   then
-       this_adtools="$(dirname $(which ppc-amigaos-gcc) 2>/dev/null)"
-       if (( $? ))
-       then
-       _error "Desired ADTOOLS cross-compiler not found on PATH" 70
-       fi
-       CROSS_PREFIX="${this_adtools}/../"
-       BASE_DIR=
-   else
-       which ppc-amigaos-gcc 1>/dev/null 2>&1 && \
-           _error "Did not expect to find a cross-compiler on the path" 90
-   fi
+    if (( use_this_adtools ))
+    then
+	this_adtools="$(dirname $(which ppc-amigaos-gcc) 2>/dev/null)"
+	if (( $? ))
+	then
+	    _error "Desired ADTOOLS cross-compiler not found on PATH" 70
+	fi
+	CROSS_PREFIX="${this_adtools}/../"
+    else
+	which ppc-amigaos-gcc 1>/dev/null 2>&1 && \
+            _error "Did not expect to find a cross-compiler on the path" 90
+    fi
 fi
-   
+if (( use_this_adtools ))
+then
+    FINAL_LHA="$(echo "$(dirname $(which ppc-amigaos-gcc))" | sed 's,/,_,g' )${FINAL_LHA}"
+fi
+
 # Variables that are used further on in the testing framework
 export BASE_DIR
 export SCRIPT_INVOCATION
@@ -365,26 +419,32 @@ export PATH="${CROSS_PREFIX}/bin:${PATH}"
 if (( do_clean_tests ))
 then
     make -s -C "${TESTS_DIR}" clean
-    exit 0
+    _info "Test cases have been cleaned. You may still want to delete the final LHA file manually"
 fi
 if (( do_clean_build ))
 then
     if (( use_this_adtools ))
     then
-	_error "Cannot use option \"-C\" with \"-u\"" 110
+	this_adtools="$(dirname $(which ppc-amigaos-gcc) 2>/dev/null)"
+	if (( $? ))
+	then
+	    _error "Desired ADTOOLS cross-compiler not found on PATH" 70
+	fi
+	CROSS_PREFIX="${this_adtools}/../"
+    fi
+    _selection=
+    _info "Will perform a make clean in \"${BASE_DIR}/${ADTOOLS_DIR}/native-build with CROSS_PREFIX set to \"${CROSS_PREFIX}\""
+    _info "This will mean that the directory \"${CROSS_PREFIX}\" will be deleted"
+    _warn ""
+    _warn "THIS IS POTENTIALLY A VERY DANGEROUS OPTION. READ THE INFORMATION ABOVE"
+    _warn ""
+    _info "Are you sure you want to continue (YES/n)?"
+    read _selection
+    if [[ "${_selection}" == YES ]]
+    then
+        make clean -C "${BASE_DIR}/${ADTOOLS_DIR}/native-build"
     else
-	_selection=y
-	_info "Are you sure you want to clean ADTOOLS which will also delete the build (y/n)?"
-	if (( !no_prompt ))
-	then
-	    read _selection
-	else
-	    _info "Assuming YES"
-	fi
-	if [[ "${_selection}" == y ]]
-	then
-	    make clean -C "${BASE_DIR}/${ADTOOLS_DIR}/native-build"
-	fi
+	_info "No action taken"
     fi
 fi
 if (( do_build )) ; then BUILD ; fi
