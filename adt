@@ -48,7 +48,7 @@ function _info
 function _usage
 {
     cat << EOF
-Usage: ${0} [-p <PREFIX>] [-y] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VER>|-s <VER>|-o <PATH>]] | [-t] ) [-c] [-C]
+Usage: ${0} [-p <PREFIX>] [-y] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VER>|-s <VER>|-o <PATH>|-m <FILE>]] | [-t] ) [-c] [-C]
        [p] prefix     : Sets the prefix of the build, test or clean session.
                         This may be useful if you wish to build another version
                         of ADTOOLS and/or perform tests on another version. For
@@ -72,16 +72,11 @@ Usage: ${0} [-p <PREFIX>] [-y] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VE
                         cross-compiler to the path and then use this option
                         along with -t
        [b] build      : Clones and builds ADTOOLS in-place respecting the
-                        additionally supplied options. Also invokes the script
-                        named "<PREFIX>adtools_mod" which enables modifications
-                        to be applied on top of the cloned ADTOOLS repository.
-                        It is your responsibility to ensure that the script
-                        exists and it named correctly. The in-place location is
+                        additionally supplied options. The in-place location is
                         the folder named "<PREFIX>build". If the directory 
                         already exists then this script invokes a build in the
                         already existing in-place ADTOOLS without firstly 
-                        performing a clean and does not invoke the ADTOOLS 
-                        modification script. In either case, this script then 
+                        performing a clean. In either case, this script then
                         exits
        [e] AFXGROUP C : Enables the experimental AFXGROUP's version of the C
                         Library, CLIB2, when building in-place ADTOOLS using
@@ -101,13 +96,18 @@ Usage: ${0} [-p <PREFIX>] [-y] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VE
                         everything else will remain self-contained and the
                         cloning of ADTOOLS will still be self-contained only
                         the installation of the cross compiler will be put into
-                        <PATH>. In the case a modification script is desired
-                        then it should be named <PATH>adtools_mod where <PATH>
-                        is the same as <PATH> for this option, but where '/' is
-                        replaced with '_'
+                        <PATH>.
        !! NOTE !!     : Rather than supplying this option you can just set an
                         environment variable named ADTOOLS_GCC_PATH which will
                         have the same effect as supplying -o <PATH>
+       [m] mod script : Invoke the script named <FILE> after cloning ADTOOLS
+                        but before building ADTOOLS. This allows modifications
+                        to things like the native-build/makefile or whatever is
+                        desired before building ADTOOLS. This is only invoked
+                        if the ADTOOLS repository has not yet been cloned. The
+                        script should reside in the same directory as this
+                        script (the adt script). There is also an example mod
+                        script named "adtools_mod"
        [t] tests      : Builds all of the tests under the "tests" folder and
                         then exits. Logging of each build of each variant is
                         appended to the log file
@@ -131,21 +131,24 @@ function SETUP_PATHS
     FINAL_LHA="${session_prefix}adt_tests.lha"
     BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
     CROSS_PREFIX="${BASE_DIR}/adt_build"
-    ADTOOLS_MOD_SCRIPT="${session_prefix}adtools_mod"
     # Rather than correctly applying logic above to check if the
     # gcc_path should be honoured, just perform a one-shot change to
-    # the CROSS_PREFIX/BASE_DIR/ADTOOLS_MOD_SCRIPT here:
+    # the CROSS_PREFIX/BASE_DIR here:
     #
     # The -o option is a total hack and should not be used!
     if [[ -n "${gcc_path}" ]]
     then
+	# Strip the / suffix off if one exists and assume that it does not have multiple trailing /
+	if [[ "${gcc_path: -1}" = / ]]
+	then
+	    gcc_path="${gcc_path::-1}"
+	fi
 	if [[ -n "${session_prefix}" ]]
 	then
             _error "The prefix (-p) option cannot be used in conjunction with a user defined gcc_path option (-o)" 101
 	fi
 	CROSS_PREFIX="${gcc_path}"
 	BASE_DIR="${ORIG_DIR}/$(echo "${gcc_path}" | sed 's,/,_,g' )build"
-	ADTOOLS_MOD_SCRIPT="$(echo "${gcc_path}" | sed 's,/,_,g' )adtools_mod"
     elif (( use_this_adtools ))
     then
 	# For cross-compilers on the path, we will use the compiler as
@@ -223,11 +226,9 @@ function BUILD
 	
         # Performs the modification (if any) that are provided in the
         # following script
-	if [[ -f "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}" ]]
+	if [[ -n "${ADTOOLS_MOD_SCRIPT}" ]]
 	then
             "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}" || _error "Modification script to ADTOOLS failed" 60
-	else
-            _info "No modification script named \"${ADTOOLS_MOD_SCRIPT}\" was found; no modification to ADTOOLS before building"
 	fi
 	
         # Clear any of these variables in the unlikely event they are set. If not, then
@@ -299,6 +300,12 @@ function BUILD
     # Update the timestamp so that the test framework knows whether it should rebuild the tests.
     # Of course, this dir will be touched even if there was nothing to update in ADTOOLS.
     touch "${BASE_DIR}"
+
+    _info "Finished building ADTOOLS."
+    _info "Your build directory (where the ADTOOLS repository and its source was cloned to) is: \"${BASE_DIR}\""
+    _info "Your installation directory (where the cross compiler was INSTALLED to) is: \"${CROSS_PREFIX}\""
+    _info "NOTE: that if you make a change to ADTOOLS and want to build it again / update it, you will need to provide the same options again, or set the necessary environment variables such as EXP_CLIB2, etc"
+    _info "NOTE: if a change is made to the cross compiler source files and you want to build those changes then you will have to manuall remove the \"gcc-cross-done-${GCC_VERSION}\" file from \"${BASE_DIR}/${ADTOOLS_DIR}/native-build\""
 }
 
 function TESTS
@@ -329,20 +336,20 @@ fi
 export EXP_CLIB2=
 export CLIB2_SHA1=
 
-while getopts p:o:yk:beg:n:s:tucC opt
+while getopts p:yk:ubeg:n:s:o:m:tcC opt
 do
     case "${opt}" in
     p)
         session_prefix="${OPTARG}"
-        ;;
-    o)
-        gcc_path="${OPTARG}"
         ;;
     y)
         no_prompt=1
         ;;
     k)
         CORES="${OPTARG}"
+        ;;
+    u)
+        use_this_adtools=1
         ;;
     b)
         do_build=1
@@ -365,11 +372,14 @@ do
     s)
         SDK_VERSION="${OPTARG}"
         ;;
+    o)
+        gcc_path="${OPTARG}"
+        ;;
+    m)
+	ADTOOLS_MOD_SCRIPT="${OPTARG}"
+	;;
     t)
         do_tests=1
-        ;;
-    u)
-        use_this_adtools=1
         ;;
     c)
         do_clean_tests=1
