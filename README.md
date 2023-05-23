@@ -18,7 +18,7 @@ scripts and makefiles contained herein but it is completely capable of using an
 already existing version of ADTOOLS on your machine versus building or using the
 in-place version if desired.
 
-The usage of the "adt" script can be seen by merely invoking "./atd". The only
+The usage of the "adt" script can be seen by merely invoking "./adt". The only
 thing worth mentioning is that modification to the in-place ADTOOLS can be
 performed automatically using the script named "adtools_mod" and there are
 already some commented-out modifications in there that you may wish to change;
