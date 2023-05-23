@@ -146,6 +146,14 @@ function SETUP_PATHS
 	CROSS_PREFIX="${gcc_path}"
 	BASE_DIR="${ORIG_DIR}/$(echo "${gcc_path}" | sed 's,/,_,g' )build"
 	ADTOOLS_MOD_SCRIPT="$(echo "${gcc_path}" | sed 's,/,_,g' )adtools_mod"
+    elif (( use_this_adtools ))
+    then
+	# For cross-compilers on the path, we will use the compiler as
+	# BASE_DIR, this allows the testing framework to run the tests
+	# and apply the clean_stamp rules only if clean_stamp does not
+	# yet exist, or if the cross-compiler on the PATH has been
+	# updated outside the context of this repo
+	BASE_DIR="$(which ppc-amigaos-gcc)"
     fi
 }
 
