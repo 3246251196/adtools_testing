@@ -217,9 +217,9 @@ function BUILD
         # following script
 	if [[ -f "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}" ]]
 	then
-            "${ORIG_DIR}/${session_prefix}adtools_mod" || _error "Modification script to ADTOOLS failed" 60
+            "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}" || _error "Modification script to ADTOOLS failed" 60
 	else
-            _info "No modification script was supplied for session \"${session_prefix}\""
+            _info "No modification script named \"${ADTOOLS_MOD_SCRIPT}\" was found; no modification to ADTOOLS before building"
 	fi
 	
         # Clear any of these variables in the unlikely event they are set. If not, then
