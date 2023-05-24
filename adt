@@ -10,12 +10,10 @@ binutils_ver=2.23.2
 SDK_VERSION=54.16
 expclib2_branch=master
 args=
-orig_EXP_CLIB2="${EXP_CLIB2}"
-orig_CLIB2_SHA1="${CLIB2_SHA1}"
 session_prefix=
-no_prompt=0
 gcc_path=
 CORES=$(nproc)
+session_was_cached=0
 
 readonly ORIG_DIR="$(pwd)"
 readonly ADTOOLS_DIR=adt_adtools
@@ -23,11 +21,40 @@ readonly TESTS_DIR=tests
 readonly SCRIPT_INVOCATION=1
 readonly RUN_ALL_SCRIPT=run_all.script
 readonly EXECUTE_SCRIPT=user.script
+readonly SESSION_CACHE="${ORIG_DIR}/.adt_session.cache"
 BUILD_DIR=
 FINAL_LHA=
 BASE_DIR=
 CROSS_PREFIX=
 ADTOOLS_MOD_SCRIPT=
+
+function generate_adt_last_proj
+{
+    cat > "${SESSION_CACHE}" <<EOF
+use_this_adtools="${use_this_adtools}"
+gcc_ver="${gcc_ver}"
+binutils_ver="${binutils_ver}"
+SDK_VERSION="${SDK_VERSION}"
+expclib2_branch="${expclib2_branch}"
+args="${args}"
+session_prefix="${session_prefix}"
+gcc_path="${gcc_path}"
+EXP_CLIB2="${EXP_CLIB2}"
+CLIB2_SHA1="${CLIB2_SHA1}"
+EOF
+
+    session_was_cached=1
+}
+
+function obtain_adt_last_proj
+{
+    if [[ -f "${SESSION_CACHE}" ]]
+    then
+	source "${SESSION_CACHE}" && _info "Using cached settings from last invocation"
+    else
+	_error "No previous settings were cached" 103
+    fi
+}
 
 function _error
 {
@@ -48,7 +75,19 @@ function _info
 function _usage
 {
     cat << EOF
-Usage: ${0} [-p <PREFIX>] [-y] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VER>|-s <VER>|-o <PATH>|-m <FILE>]] | [-t] ) [-c] [-C]
+Usage: ${0} [-x] [-p <PREFIX>] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VER>|-s <VER>|-o <PATH>|-m <FILE>] | [-t] ) [-c] [-C]
+       [x] cached proj: Use the variables stored from the previous build action
+                        session for this action. This is useful when a complex
+                        build was invoked before containing many options so
+                        that they do not need to be remembered. This cache file
+                        is only updated on a build action which requires a new
+                        build of ADTOOLS. For example, if a build action such
+                        as "-b -e beta10 -s 53.30 -g 10 -p beta10" was provided
+                        then running the tests for that session is as easy as
+                        "-x -t", or, making a modification to the cross
+                        compiler source files and wanting to build the cross
+                        compiler again is as easy as "-x -b"
+       !! NOTE !!     : This option must be the first option provided
        [p] prefix     : Sets the prefix of the build, test or clean session.
                         This may be useful if you wish to build another version
                         of ADTOOLS and/or perform tests on another version. For
@@ -61,8 +100,8 @@ Usage: ${0} [-p <PREFIX>] [-y] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VE
                         on the expected session/prefix. Rather than supplying
                         this option you can just set an environment variable
                         named ADTOOLS_PREFIX which will have the same effect as
-                        supplying -p <PREFIX>
-       [y] no prompt  : Answer YES to all prompts
+                        supplying -p <PREFIX>. Alternatively, use the -x option
+                        which will retrieve the previous session's settings
        [k] cores      : Number of cores/jobs to pass to Makefiles
                         (DEFAULT: the result of the command NPROC)
        [u] use_adtools: Use the ADTOOLS that is already on the existing path
@@ -99,7 +138,13 @@ Usage: ${0} [-p <PREFIX>] [-y] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VE
                         <PATH>.
        !! NOTE !!     : Rather than supplying this option you can just set an
                         environment variable named ADTOOLS_GCC_PATH which will
-                        have the same effect as supplying -o <PATH>
+                        have the same effect as supplying -o <PATH>.
+                        Alternatively, use the -x option which will retrieve
+                        the previous session's settings. Like the -p option,
+                        you will need to provide this option if you want to
+                        build the tests for a build of ADTOOLS that was built
+                        with this option, unless the -x option is used, or the
+                        variables described above are set in the environment
        [m] mod script : Invoke the script named <FILE> after cloning ADTOOLS
                         but before building ADTOOLS. This allows modifications
                         to things like the native-build/makefile or whatever is
@@ -133,7 +178,7 @@ function SETUP_PATHS
     CROSS_PREFIX="${BASE_DIR}/adt_build"
     # Rather than correctly applying logic above to check if the
     # gcc_path should be honoured, just perform a one-shot change to
-    # the CROSS_PREFIX/BASE_DIR here:
+    # the necessary variables right here!
     #
     # The -o option is a total hack and should not be used!
     if [[ -n "${gcc_path}" ]]
@@ -149,6 +194,7 @@ function SETUP_PATHS
 	fi
 	CROSS_PREFIX="${gcc_path}"
 	BASE_DIR="${ORIG_DIR}/$(echo "${gcc_path}" | sed 's,/,_,g' )build"
+	FINAL_LHA="$(echo "${gcc_path}" | sed 's,/,_,g' )adt_tests.lha"
     elif (( use_this_adtools ))
     then
 	# For cross-compilers on the path, we will use the compiler as
@@ -192,16 +238,11 @@ function CHECK_DEPENDS
     if (( !_continue ))
     then
 	_info "Dependency check was not clean. Continue (y/n)?"
-	if (( !no_prompt ))
-	then
-            read _selection
-            if [[ "${_selection}" != y ]]
-            then
-		_error "Not continuing due to issues with the dependency checker" 100
-            fi
-	else
-            _info "Assuming YES"
-	fi
+        read _selection
+        if [[ "${_selection}" != y ]]
+        then
+	    _error "Not continuing due to issues with the dependency checker" 100
+        fi
     fi
 }
 
@@ -244,8 +285,19 @@ function BUILD
         export LD=
         export RANLIB=
         export READELF=
+
+	# Store this sessions settings
+	generate_adt_last_proj
     else
         cd "${BASE_DIR}/${ADTOOLS_DIR}"
+	local _selection=
+	_info "Did you make any changes to the CLIB2 source files and want to build the cross compiler? (y/n)"
+	read _selection
+	if [[ "${_selection}" == y ]]
+	then
+	    rm "${BASE_DIR}/${ADTOOLS_DIR}/native-build/clib2-cross-done-"*
+	fi
+	rm "${BASE_DIR}/${ADTOOLS_DIR}/native-build/gcc-cross-done-"*
     fi
     
     native_gcc_error=0
@@ -263,25 +315,6 @@ function BUILD
     if (( native_gcc_error ))
     then
         _error "Expected native linux x86-64 gcc compiler to be accessible" 30
-    fi
-    
-    if [[ -n "${orig_EXP_CLIB2}" && "${orig_EXP_CLIB2}" != "${EXP_CLIB2}" ]]
-    then
-	_info "Variable \"EXP_CLIB2\" was originally \"${orig_EXP_CLIB2}\" and has been reset to \"${EXP_CLIB2}\""
-    fi
-    if [[ -n "${orig_CLIB2_SHA1}" && "${orig_CLIB2_SHA1}" != "${CLIB2_SHA1}" ]]
-    then
-	_info "Variable \"CLIB2_SHA1\" was originally \"${orig_CLIB2_SHA1}\" and has been reset to reset to \"${CLIB2_SHA1}\""
-    fi
-    
-    if [[ -n "${session_prefix}" ]]
-    then
-	_info "Using influential environment variable for PREFIX whose value is: \"${session_prefix}\""
-    fi
-    
-    if [[ -n "${gcc_path}" ]]
-    then
-	_info "Using influential environment variable for GCC PATH whose value is: \"${gcc_path}\""
     fi
     
     sleep 5 # let the user at least notice if there were some messages
@@ -304,8 +337,6 @@ function BUILD
     _info "Finished building ADTOOLS."
     _info "Your build directory (where the ADTOOLS repository and its source was cloned to) is: \"${BASE_DIR}\""
     _info "Your installation directory (where the cross compiler was INSTALLED to) is: \"${CROSS_PREFIX}\""
-    _info "NOTE: that if you make a change to ADTOOLS and want to build it again / update it, you will need to provide the same options again, or set the necessary environment variables such as EXP_CLIB2, etc"
-    _info "NOTE: if a change is made to the cross compiler source files and you want to build those changes then you will have to manuall remove the \"gcc-cross-done-${GCC_VERSION}\" file from \"${BASE_DIR}/${ADTOOLS_DIR}/native-build\""
 }
 
 function TESTS
@@ -315,6 +346,7 @@ function TESTS
 " You may have forgotten to set the prefix with option -p or build the cross compiler or specify the -u option" 50
 
     _info "Building tests..."
+    _info "You MUST run \"./adt -c\" if you want to generate a full clean test build"
     _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
     _info "If errors occur the look at the relevant log file in the test directory"
     ${args} make -s -C "${TESTS_DIR}" all || _error "An error occurred while trying to build the tests" 120
@@ -332,18 +364,13 @@ then
     _error "No options provided" 10
 fi
 
-# Clear these variables to avoid unnecessary confusion. They must be set using this script
-export EXP_CLIB2=
-export CLIB2_SHA1=
-
-while getopts p:yk:ubeg:n:s:o:m:tcC opt
+seen_non_x_opt=0
+while getopts p:k:uxbeg:n:s:o:m:tcC opt
 do
+    if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
     p)
         session_prefix="${OPTARG}"
-        ;;
-    y)
-        no_prompt=1
         ;;
     k)
         CORES="${OPTARG}"
@@ -351,6 +378,14 @@ do
     u)
         use_this_adtools=1
         ;;
+    x)
+	if (( seen_non_x_opt ))
+	then
+	    # This allows options from the cache file to be further overriden
+	    _error "-x must be the first option to this script" 102
+	fi
+	obtain_adt_last_proj
+	;;
     b)
         do_build=1
         ;;
@@ -477,3 +512,5 @@ then
 fi
 if (( do_build )) ; then BUILD ; fi
 if (( do_tests)) ; then TESTS ; fi
+
+if (( session_was_cached )) ; then _info "Session was cached" ; fi
