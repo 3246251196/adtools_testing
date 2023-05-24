@@ -295,7 +295,8 @@ function BUILD
     else
         cd "${BASE_DIR}/${ADTOOLS_DIR}"
 	local _selection=
-	_info "Did you make any changes to the CLIB2 source files and want to build the cross compiler? (y/n)"
+	_info "Assuming you want to build the cross compiler"
+	_info "Did you make any changes to the CLIB2 source files? (y/n)?"
 	read _selection
 	if [[ "${_selection}" == y ]]
 	then
