@@ -61,6 +61,40 @@ It should be as easy is the following steps:
   "execute run_<test case variant name>.script", OR,
 - run the executable directly, yourself.
 
+## Prefixes
+### Example of testing multiple compilers
+The usage complexity of this script can go from simple to complex. You can
+supply prefix options to the script. This allows for checking out and building
+multiple cross-compilers for modification and for testing. For example, you may
+want to build a cross compiler using GCC 10, SDK 53.30 with a particular
+experimental CLIB2 branch. The script allows you the option to do that by
+providing a prefix option. Basically, this prefixes the necessary files/folders
+with the prefix name. You may want to invoke something like "-p
+gcc10_sdk53_expClib". You can then build cross compiler and tests for that
+prefix so long as you supply the prefix option for each build and test
+action. You can then do the same for a different combination, such as GCC 11
+with classic CLIB2.
+
+### Deviation to self-contained cross compiler installation
+In addition to prefixing is the ability to deviate from the
+principles of this script. You can install the cross compiler outside of the
+directory which was used to clone this repository. The checkout of ADTOOLS and
+all the source files for the cross compiler are still cloned inside the cloned
+folder, but the "make install" of the cross compiler is installed outside. This
+is similar to prefixing and not really recommended.
+
+### Previous build session cache
+A number of options may be used to build a cross compiler. For example: "./adt
+-b -e beta10 -s 53.30 -g 10" and it can become difficult to remember those
+options. Indeed, they need to be remembered again if an action should be
+performed in the context of that particular cross compiler, such as building it
+again due to source file changes, or if wanting to build the tests for that
+compiler. This script will store the build sessions settings in a file. On the
+next invocation of the script - whether building or testing, you can supply the
+"-x" option and the script will parse the last build session's settings which
+saves the need to remember all of the switches. Note, though, that once a new
+build session is performed, the cache file gets written over.
+
 ## FYI
 This script/repo was written at the time when
 - ADTOOLS last commit: 1501a4a26cf1bcffdd6dd4bcd603167a3e00f51b
