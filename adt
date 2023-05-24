@@ -369,10 +369,18 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts p:k:uxbeg:n:s:o:m:tcC opt
+while getopts xp:k:ubeg:n:s:o:m:tcC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
+    x)
+	if (( seen_non_x_opt ))
+	then
+	    # This allows options from the cache file to be further overriden
+	    _error "-x must be the first option to this script" 102
+	fi
+	obtain_adt_last_proj
+	;;
     p)
         session_prefix="${OPTARG}"
         ;;
@@ -382,14 +390,6 @@ do
     u)
         use_this_adtools=1
         ;;
-    x)
-	if (( seen_non_x_opt ))
-	then
-	    # This allows options from the cache file to be further overriden
-	    _error "-x must be the first option to this script" 102
-	fi
-	obtain_adt_last_proj
-	;;
     b)
         do_build=1
         ;;
