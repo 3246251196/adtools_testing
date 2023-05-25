@@ -79,7 +79,12 @@ function _info
 function _usage
 {
     cat << EOF
-Usage: ${0} [-x] [-p <PREFIX>] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VER>|-s <VER>|-o <PATH>|-m <FILE>] | [-t] ) [-c] [-C]
+Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
+            where:
+            OPTIONS: [-x] [-p <PREFIX>] | -o <PATH>] [-k <NUM>] [-u] 
+            ACTIONS: [-b [ [-e <BRANCH>] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
+                     ^                                                                    ^      ^
+                     BUILD ADTOOLS                                                        TESTS  CLEAN
        [x] cached proj: Use the variables stored from the previous build action
                         session for this action. This is useful when a complex
                         build was invoked before containing many options so
@@ -106,6 +111,25 @@ Usage: ${0} [-x] [-p <PREFIX>] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VE
                         named ADTOOLS_PREFIX which will have the same effect as
                         supplying -p <PREFIX>. Alternatively, use the -x option
                         which will retrieve the previous session's settings
+       [o] gcc path   : This is a deviation to the principle of this repository
+                        because the idea is that everything is self-contained
+                        inside the directory you have cloned this repository
+                        to. But, if desired, you can supply this option with a
+                        path and the cross-compiler will be installed into that
+                        location. For example, -o /usr/amiga/gcc. But,
+                        everything else will remain self-contained and the
+                        cloning of ADTOOLS will still be self-contained only
+                        the installation of the cross compiler will be put into
+                        <PATH>.
+       !! NOTE !!     : Rather than supplying this option you can just set an
+                        environment variable named ADTOOLS_GCC_PATH which will
+                        have the same effect as supplying -o <PATH>.
+                        Alternatively, use the -x option which will retrieve
+                        the previous session's settings. Like the -p option,
+                        you will need to provide this option if you want to
+                        build the tests for a build of ADTOOLS that was built
+                        with this option, unless the -x option is used, or the
+                        variables described above are set in the environment
        [k] cores      : Number of cores/jobs to pass to Makefiles
                         (DEFAULT: the result of the command NPROC)
        [u] use_adtools: Use the ADTOOLS that is already on the existing path
@@ -130,25 +154,6 @@ Usage: ${0} [-x] [-p <PREFIX>] [-k <NUM>] [-u] ( [-b[-e <BRANCH>|-g <VER>|-n <VE
                         in-place ADTOOLS (DEFAULT: 2.23.2)
        [s] SDK        : Selects the version of the SDK to use when building
                         in-place ADTOOLS (DEFAULT: 54.16)
-       [o] gcc path   : This is a deviation to the principle of this repository
-                        because the idea is that everything is self-contained
-                        inside the directory you have cloned this repository
-                        to. But, if desired, you can supply this option with a
-                        path and the cross-compiler will be installed into that
-                        location. For example, -o /usr/amiga/gcc. But,
-                        everything else will remain self-contained and the
-                        cloning of ADTOOLS will still be self-contained only
-                        the installation of the cross compiler will be put into
-                        <PATH>.
-       !! NOTE !!     : Rather than supplying this option you can just set an
-                        environment variable named ADTOOLS_GCC_PATH which will
-                        have the same effect as supplying -o <PATH>.
-                        Alternatively, use the -x option which will retrieve
-                        the previous session's settings. Like the -p option,
-                        you will need to provide this option if you want to
-                        build the tests for a build of ADTOOLS that was built
-                        with this option, unless the -x option is used, or the
-                        variables described above are set in the environment
        [m] mod script : Invoke the script named <FILE> after cloning ADTOOLS
                         but before building ADTOOLS. This allows modifications
                         to things like the native-build/makefile or whatever is
@@ -370,7 +375,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:k:ubeg:n:s:o:m:tcC opt
+while getopts xp:o:k:ubeg:n:s:m:tcC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -384,6 +389,9 @@ do
 	;;
     p)
         session_prefix="${OPTARG}"
+        ;;
+    o)
+        gcc_path="${OPTARG}"
         ;;
     k)
         CORES="${OPTARG}"
@@ -411,9 +419,6 @@ do
         ;;
     s)
         SDK_VERSION="${OPTARG}"
-        ;;
-    o)
-        gcc_path="${OPTARG}"
         ;;
     m)
 	ADTOOLS_MOD_SCRIPT="${OPTARG}"
