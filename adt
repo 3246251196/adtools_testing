@@ -480,6 +480,7 @@ fi
 
 # Variables that are used further on in the testing framework
 export BASE_DIR
+export ADTOOLS_DIR
 export SCRIPT_INVOCATION
 export FINAL_LHA
 export RUN_ALL_SCRIPT

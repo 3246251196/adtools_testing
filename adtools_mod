@@ -3,6 +3,15 @@
 set -e
 set -u
 
+# You can use
+# $BASE_DIR/$ADTOOLS_DIR : the location of where ADTOOLS is checked out to
+# as in
+# cp makefile $BASE_DIR/$ADTOOLS_DIR/native-build/
+#
+# to replace the makefile in the checked out ADTOOLS location for this session
+#
+# Or, you may want some small in-place hacks:
+# 
 # if (( EXP_CLIB2 ))
 # then
 #     # We shall use the rs6k amigaos.h version from the afxgroup CLIB2
