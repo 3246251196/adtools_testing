@@ -3,10 +3,11 @@
 set -e
 set -u
 
-# You can use
-# $BASE_DIR/$ADTOOLS_DIR : the location of where ADTOOLS is checked out to
-# as in
-# cp makefile $BASE_DIR/$ADTOOLS_DIR/native-build/
+# WHEN THIS SCRIPT IS INVOKED YOU ARE ALREADY INSIDE THE CHECKED OUT LOCATION OF ADTOOLS
+#
+# So, for example you can invoke:
+#
+#     cp makefile native-build
 #
 # to replace the makefile in the checked out ADTOOLS location for this session
 #
