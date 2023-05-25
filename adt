@@ -456,8 +456,7 @@ then
 fi
 if (( !do_build && !do_tests && !do_clean_tests && !do_clean_build ))
 then
-    _warn "No action performed"
-    exit 0
+    _error "No action performed" 80
 fi
 if (( !do_clean_tests && !do_clean_build ))
 then
