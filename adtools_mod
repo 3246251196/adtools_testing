@@ -7,7 +7,7 @@ set -u
 #
 # So, for example you can invoke:
 #
-#     cp makefile native-build
+#     cp /home/user/Downloads/makefile native-build/
 #
 # to replace the makefile in the checked out ADTOOLS location for this session
 #
