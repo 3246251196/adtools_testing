@@ -30,6 +30,11 @@ ADTOOLS_MOD_SCRIPT=
 
 function generate_adt_last_proj
 {
+    if [[ -f "${SESSION_CACHE}" ]]
+    then
+	_warn "Overwriting previously cached session"
+    fi
+    
     cat > "${SESSION_CACHE}" <<EOF
 use_this_adtools="${use_this_adtools}"
 gcc_ver="${gcc_ver}"
