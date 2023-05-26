@@ -14,6 +14,7 @@ session_prefix=
 gcc_path=
 CORES=$(nproc)
 session_was_cached=0
+ignore_depends=0
 
 readonly ORIG_DIR="$(pwd)"
 readonly ADTOOLS_DIR=adt_adtools
@@ -86,7 +87,7 @@ function _usage
     cat << EOF
 Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
             where:
-            OPTIONS: [-x] [-p <PREFIX>] | -o <PATH>] [-k <NUM>] [-u] 
+            OPTIONS: [-x] [-p <PREFIX>] | -o <PATH>] [-k <NUM>] [-u] [-i]
             ACTIONS: [-b [ [-e <BRANCH>] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
                      ^                                                                    ^      ^
                      BUILD ADTOOLS                                                        TESTS  CLEAN
@@ -143,6 +144,7 @@ Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
                         built by using the -o option, you will need to add the
                         cross-compiler to the path and then use this option
                         along with -t
+       [i] ignore dep : Ignore dependency checker routine
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. The in-place location is
                         the folder named "<PREFIX>build". If the directory 
@@ -198,7 +200,7 @@ function SETUP_PATHS
     if [[ -n "${gcc_path}" ]]
     then
 	# Strip the / suffix off if one exists and assume that it does not have multiple trailing /
-	if [[ "${gcc_path: -1}" = / ]]
+	if [[ "${gcc_path: -1}" == / ]]
 	then
 	    gcc_path="${gcc_path::-1}"
 	fi
@@ -262,9 +264,12 @@ function CHECK_DEPENDS
 
 function BUILD
 {
-    CHECK_DEPENDS
     if [[ ! -d "${BASE_DIR}" ]]
     then
+	if (( !ignore_depends ))
+	then
+	    CHECK_DEPENDS
+	fi
         local INFO_STRING="Building ADTOOLS using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\""
         if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\"" ; fi
         _info "${INFO_STRING}"
@@ -315,21 +320,27 @@ function BUILD
 	rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/gcc-cross-done-"*
     fi
     
-    native_gcc_error=0
+    native_gcc=
     which gcc 1>/dev/null 2>&1
     if (( !${?} ))
     then
-        if [[ $(gcc -dumpmachine) != "x86_64-linux-gnu" ]]
+	native_gcc="$(gcc -dumpmachine)"
+        if [[ "${native_gcc}" == "x86_64-linux-gnu" ]]
         then
-            native_gcc_error=1
+            native_gcc=
         fi
     else
-        native_gcc_error=1
+        native_gcc=error
     fi
 
-    if (( native_gcc_error ))
+    if [[ -n "${native_gcc}" ]]
     then
-        _error "Expected native linux x86-64 gcc compiler to be accessible" 30
+	if [[ "${native_gcc}" == error ]]
+	then
+	    _error "No native compiler exists to build ADTOOLS" 30
+	else
+            _warn "Native Compiler architecture is \"${native_gcc}\" which is not supported but continuing anyway"
+	fi
     fi
     
     sleep 5 # let the user at least notice if there were some messages
@@ -380,7 +391,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:k:ubeg:n:s:m:tcC opt
+while getopts xp:o:k:uibeg:n:s:m:tcC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -404,6 +415,9 @@ do
     u)
         use_this_adtools=1
         ;;
+    i)
+	ignore_depends=1
+	;;
     b)
         do_build=1
         ;;
