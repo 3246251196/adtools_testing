@@ -1,6 +1,8 @@
 include ../common.mak
 
-LDFLAGS+=-use-dynld -athread=native
+# This test is just for dynld, but a static version is also built anyway!
+
+LDFLAGS+=-athread=native
 
 CFLAGS+=-fPIC
 
