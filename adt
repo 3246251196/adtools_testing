@@ -87,7 +87,7 @@ function _usage
     cat << EOF
 Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
             where:
-            OPTIONS: [-x] [-p <PREFIX>] | -o <PATH>] [-k <NUM>] [-u] [-i]
+            OPTIONS: [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-k <NUM>] [-u] [-i]
             ACTIONS: [-b [ [-e <BRANCH>] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
                      ^                                                                    ^      ^
                      BUILD ADTOOLS                                                        TESTS  CLEAN
