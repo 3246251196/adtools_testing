@@ -46,7 +46,7 @@ results and reports the result as:
 - PARTIAL (there was a difference but only in order; this can be useful for
           multi threaded tests where some threads may report output before the
           other thread without prediction),
-- FAIL    (there was a difference in order or content),
+- FAIL    (there was a difference in content),
 - ERROR   (the inspection executable, whose source code is in this repository,
           unexpectedly failed).
 
