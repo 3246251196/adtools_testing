@@ -39,7 +39,7 @@ Amiga Shared Libraries are sought and added to the LHA for that test variant;
 instead, it is expected that those Shared Libraries will exist on the AmigaOne
 machine invoking the test.
 
-The script named "run_<test case variant name>.script" executes the test
+The script named "run_*.script" executes the test
 executable, records the STDOUT and STDERR, compares STDOUT to an expected set of
 results and reports the result as:
 - PASS    (there was no difference),
@@ -58,7 +58,7 @@ It should be as easy is the following steps:
 - lha x adt_tests.lha 
 - execute run_all_script, OR,
 - cd into the specific test case variant of interest and invoke
-  "execute run_<test case variant name>.script", OR,
+  "execute run_*.script", OR,
 - run the executable directly, yourself.
 
 ## Prefixes
