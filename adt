@@ -61,6 +61,12 @@ function obtain_adt_last_proj
     if [[ -f "${SESSION_CACHE}" ]]
     then
 	source "${SESSION_CACHE}" && _info "Using cached settings from last invocation"
+	_info "Settings Begin"
+	while read setting
+	do
+	    _info "${setting}"
+	done < "${SESSION_CACHE}"
+	_info "Settings End"
     else
 	_error "No previous settings were cached" 103
     fi
@@ -376,7 +382,6 @@ function TESTS
     _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
     _info "If errors occur the look at the relevant log file in the test directory"
     ${args} make -s -C "${TESTS_DIR}" all || _error "An error occurred while trying to build the tests" 120
-    _info "Finished building tests. It is your responsibility to clean the tests first for this particular session"
     _info "Creating final LHA file..."
     _info "\"${FINAL_LHA}\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
     _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
@@ -488,8 +493,12 @@ then
 	fi
 	CROSS_PREFIX="${this_adtools}/../"
     else
-	which ppc-amigaos-gcc 1>/dev/null 2>&1 && \
-            _warn "Did not expect to find a cross-compiler on the path"
+	# unless we are using the deviation -o option!
+	if [[ -z "${gcc_path}" ]]
+	then
+	    which ppc-amigaos-gcc 1>/dev/null 2>&1 && \
+		_warn "Did not expect to find a cross-compiler on the path"
+	fi
     fi
 fi
 if (( use_this_adtools ))
