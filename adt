@@ -29,6 +29,22 @@ BASE_DIR=
 CROSS_PREFIX=
 ADTOOLS_MOD_SCRIPT=
 
+function _error
+{
+    echo "### GURU MEDITATION ERROR (CODE: ${2}): ${1}" 1>&2
+    exit "${2}"
+}
+
+function _warn
+{
+    echo "### WARN: ${1}" 1>&2
+}
+
+function _info
+{
+    echo "### INFO: ${1}"
+}
+
 function generate_adt_last_proj
 {
     if [[ -f "${SESSION_CACHE}" ]]
@@ -61,31 +77,17 @@ function obtain_adt_last_proj
     if [[ -f "${SESSION_CACHE}" ]]
     then
 	source "${SESSION_CACHE}" && _info "Using cached settings from last invocation"
+	_info ""
 	_info "Settings Begin"
 	while read setting
 	do
-	    _info "${setting}"
+	    _info ">>> ${setting}"
 	done < "${SESSION_CACHE}"
 	_info "Settings End"
+	_info ""
     else
 	_error "No previous settings were cached" 103
     fi
-}
-
-function _error
-{
-    echo "### GURU MEDITATION ERROR (CODE: ${2}): ${1}" 1>&2
-    exit "${2}"
-}
-
-function _warn
-{
-    echo "### WARN: ${1}" 1>&2
-}
-
-function _info
-{
-    echo "### INFO: ${1}"
 }
 
 function _usage
@@ -529,7 +531,7 @@ then
 	this_adtools="$(dirname $(which ppc-amigaos-gcc) 2>/dev/null)"
 	if (( $? ))
 	then
-	    _error "Desired ADTOOLS cross-compiler not found on PATH" 70
+	    _error "Desired ADTOOLS cross-compiler not found on PATH" 71
 	fi
 	CROSS_PREFIX="${this_adtools}/../"
     fi
