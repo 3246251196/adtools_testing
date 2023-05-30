@@ -69,6 +69,11 @@ export CLIB2_SHA1
 export SDK_VERSION
 EOF
 
+    if (( ${?} ))
+    then
+	_error "Unable to write to \"${SESSION_CACHE}\". See error above" 104
+    fi
+
     session_was_cached=1
 }
 

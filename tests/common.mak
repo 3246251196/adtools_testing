@@ -21,22 +21,29 @@ LOG_CMD = echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;      
 	echo  "PHASE                          : $(1)" >> $(LOG_FILE) ;                \
 	echo  "COMMAND                        : $(2)" >> $(LOG_FILE) ;                \
 	echo  "COMMAND OUTPUT (STDOUT/STDERR) : See following lines" >> $(LOG_FILE) ; \
+	echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;              \
 	$(2) 1>> $(LOG_FILE) 2>&1 || echo "Failed to build $$(pwd) : $(PROG)" 1>&2
 
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:
 # "lib/gcc/ppc-amigaos/11.3.0/libgcc.so", unlike clib which is in
-# clib2.  GREP_OPT is a hack to get around this. First, assume that
-# for any library we are looking for, we will find it in a location
-# that contains the string of the particular C library being
+# clib2.  GREP_OPT_C_LIB is a hack to get around this. First, assume
+# that for any library we are looking for, we will find it in a
+# location that contains the string of the particular C library being
 # used. Then, in the case that we are newlib, so long as we remove
 # anything that contains "clib2", we assume that is the newlib
 # library. This works for the case that newlib is in the string and is
 # not.
-GREP_OPT=$(C_LIB)
+GREP_OPT_C_LIB=$(C_LIB)
 ifeq ($(C_LIB),newlib)
-	GREP_OPT=-v clib2
+	GREP_OPT_C_LIB=-v clib2
 endif
+# We also want to restrict searches to those with "ppc-amigaos" in the
+# path. This helps the situation where the build was installed using
+# the -o option: for instance, the cross compiler may have been
+# installed to /usr. When attempting to invoke FIND to figure out
+# which Shared Object to add to the archive, we may match on non cross
+# compiler objects! This is handled directly below.
 
 .PHONY: clean all
 all: $(LHA_FILE)
@@ -44,13 +51,13 @@ all: $(LHA_FILE)
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
 	mkdir -p $(TEMP_DIR)
 ifneq ($(DYN),)
-	echo "####################" >> $(LOG_FILE)
-	echo "LISTING OF SHARED OBJECTS" >> $(LOG_FILE)
-	echo ""  >> $(LOG_FILE)
+	$(call LOG_CMD,Listing Shared Objects,,)
 	ARR_SO=($$($(READELF) -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ;    \
 	for SO in $${ARR_SO[@]} ;                                                        \
 	do                                                                               \
-		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}" | grep $(GREP_OPT)) ;        \
+		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}"            |                 \
+						grep $(GREP_OPT_C_LIB) |                 \
+						grep "ppc-amigaos")    ;                 \
 		if [[ -z "$${LOC}" ]] ;                                                  \
 		then                                                                     \
 			LOC=$$(find . -name "$${SO}") ;                                  \
@@ -67,9 +74,7 @@ ifneq ($(DYN),)
 		fi ;                                                                     \
 	done
 endif
-	echo "####################" >> $(LOG_FILE)
-	echo "LISTING OF POTENTIALLY REQUIRED SHARED LIBRARIES" >> $(LOG_FILE)
-	echo ""  >> $(LOG_FILE)
+	$(call LOG_CMD,Listing Shared Libraries,,)
 	grep -a -o -E "[A-Za-z_0-9]+\.library" $(PROG) >> $(LOG_FILE)
 
 	cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
