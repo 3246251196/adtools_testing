@@ -1,2 +1,2 @@
 ; FAILAT 21
-; execute `DIR run#?.script`
+; execute `LIST QUICK FILES NOHEAD run#?.script`
