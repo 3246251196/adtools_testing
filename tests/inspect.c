@@ -5,16 +5,16 @@
    this implies to inspection test was requested. If the size of the two files
    are different the result is FAIL. If the size is the same and the content and
    its order are the same the result is PASS. If the size is the same and the
-   content is the same but in the wrong order, the results is WARN. */
+   content is the same but in the wrong order, the results is PARTIAL. */
 #include <stdio.h>
 #include <stdlib.h>
-#define ERR 20
-#define FAIL 10
-#define WARN 5
-#define SUCC 0
+#define ERR 20    /* shold never happen; an internal error */
+#define FAIL 10   /* different content */
+#define PARTIAL 5 /* same content, same size, but different order */
+#define PASS 0    /* success */
 int main(int argc, char *argv[])
 {
-  int res=SUCC;
+  int res=PASS;
   FILE *actual=NULL,*expected=NULL;
   char *actual_contents=NULL,*expected_contents=NULL;
   long actual_size=-1,expected_size=-1;
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
       if(0L==expected_size)
 	{
 	  /* This must not be an inspection test! */
-	  res=SUCC; goto ENDER;
+	  res=PASS; goto ENDER;
 	}
       actual_size=ftell(actual);
       if(actual_size!=expected_size)
@@ -70,8 +70,8 @@ int main(int argc, char *argv[])
 	    /* We have a mismatch. The contents may still be the same, though,
 	       in a different order.  This can happen when threading occurs. We
 	       use a different return code for this.  We are now AT LEAST a
-	       WARN */
-	    res=WARN;
+	       PARTIAL */
+	    res=PARTIAL;
 	  }
       }
     i=0;
