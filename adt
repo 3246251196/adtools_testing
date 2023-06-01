@@ -148,7 +148,7 @@ Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
                         everything else will remain self-contained and the
                         cloning of ADTOOLS will still be self-contained only
                         the installation of the cross compiler will be put into
-                        <PATH>.
+                        <PATH>
        !! NOTE !!     : Rather than supplying this option you can just set an
                         environment variable named ADTOOLS_GCC_PATH which will
                         have the same effect as supplying -o <PATH>.
