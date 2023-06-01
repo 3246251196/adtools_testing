@@ -8,7 +8,7 @@
    content is the same but in the wrong order, the results is PARTIAL. */
 #include <stdio.h>
 #include <stdlib.h>
-#define ERR 20    /* shold never happen; an internal error */
+#define ERR 20    /* should never happen; an internal error */
 #define FAIL 10   /* different content */
 #define PARTIAL 5 /* same content, same size, but different order */
 #define PASS 0    /* success */

@@ -2,8 +2,6 @@
 
 ## Using this repository
 ### For more information
-Run "./adt"
-
 At the heart of it, this script does two things:
 - Builds ADTOOLS in-place,
 - And/Or, builds the tests in this repository ready for execution on an
@@ -21,7 +19,7 @@ in-place version if desired.
 The usage of the "adt" script can be seen by merely invoking "./adt".
 
 With regards to building the tests, the "adt" script will create an artifact
-named "<PREFIX>adt_tests.lha". This file can be sent to your AmigaOne machine
+named "\<PREFIX>adt_tests.lha". This file can be sent to your AmigaOne machine
 and extracted. The extraction will cause the creation of a folder named "tests"
 and a script (without executable permissions) named "run_all.script" which can
 be invoked with "execute run_all.script" on the AmigaOne machine.
