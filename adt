@@ -239,7 +239,7 @@ function CHECK_DEPENDS
 {
     local _continue=1
     local _selection
-    local _packages="libgmp-dev libmpc-dev libmpfr-dev bison flex"
+    local _packages="libgmp-dev libmpc-dev libmpfr-dev bison flex texinfo"
 
     _info "Checking for ${_packages} and a suitable version of LHA"
     
