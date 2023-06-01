@@ -29,20 +29,29 @@ BASE_DIR=
 CROSS_PREFIX=
 ADTOOLS_MOD_SCRIPT=
 
-function _error
+# $1: Message
+function _info
 {
-    echo "### GURU MEDITATION ERROR (CODE: ${2}): ${1}" 1>&2
-    exit "${2}"
+    echo "### INFO: ${1}"
 }
 
+# $1: Message
 function _warn
 {
     echo "### WARN: ${1}" 1>&2
 }
 
-function _info
+# $1: Message
+# $2: Unique Error Code
+# $3: If set to anything then also requests the user to manually remove ${BASE_DIR}
+function _error
 {
-    echo "### INFO: ${1}"
+    echo "### GURU MEDITATION ERROR (CODE: ${2}): ${1}" 1>&2
+    if [[ -n "${3}" ]]
+    then
+	_warn "For this error it is recommended to remove \"${BASE_DIR}\" before starting again"
+    fi
+    exit "${2}"
 }
 
 function generate_adt_last_proj
@@ -270,7 +279,7 @@ function CHECK_DEPENDS
         read _selection
         if [[ "${_selection}" != y ]]
         then
-	    _error "Not continuing due to issues with the dependency checker" 100
+	    _error "Not continuing due to issues with the dependency checker" 207 1
         fi
     fi
 }
@@ -281,6 +290,7 @@ function BUILD
     then
 	if (( !ignore_depends ))
 	then
+	    # TODO: Return a value from the function instead and raise error here
 	    CHECK_DEPENDS
 	fi
         local INFO_STRING="Building ADTOOLS using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\""
@@ -289,19 +299,19 @@ function BUILD
         
         mkdir "${BASE_DIR}"
         cd "${BASE_DIR}"
-        git clone https://github.com/sba1/adtools.git "${ADTOOLS_DIR}"
+        git clone https://github.com/sba1/adtools.git "${ADTOOLS_DIR}" || _error "Unable to clone ADTOOLS repo" 201 1
         cd "${ADTOOLS_DIR}"
 	
-        git submodule init
-        git submodule update
-        gild/bin/gild checkout binutils "${binutils_ver}"
-        gild/bin/gild checkout gcc "${gcc_ver}"
+        git submodule init || _error "Unable to initialise submodules in ADTOOLS repo" 202 1
+        git submodule update || _error "Unable to update submodules in ADTOOLS repo" 203 1
+        gild/bin/gild checkout binutils "${binutils_ver}" || _error "Unable to clone binutils in ADTOOLS repo" 204 1
+        gild/bin/gild checkout gcc "${gcc_ver}" || _error "Unable to clone gcc in ADTOOLS repo" 205 1
 	
         # Performs the modification (if any) that are provided in the
         # following script
 	if [[ -n "${ADTOOLS_MOD_SCRIPT}" ]]
 	then
-            "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}" || _error "Modification script to ADTOOLS failed" 60
+            "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}" || _error "Modification script to ADTOOLS failed" 206 1
 	fi
 	
         # Clear any of these variables in the unlikely event they are set. If not, then
@@ -562,7 +572,12 @@ then
 	_info "No action taken"
     fi
 fi
+
 if (( do_build )) ; then BUILD ; fi
 if (( do_tests)) ; then TESTS ; fi
 
-if (( session_was_cached )) ; then _info "Session was cached" ; fi
+if (( session_was_cached )) ;
+then
+    _info "Session was cached to file \"${SESSION_CACHE}\". You may want to backup this file since "\
+"it will be overwritten on any subsequent NEW builds"
+fi
