@@ -273,6 +273,7 @@ function CHECK_DEPENDS
 	_warn "Prebuild dependency checking is only supported with \"dpkg\". Dependency checks ignored."
 	_continue=0
     fi
+
     if (( !_continue ))
     then
 	_info "Dependency check was not clean. Continue (y/n)?"
@@ -302,6 +303,15 @@ function BUILD
         git clone https://github.com/sba1/adtools.git "${ADTOOLS_DIR}" || _error "Unable to clone ADTOOLS repo" 201 1
         cd "${ADTOOLS_DIR}"
 	
+	# Check that the user has configured git email/username; especially
+	# since ADTOOLS silently just does not apply the patches if this
+	# information is not there and then binutils fails to build with someone
+	# nebulous errors!
+	git config user.email 1>/dev/null 2>&1 || \
+	    _error "Git has no user.email configured. This will lead to errors in building ADTOOLS" 208 1
+	git config user.name 1>/dev/null 2>&1 || \
+	    _error "Git has no user.name configured. This will lead to errors in building ADTOOLS" 209 1
+
         git submodule init || _error "Unable to initialise submodules in ADTOOLS repo" 202 1
         git submodule update || _error "Unable to update submodules in ADTOOLS repo" 203 1
         gild/bin/gild checkout binutils "${binutils_ver}" || _error "Unable to clone binutils in ADTOOLS repo" 204 1
