@@ -5,9 +5,13 @@ set -u
 
 # WHEN THIS SCRIPT IS INVOKED YOU ARE ALREADY INSIDE THE CHECKED OUT LOCATION OF ADTOOLS
 #
+# You may use the variable ORIG_DIR which represents the absolute path the directory used to clone adtools_testing.
+#
 # So, for example you can invoke:
 #
-#     cp /home/user/Downloads/makefile native-build/
+#     cp /home/user/Downloads/makefile native-build/,
+# Or,
+#     cp "${ORIG_DIR}/myFile" gcc/repo
 #
 # to replace the makefile in the checked out ADTOOLS location for this session
 #
