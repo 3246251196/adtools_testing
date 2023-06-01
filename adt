@@ -355,6 +355,12 @@ function BUILD
             _warn "Native Compiler architecture is \"${native_gcc}\" which is not supported but continuing anyway"
 	fi
     fi
+
+    if [[ -n "${gcc_path}" ]]
+    then
+	which ppc-amigaos-gcc 1>/dev/null 2>&1 && _warn "Already found a cross compiler on the path. "\
+"Since you used the -o option then this script assumes this is expected"
+    fi
     
     sleep 5 # let the user at least notice if there were some messages
     
