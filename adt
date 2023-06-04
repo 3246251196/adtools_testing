@@ -248,9 +248,22 @@ function CHECK_DEPENDS
 {
     local _continue=1
     local _selection
-    local _packages="libgmp-dev libmpc-dev libmpfr-dev bison flex texinfo"
-
-    _info "Checking for ${_packages} and a suitable version of LHA"
+    local _packages=(
+	"libgmp-dev"
+	"libmpc-dev"
+	"libmpfr-dev"
+	"bison"
+	"flex"
+	"texinfo"
+    )
+    # We print this out regardless of the package management system so
+    # that in the case that dpkg is NOT being used, the user has an
+    # idea of which packages to manually install
+    _info "Checking for the following required packages:"
+    for package in "${_packages[@]}"
+    do
+	_info "- ${package}"
+    done
     
     if [[ ! "$(lha --version 2>&1)" =~ "LHa for UNIX version" ]]
     then
@@ -261,7 +274,7 @@ function CHECK_DEPENDS
     # Only supporting dpkg for now
     if [[ $(dpkg-query --version ) ]]
     then
-	for package in ${_packages}
+	for package in "${_packages[@]}"
 	do
             if [[ $(dpkg-query --showformat '${db:Status-Status}' --show "${package}" 2>/dev/null) != installed ]]
             then
@@ -296,7 +309,7 @@ function BUILD
 	fi
         local INFO_STRING="Building ADTOOLS using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\""
         if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\"" ; fi
-        _info "${INFO_STRING}"
+        _info "Building ADTOOLS..."
         
         mkdir "${BASE_DIR}"
         cd "${BASE_DIR}"
@@ -389,7 +402,16 @@ function BUILD
     echo "${INFO_STRING}" >> "${LOG_FILE}"
     echo "export EXP_CLIB2=${EXP_CLIB2}" >> "${LOG_FILE}"
     echo "export CLIB2_SHA1=${CLIB2_SHA1}" >> "${LOG_FILE}"
-    BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" ${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | tee -a \"${LOG_FILE}\""
+    if [[ -n "${ADTOOLS_MOD_SCRIPT}" ]]
+    then
+	echo "ADTOOLS was modified with script \"${ADTOOLS_MOD_SCRIPT}\" whose contents, idented by 4 spaces, follows:" >> "${LOG_FILE}"
+	while read line
+	do
+	    echo "    ${line}" >> "${LOG_FILE}"
+	done < "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}"
+    fi
+    BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" ${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | "\
+"tee -a \"${LOG_FILE}\""
     echo "####################" >> "${LOG_FILE}"
     echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
     echo "####################" >> "${LOG_FILE}"
@@ -399,7 +421,7 @@ function BUILD
     # Of course, this dir will be touched even if there was nothing to update in ADTOOLS.
     touch "${BASE_DIR}"
 
-    _info "Finished building ADTOOLS."
+    _info "Finished building ADTOOLS..."
     _info "Your build directory (where the ADTOOLS repository and its source was cloned to) is: \"${BASE_DIR}\""
     _info "Your installation directory (where the cross compiler was INSTALLED to) is: \"${CROSS_PREFIX}\""
 }
@@ -415,7 +437,7 @@ function TESTS
     _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
     _info "If errors occur the look at the relevant log file in the test directory"
     ${args} make -s -C "${TESTS_DIR}" all || _error "An error occurred while trying to build the tests" 120
-    _info "Creating final LHA file..."
+    _info "Finished building tests..."
     _info "\"${FINAL_LHA}\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
     _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
     _info "which acts on each variant but is commented out. The \"run_all.script\" is designed to be re-run again."
