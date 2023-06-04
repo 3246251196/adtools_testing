@@ -172,8 +172,7 @@ Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
                         the folder named "<PREFIX>build". If the directory 
                         already exists then this script invokes a build in the
                         already existing in-place ADTOOLS without firstly 
-                        performing a clean. In either case, this script then
-                        exits
+                        performing a clean
        [e] AFXGROUP C : Enables the experimental AFXGROUP's version of the C
                         Library, CLIB2, when building in-place ADTOOLS using
                         the branch specified (DEFAULT: master)
@@ -191,15 +190,15 @@ Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
                         script should reside in the same directory as this
                         script (the adt script). There is also an example mod
                         script named "adtools_mod"
-       [t] tests      : Builds all of the tests under the "tests" folder and
-                        then exits. Logging of each build of each variant is
-                        appended to the log file
-       [c] clean_tests: Performs a cleaning on all tests and then exits
-       [C] clean_build: Performs a cleaning on the in-place ADTOOLS which will
-                        also remove the built cross-compiler binaries and then
-                        exits. In the case that you are using a cross-compiler
-                        outside the self-contained directory then it is not
-                        recommended to use this option
+       [t] tests      : Builds all of the tests under the "tests" folder. 
+                        Logging of each build of each variant is appended to
+                        the log file
+       [c] clean_tests: Performs a clean on all tests
+       [C] clean_build: Performs a clean on the in-place ADTOOLS which will
+                        also remove the built cross-compiler binaries. In the
+                        case that you are using a cross-compiler outside of the
+                        the self-contained directory then it is not recommended
+                        to use this option without strict consideration
        *              : Any other arguments are assumed to be arguments that
                         are to be passed to the testing framework when using
                         the option "t" or the building of ADTOOLS when using the
