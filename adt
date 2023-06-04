@@ -404,7 +404,7 @@ function BUILD
     echo "export CLIB2_SHA1=${CLIB2_SHA1}" >> "${LOG_FILE}"
     if [[ -n "${ADTOOLS_MOD_SCRIPT}" ]]
     then
-	echo "ADTOOLS was modified with script \"${ADTOOLS_MOD_SCRIPT}\" whose contents, idented by 4 spaces, follows:" >> "${LOG_FILE}"
+	echo "ADTOOLS was modified with script \"${ADTOOLS_MOD_SCRIPT}\" whose contents, indented by 4 spaces, follows:" >> "${LOG_FILE}"
 	while read line
 	do
 	    echo "    ${line}" >> "${LOG_FILE}"
