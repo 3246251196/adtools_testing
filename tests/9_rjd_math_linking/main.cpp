@@ -6,6 +6,6 @@
 int main(int argc, char *argv[])
 {
   float res = sinf(PI/2.0F);
-  printf("%.3f", res);
+  printf("%.3f\n", res);
   return 0;
 }
