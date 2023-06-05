@@ -589,7 +589,7 @@ then
 	CROSS_PREFIX="${this_adtools}/../"
     fi
     _selection=
-    _info "Will perform a make clean in \"${BASE_DIR}/${ADTOOLS_DIR}/native-build with CROSS_PREFIX set to \"${CROSS_PREFIX}\""
+    _info "Will perform a make clean in \"${BASE_DIR}/${ADTOOLS_DIR}/native-build\" with CROSS_PREFIX set to \"${CROSS_PREFIX}\""
     _info "This will mean that the directory \"${CROSS_PREFIX}\" will be deleted"
     _warn ""
     _warn "THIS IS POTENTIALLY A VERY DANGEROUS OPTION. READ THE INFORMATION ABOVE"
