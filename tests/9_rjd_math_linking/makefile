@@ -8,6 +8,8 @@ ifneq ($(DYN),)
 LDFLAGS+=-athread=native
 endif
 
+CFLAGS+=-Wall -Wextra -Werror -pendantic -std=c++11
+
 $(PROG): main_$(FILE_INFIX).o
 	$(call LOG_CMD,Link,$(CXX) $(LDFLAGS) -o $@ $^)
 	$(call LOG_CMD,Readelf,$(READELF) -d $(PROG))
@@ -16,3 +18,5 @@ main_$(FILE_INFIX).o: main.cpp
 	$(call LOG_CMD,Compile,$(CXX) $(CXXFLAGS) -c -o $@ $^)
 
 #@ 1.000
+#@ 42.000
+#@ 43.000
