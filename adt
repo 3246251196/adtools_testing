@@ -421,7 +421,11 @@ function BUILD
     touch "${BASE_DIR}"
 
     _info "Finished building ADTOOLS..."
-    _info "Your build directory (where the ADTOOLS repository and its source was cloned to) is: \"${BASE_DIR}\""
+    local _cloneLoc="${BASE_DIR}/${ADTOOLS_DIR}"
+    if [[ -n "${gcc_path}" ]]
+       _cloneLoc="${BASE_DIR}"
+    fi
+    _info "Your build directory (where the ADTOOLS repository and its source was cloned to) is: \"${_cloneLoc}\""
     _info "Your installation directory (where the cross compiler was INSTALLED to) is: \"${CROSS_PREFIX}\""
 }
 
