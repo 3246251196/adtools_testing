@@ -74,6 +74,8 @@ session_prefix="${session_prefix}"
 gcc_path="${gcc_path}"
 EXP_CLIB2="${EXP_CLIB2}"
 CLIB2_SHA1="${CLIB2_SHA1}"
+adtools_repo_loc="${adtools_repo_loc}"
+adtools_repo_branch="${adtools_repo_branch}"
 
 export EXP_CLIB2
 export CLIB2_SHA1
