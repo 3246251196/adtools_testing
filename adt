@@ -15,6 +15,8 @@ gcc_path=
 CORES=$(nproc)
 session_was_cached=0
 ignore_depends=0
+adtools_repo_loc="https://github.com/sba1/adtools.git"
+adtools_repo_branch=
 
 readonly ORIG_DIR="$(pwd)"
 readonly ADTOOLS_DIR=adt_adtools
@@ -110,9 +112,9 @@ function _usage
 Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
             where:
             OPTIONS: [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-k <NUM>] [-u] [-i]
-            ACTIONS: [-b [ [-e <BRANCH>] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
-                     ^                                                                    ^      ^
-                     BUILD ADTOOLS                                                        TESTS  CLEAN
+            ACTIONS: [-b [ [-r "<REPO [BRANCH]>"] [-e <BRANCH>] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
+                     ^                                                                                           ^      ^
+                     BUILD ADTOOLS                                                                               TESTS  CLEAN
        [x] cached proj: Use the variables stored from the previous build action
                         session for this action. This is useful when a complex
                         build was invoked before containing many options so
@@ -173,6 +175,14 @@ Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
                         already exists then this script invokes a build in the
                         already existing in-place ADTOOLS without firstly 
                         performing a clean
+       [r] repo       : The repository location of ADTOOLS. <REPO> is the
+                        location to clone from in the case you have forked
+                        from the original location and BRANCH is switched to
+                        if supplied
+                        (DEFAULT: ${adtools_repo_loc})
+       !! NOTE !!     : In the case you specify BRANCH you must quote the
+                        option argument. For example
+                        -r "https://myRepo/ MY_BRANCH"
        [e] AFXGROUP C : Enables the experimental AFXGROUP's version of the C
                         Library, CLIB2, when building in-place ADTOOLS using
                         the branch specified (DEFAULT: master)
@@ -306,14 +316,18 @@ function BUILD
 	    # TODO: Return a value from the function instead and raise error here
 	    CHECK_DEPENDS
 	fi
-        local INFO_STRING="Building ADTOOLS using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\""
+        local INFO_STRING="Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch: \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\""
         if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\"" ; fi
         _info "Building ADTOOLS..."
         
         mkdir "${BASE_DIR}"
         cd "${BASE_DIR}"
-        git clone https://github.com/sba1/adtools.git "${ADTOOLS_DIR}" || _error "Unable to clone ADTOOLS repo" 201 1
+        git clone "${adtools_repo_loc}" "${ADTOOLS_DIR}" || _error "Unable to clone ADTOOLS repo" 201 1
         cd "${ADTOOLS_DIR}"
+	if [[ -n "${adtools_repo_branch}" ]]
+	then
+	    git switch "${adtools_repo_branch}" || _error "Unable to switch to branch: \"${adtools_repo_branch}\"" 301 1
+	fi
 	
 	# Check that the user has configured git email/username; especially
 	# since ADTOOLS silently just does not apply the patches if this
@@ -455,7 +469,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:k:uibeg:n:s:m:tcC opt
+while getopts xp:o:k:uibr:eg:n:s:m:tcC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -485,6 +499,14 @@ do
     b)
         do_build=1
         ;;
+    r)
+	repo_branch=(${OPTARG})
+	adtools_repo_loc="${repo_branch[0]}"
+	if (( ${#repo_branch[@]} > 1 ))
+	then
+	   adtools_repo_branch="${repo_branch[1]}"
+	fi
+	;;
     e)
         export EXP_CLIB2=1
         next="${!OPTIND}"
