@@ -399,7 +399,7 @@ function BUILD
     then
 	if [[ "${native_gcc}" == error ]]
 	then
-	    _error "No native compiler exists to build ADTOOLS. Only GCC is supported" 30
+	    _error "No native compiler exists to build ADTOOLS. Both \"gcc\" and \"g++\" are needed and only the GNU COMPILER COLLECTION (GCC) is supported" 30
 	else
             _warn "Native Compiler architecture is \"${native_gcc}\" which is not supported but continuing anyway"
 	fi
