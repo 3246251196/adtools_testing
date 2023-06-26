@@ -14,9 +14,11 @@ INSPECT_EXPECTED=inspect_$(FILE_INFIX).expected
 INSPECT_STDOUT=inspect_$(FILE_INFIX).stdout
 INSPECT_STDERR=inspect_$(FILE_INFIX).stderr
 INSPECT_EXE_FILE=inspect_$(FILE_INFIX)_$(INSPECT_EXE)
+MAP_FILE=$(PROG).map
 TEMP_DIR=temp_$(FILE_INFIX).tmp # We need this for parallel jobs otherwise the located libraries may become corrupt
 
 LOG_CMD = echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;            \
+	echo  "TIME STAMP                     : $$(date)" >> $(LOG_FILE) ;            \
 	echo  "TARGET                         : $@" >> $(LOG_FILE) ;                  \
 	echo  "PHASE                          : $(1)" >> $(LOG_FILE) ;                \
 	echo  "COMMAND                        : $(2)" >> $(LOG_FILE) ;                \
@@ -79,7 +81,7 @@ endif
 
 	cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
 	$(LHA_ADD) $(LHA_FILE) $(PROG) $(LOG_FILE) $(RUN_TEST_SCRIPT) $(INSPECT_EXPECTED) \
-		$(INSPECT_EXE_FILE) *.map
+		$(INSPECT_EXE_FILE) $(MAP_FILE)
 	rm -f $(INSPECT_EXE_FILE) # Doing this avoids getting warnings when extracting the LHAs on amiga since the file names are the same
 	rm -rf $(TEMP_DIR)
 	echo "	(Re)Built test/variant \"$(LHA_FILE)\""
