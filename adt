@@ -392,21 +392,27 @@ function BUILD
 	generate_adt_last_proj
     else
         cd "${BASE_DIR}/${ADTOOLS_DIR}"
-	local _selection=
-	_info "Assuming you want to build the cross compiler"
-	_info "Did you make any changes to the CLIB2 source files? (y/n)?"
-	read _selection
-	if [[ "${_selection}" == y ]]
+
+	# In the case that we just performed a clean (-C), then we do
+	# not want to be asked about this
+	if [[ -d "${CROSS_PREFIX}" ]]
 	then
-	    rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/clib2-cross-done-"*
+	    local _selection=
+	    _info "Assuming you want to build the cross compiler"
+	    _info "Did you make any changes to the CLIB2 source files? (y/n)?"
+	    read _selection
+	    if [[ "${_selection}" == y ]]
+	    then
+		rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/clib2-cross-done-"*
+	    fi
+	    _info "Did you make any changes to the BINUTILS source files? (y/n)?"
+	    read _selection
+	    if [[ "${_selection}" == y ]]
+	    then
+		rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/binutils-cross-done-"*
+	    fi
+	    rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/gcc-cross-done-"*
 	fi
-	_info "Did you make any changes to the BINUTILS source files? (y/n)?"
-	read _selection
-	if [[ "${_selection}" == y ]]
-	then
-	    rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/binutils-cross-done-"*
-	fi
-	rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/gcc-cross-done-"*
     fi
     
     native_gcc=
