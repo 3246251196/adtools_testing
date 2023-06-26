@@ -484,7 +484,7 @@ function TESTS
 {
     # Arbitrary check
     which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross-compiler on the path."\
-" You may have forgotten to set the prefix with option -p or build the cross compiler or specify the -u option" 50
+" You may have forgotten to set the prefix with option -p or build the cross compiler or specify the -u option or used the -x option to retain your previously cached settings" 50
 
     _info "Building tests..."
     _info "You MUST run \"./adt -c\" if you want to generate a full clean test build"
