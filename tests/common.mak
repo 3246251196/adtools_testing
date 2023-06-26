@@ -77,7 +77,7 @@ ifneq ($(DYN),)
 	done
 endif
 	$(call LOG_CMD,Listing Shared Libraries,,)
-	grep -a -o -E "[A-Za-z_0-9]+\.library" $(PROG) >> $(LOG_FILE)
+	grep -a -o -E "[A-Za-z_0-9]+\.library" $(PROG) | sort -u >> $(LOG_FILE)
 
 	cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
 	$(LHA_ADD) $(LHA_FILE) $(PROG) $(LOG_FILE) $(RUN_TEST_SCRIPT) $(INSPECT_EXPECTED) \
