@@ -17,6 +17,7 @@ session_was_cached=0
 ignore_depends=0
 adtools_repo_loc="https://github.com/sba1/adtools.git"
 adtools_repo_branch=
+just_continue=0
 
 readonly ORIG_DIR="$(pwd)"
 readonly ADTOOLS_DIR=adt_adtools
@@ -127,7 +128,7 @@ function _usage
     cat << EOF
 Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
             where:
-            OPTIONS: [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-k <NUM>] [-u] [-i]
+            OPTIONS: [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y]
             ACTIONS: [-b [ [-r "<REPO [BRANCH]>"] [-e <BRANCH>] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
                      ^                                                                                           ^      ^
                      BUILD ADTOOLS                                                                               TESTS  CLEAN
@@ -142,7 +143,8 @@ Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
                         "-x -t", or, making a modification to the cross
                         compiler source files and wanting to build the cross
                         compiler again is as easy as "-x -b"
-       !! NOTE !!     : This option must be the first option provided
+       !! NOTE !!     : This option must be the first option provided. Not all
+                        arguments are cached. See below
        [p] prefix     : Sets the prefix of the build, test or clean session.
                         This may be useful if you wish to build another version
                         of ADTOOLS and/or perform tests on another version. For
@@ -176,15 +178,21 @@ Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
                         build the tests for a build of ADTOOLS that was built
                         with this option, unless the -x option is used, or the
                         variables described above are set in the environment
-       [k] cores      : Number of cores/jobs to pass to Makefiles
-                        (DEFAULT: the result of the command NPROC)
        [u] use_adtools: Use the ADTOOLS that is already on the existing path
                         for building the tests or use this when performing a
                         clean of a build of ADTOOLS. In the case ADTOOLS was
                         built by using the -o option, you will need to add the
                         cross-compiler to the path and then use this option
                         along with -t
+       [k] cores      : Number of cores/jobs to pass to Makefiles
+                        (DEFAULT: the result of the command NPROC)
+       !! NOTE !!     : This is option is NOT cached
        [i] ignore dep : Ignore dependency checker routine
+       !! NOTE !!     : This is option is NOT cached
+       [y] auto answer: Automatically answer script questions with whatever
+                        answer will result in script progression where safe to
+                        do so
+       !! NOTE !!     : This is option is NOT cached
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. The in-place location is
                         the folder named "<PREFIX>build". If the directory 
@@ -321,12 +329,15 @@ function CHECK_DEPENDS
 
     if (( !_continue ))
     then
-	_info "Dependency check was not clean. Continue (y/n)?"
-        read _selection
-        if [[ "${_selection}" != y ]]
-        then
-	    _error "Not continuing due to issues with the dependency checker" 207 1
-        fi
+	_info "Dependency check was not clean. Continue ([y]/n)?"
+	if (( !just_continue ))
+	then
+           read _selection
+           if [[ "${_selection}" != y ]]
+           then
+	       _error "Not continuing due to issues with the dependency checker" 207 1
+           fi
+	fi
     fi
 }
 
@@ -399,17 +410,23 @@ function BUILD
 	then
 	    local _selection=
 	    _info "Assuming you want to build the cross compiler"
-	    _info "Did you make any changes to the CLIB2 source files? (y/n)?"
-	    read _selection
-	    if [[ "${_selection}" == y ]]
+	    _info "Did you make any changes to the CLIB2 source files? (y/[n])?"
+	    if (( !just_continue ))
 	    then
-		rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/clib2-cross-done-"*
+		read _selection
+		if [[ "${_selection}" == y ]]
+		then
+		    rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/clib2-cross-done-"*
+		fi
 	    fi
-	    _info "Did you make any changes to the BINUTILS source files? (y/n)?"
-	    read _selection
-	    if [[ "${_selection}" == y ]]
+	    _info "Did you make any changes to the BINUTILS source files? (y/[n])?"
+	    if (( !just_continue ))
 	    then
-		rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/binutils-cross-done-"*
+		read _selection
+		if [[ "${_selection}" == y ]]
+		then
+		    rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/binutils-cross-done-"*
+		fi
 	    fi
 	    rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/gcc-cross-done-"*
 	fi
@@ -505,7 +522,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:k:uibr:eg:n:s:m:tcC opt
+while getopts xp:o:uk:iybr:eg:n:s:m:tcC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -523,14 +540,17 @@ do
     o)
         gcc_path="${OPTARG}"
         ;;
-    k)
-        CORES="${OPTARG}"
-        ;;
     u)
         use_this_adtools=1
         ;;
+    k)
+        CORES="${OPTARG}"
+        ;;
     i)
 	ignore_depends=1
+	;;
+    y)
+	just_continue=1
 	;;
     b)
         do_build=1
