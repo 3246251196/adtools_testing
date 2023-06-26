@@ -25,6 +25,7 @@ readonly SCRIPT_INVOCATION=1
 readonly RUN_ALL_SCRIPT=run_all.script
 readonly EXECUTE_SCRIPT=user.script
 readonly SESSION_CACHE="${ORIG_DIR}/.adt_session.cache"
+readonly ADT_LOG_FILE=adt.log
 BUILD_DIR=
 FINAL_LHA=
 BASE_DIR=
@@ -52,6 +53,11 @@ function _error
     if [[ -n "${3}" ]]
     then
 	_warn "For this error it is recommended to remove \"${BASE_DIR}\" before starting again"
+    fi
+    if (( session_was_cached ))
+    then
+	_info "Cached settings:"
+	obtain_adt_last_proj DO_NOT_SOURCE
     fi
     exit "${2}"
 }
@@ -428,7 +434,7 @@ function BUILD
     
     sleep 5 # let the user at least notice if there were some messages
     
-    LOG_FILE="${BASE_DIR}/adt.log"
+    LOG_FILE="${BASE_DIR}/${ADT_LOG_FILE}"
     echo "####################" >> "${LOG_FILE}"
     echo "${INFO_STRING}" >> "${LOG_FILE}"
     echo "####################" >> "${LOG_FILE}"

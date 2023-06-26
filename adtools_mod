@@ -2,6 +2,7 @@
 # Insert any modifications to ADTOOLS before building it here:
 set -e
 set -u
+set -x
 
 # WHEN THIS SCRIPT IS INVOKED YOU ARE ALREADY INSIDE THE CHECKED OUT LOCATION OF ADTOOLS
 #
