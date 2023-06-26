@@ -332,6 +332,9 @@ function CHECK_DEPENDS
 
 function BUILD
 {
+    local INFO_STRING="[$(date)] Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\", CROSS_PREFIX (installation location of the cross-compiler) \"${CROSS_PREFIX}\""
+    if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\"" ; fi
+
     if [[ ! -d "${BASE_DIR}" ]]
     then
 	if (( !ignore_depends ))
@@ -339,8 +342,6 @@ function BUILD
 	    # TODO: Return a value from the function instead and raise error here
 	    CHECK_DEPENDS
 	fi
-        local INFO_STRING="Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\", CROSS_PREFIX (installation location of the cross-compiler) \"${CROSS_PREFIX}\""
-        if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\"" ; fi
         _info "Building ADTOOLS..."
         
         mkdir "${BASE_DIR}"
