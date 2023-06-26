@@ -56,6 +56,7 @@ function _error
     exit "${2}"
 }
 
+#
 function generate_adt_last_proj
 {
     if [[ -f "${SESSION_CACHE}" ]]
@@ -67,19 +68,22 @@ function generate_adt_last_proj
 use_this_adtools="${use_this_adtools}"
 gcc_ver="${gcc_ver}"
 binutils_ver="${binutils_ver}"
-SDK_VERSION="${SDK_VERSION}"
 expclib2_branch="${expclib2_branch}"
 args="${args}"
 session_prefix="${session_prefix}"
 gcc_path="${gcc_path}"
-EXP_CLIB2="${EXP_CLIB2}"
-CLIB2_SHA1="${CLIB2_SHA1}"
 adtools_repo_loc="${adtools_repo_loc}"
 adtools_repo_branch="${adtools_repo_branch}"
+
+EXP_CLIB2="${EXP_CLIB2}"
+CLIB2_SHA1="${CLIB2_SHA1}"
+SDK_VERSION="${SDK_VERSION}"
+CROSS_PREFIX="${CROSS_PREFIX}"
 
 export EXP_CLIB2
 export CLIB2_SHA1
 export SDK_VERSION
+export CROSS_PREFIX
 EOF
 
     if (( ${?} ))
@@ -90,11 +94,15 @@ EOF
     session_was_cached=1
 }
 
+# $1: If set to anything then do not source the cached settings
 function obtain_adt_last_proj
 {
     if [[ -f "${SESSION_CACHE}" ]]
     then
-	source "${SESSION_CACHE}" && _info "Using cached settings from last invocation"
+	if (( $# == 0 ))
+	then
+	    source "${SESSION_CACHE}" && _info "Using cached settings from last invocation"
+	fi
 	_info ""
 	_info "Settings Begin"
 	while read setting
@@ -224,7 +232,14 @@ function SETUP_PATHS
     BUILD_DIR="${session_prefix}build"
     FINAL_LHA="${session_prefix}adt_tests.lha"
     BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
-    CROSS_PREFIX="${BASE_DIR}/adt_build"
+    if [[ -z "${CROSS_PREFIX}" ]]
+    then
+	CROSS_PREFIX="${BASE_DIR}/adt_build"
+    else
+	# Do not set it since we must be in the situation where the user has provided the "-x" option
+	# which should use the value in the cache file.
+	:
+    fi
     # Rather than correctly applying logic above to check if the
     # gcc_path should be honoured, just perform a one-shot change to
     # the necessary variables right here!
@@ -318,7 +333,7 @@ function BUILD
 	    # TODO: Return a value from the function instead and raise error here
 	    CHECK_DEPENDS
 	fi
-        local INFO_STRING="Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch: \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\""
+        local INFO_STRING="Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\", CROSS_PREFIX (installation location of the cross-compiler) \"${CROSS_PREFIX}\""
         if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\"" ; fi
         _info "Building ADTOOLS..."
         
@@ -416,8 +431,7 @@ function BUILD
     LOG_FILE="${BASE_DIR}/adt.log"
     echo "####################" >> "${LOG_FILE}"
     echo "${INFO_STRING}" >> "${LOG_FILE}"
-    echo "export EXP_CLIB2=${EXP_CLIB2}" >> "${LOG_FILE}"
-    echo "export CLIB2_SHA1=${CLIB2_SHA1}" >> "${LOG_FILE}"
+    echo "####################" >> "${LOG_FILE}"
     if [[ -n "${ADTOOLS_MOD_SCRIPT}" ]]
     then
 	echo "ADTOOLS was modified with script \"${ADTOOLS_MOD_SCRIPT}\" whose contents, indented by 4 spaces, follows:" >> "${LOG_FILE}"
@@ -426,7 +440,7 @@ function BUILD
 	    echo "    ${line}" >> "${LOG_FILE}"
 	done < "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}"
     fi
-    BUILD_CMD="CROSS_PREFIX=\"${CROSS_PREFIX}\" ${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | "\
+    BUILD_CMD="${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | "\
 "tee -a \"${LOG_FILE}\""
     echo "####################" >> "${LOG_FILE}"
     echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
@@ -590,7 +604,6 @@ then
     FINAL_LHA="$(echo "$(dirname $(which ppc-amigaos-gcc))" | sed 's,/,_,g' )${FINAL_LHA}"
 fi
 
-# Variables that are used further on in the testing framework
 export BASE_DIR
 export ADTOOLS_DIR
 export ORIG_DIR
@@ -641,4 +654,7 @@ if (( session_was_cached )) ;
 then
     _info "Session was cached to file \"${SESSION_CACHE}\". You may want to backup this file since "\
 "it will be overwritten on any subsequent NEW builds"
+    # Write out the contents of the cache file:
+    _info "Cached settings:"
+    obtain_adt_last_proj DO_NOT_SOURCE
 fi
