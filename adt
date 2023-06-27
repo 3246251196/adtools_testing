@@ -18,6 +18,7 @@ ignore_depends=0
 adtools_repo_loc="https://github.com/sba1/adtools.git"
 adtools_repo_branch=
 just_continue=0
+no_cache=0
 
 readonly ORIG_DIR="$(pwd)"
 readonly ADTOOLS_DIR=adt_adtools
@@ -128,7 +129,7 @@ function _usage
     cat << EOF
 Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
             where:
-            OPTIONS: [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y]
+            OPTIONS: [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
             ACTIONS: [-b [ [-r "<REPO [BRANCH]>"] [-e <BRANCH>] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
                      ^                                                                                           ^      ^
                      BUILD ADTOOLS                                                                               TESTS  CLEAN
@@ -192,6 +193,8 @@ Usage: adt [OPTIONS] [ACTIONS] (one, and only one, action is always required)
        [y] auto answer: Automatically answer script questions with whatever
                         answer will result in script progression where safe to
                         do so
+       !! NOTE !!     : This is option is NOT cached
+       [d] don't cache: Do not update the cache for this invocation
        !! NOTE !!     : This is option is NOT cached
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. The in-place location is
@@ -399,8 +402,11 @@ function BUILD
         export RANLIB=
         export READELF=
 
-	# Store this sessions settings
-	generate_adt_last_proj
+	# Store this session's settings
+	if (( !no_cache ))
+	then
+	    generate_adt_last_proj
+	fi
     else
         cd "${BASE_DIR}/${ADTOOLS_DIR}"
 
@@ -522,7 +528,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iybr:eg:n:s:m:tcC opt
+while getopts xp:o:uk:iydbr:eg:n:s:m:tcC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -551,6 +557,9 @@ do
 	;;
     y)
 	just_continue=1
+	;;
+    d)
+	no_cache=1;
 	;;
     b)
         do_build=1
