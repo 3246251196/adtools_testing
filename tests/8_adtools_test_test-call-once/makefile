@@ -1,10 +1,13 @@
 include ../common.mak
 
 CXXFLAGS+=-std=c++11
-LDFLAGS+=-athread=native
+
+# export these variables to override them:
+THREAD_IMPL?=-athread=native
+LIBS?=
 
 $(PROG): main$(FILE_INFIX).o
-	$(call LOG_CMD,Link,$(CXX) $(LDFLAGS) -o $@ $^)
+	$(call LOG_CMD,Link,$(CXX) $(LDFLAGS) -o $@ $^ $(THREAD_IMPL) $(LIBS))
 	$(call LOG_CMD,Readelf,$(READELF) -d $(PROG))
 
 main$(FILE_INFIX).o: main.cpp
