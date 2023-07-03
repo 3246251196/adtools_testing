@@ -24,7 +24,7 @@ LOG_CMD = echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;      
 	echo  "COMMAND                        : $(2)" >> $(LOG_FILE) ;                \
 	echo  "COMMAND OUTPUT (STDOUT/STDERR) : See following lines" >> $(LOG_FILE) ; \
 	echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;              \
-	$(2) 1>> $(LOG_FILE) 2>&1 || echo "Failed to build $$(pwd) : $(PROG)" 1>&2
+	$(2) 1>> $(LOG_FILE) 2>&1 || exit 0
 
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:
@@ -51,40 +51,41 @@ endif
 all: $(LHA_FILE)
 
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
+	if [[ ! -f $(PROG) ]] ; then echo "    Failed to build test/variant \"$(PROG)\"" ; fi
 	mkdir -p $(TEMP_DIR)
 ifneq ($(DYN),)
 	$(call LOG_CMD,Listing Shared Objects,,)
-	ARR_SO=($$($(READELF) -d $(PROG) | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ;    \
-	for SO in $${ARR_SO[@]} ;                                                        \
-	do                                                                               \
-		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}"            |                 \
-						grep $(GREP_OPT_C_LIB) |                 \
-						grep "ppc-amigaos")    ;                 \
-		if [[ -z "$${LOC}" ]] ;                                                  \
-		then                                                                     \
-			LOC=$$(find . -name "$${SO}") ;                                  \
-			{ test -f "$${LOC}" && $(LHA_ADD) $(LHA_FILE) "$${LOC}" &&       \
-				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } || \
-				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;  \
-		else                                                                     \
-			{ test -f "$${LOC}" && cp "$${LOC}" $(TEMP_DIR) &&               \
-				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } || \
-				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;  \
-			cd $(TEMP_DIR) ;                                                 \
-			$(LHA_ADD) ../$(LHA_FILE) "$$(basename "$${LOC}")" ;             \
-			cd .. ;                                                          \
-		fi ;                                                                     \
+	ARR_SO=($$($(READELF) -d $(PROG) 1>/dev/null 2>&1 | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
+	for SO in $${ARR_SO[@]} ;                                                                      \
+	do                                                                                             \
+		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}"            |                               \
+						grep $(GREP_OPT_C_LIB) |                               \
+						grep "ppc-amigaos")    ;                               \
+		if [[ -z "$${LOC}" ]] ;                                                                \
+		then                                                                                   \
+			LOC=$$(find . -name "$${SO}") ;                                                \
+			{ test -f "$${LOC}" && $(LHA_ADD) $(LHA_FILE) "$${LOC}" &&                     \
+				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } ||               \
+				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;                \
+		else                                                                                   \
+			{ test -f "$${LOC}" && cp "$${LOC}" $(TEMP_DIR) &&                             \
+				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } ||               \
+				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;                \
+			cd $(TEMP_DIR) ;                                                               \
+			$(LHA_ADD) ../$(LHA_FILE) "$$(basename "$${LOC}")" ;                           \
+			cd .. ;                                                                        \
+		fi ;                                                                                   \
 	done
 endif
 	$(call LOG_CMD,Listing Shared Libraries,,)
-	grep -a -o -E "[A-Za-z_0-9]+\.library" $(PROG) | sort -u >> $(LOG_FILE)
+	grep -a -o -E "[A-Za-z_0-9]+\.library" $(PROG) 1>/dev/null 2>&1 | sort -u >> $(LOG_FILE)
 
 	cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
 	$(LHA_ADD) $(LHA_FILE) $(PROG) $(LOG_FILE) $(RUN_TEST_SCRIPT) $(INSPECT_EXPECTED) \
 		$(INSPECT_EXE_FILE) $(MAP_FILE)
 	rm -f $(INSPECT_EXE_FILE) # Doing this avoids getting warnings when extracting the LHAs on amiga since the file names are the same
 	rm -rf $(TEMP_DIR)
-	echo "	(Re)Built test/variant \"$(LHA_FILE)\""
+	echo "    (Re)Built test/variant \"$(PROG)\""
 
 $(RUN_TEST_SCRIPT):
 	echo "FAILAT 21" > $(RUN_TEST_SCRIPT) ;                                                                    \
