@@ -132,7 +132,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXTRAS] (one, and only one, action is always req
  where:
 
  OPTIONS: [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
- ACTIONS: [-b [ [-r "<REPO [BRANCH]>"] [-e <BRANCH>] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
+ ACTIONS: [-b [ [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
           ^                                                                                           ^      ^
           BUILD ADTOOLS                                                                               TESTS  CLEAN
  EXTRAS:  Passed to the relevant ACTION Makefile
