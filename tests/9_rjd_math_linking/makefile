@@ -5,7 +5,8 @@ include ../common.mak
 #
 #       Maybe this is fine. I have not looked into it in great detail!
 ifneq ($(DYN),)
-LDFLAGS+=-athread=native
+THREAD_IMPL?=native
+LDFLAGS+=-athread=$(THREAD_IMPL)
 endif
 
 CFLAGS+=-Wall -Wextra -Werror -pendantic -std=c++11
@@ -36,7 +37,7 @@ CFLAGS+=-Wall -Wextra -Werror -pendantic -std=c++11
 ###
 
 $(PROG): main_$(FILE_INFIX).o
-	$(call LOG_CMD,Link,$(CXX) $(LDFLAGS) -o $@ $^)
+	$(call LOG_CMD,Link,$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS))
 	$(call LOG_CMD,Readelf,$(READELF) -d $(PROG))
 
 main_$(FILE_INFIX).o: main.cpp

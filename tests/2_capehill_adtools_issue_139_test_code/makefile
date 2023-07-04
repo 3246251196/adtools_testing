@@ -19,10 +19,11 @@ LIB=lib$(LIB_NAME).a
 endif
 
 CFLAGS+=-Wall -Werror -pedantic -std=c11 -fPIC
-LDFLAGS+=-L. -l$(LIB_NAME) -athread=native
+LDFLAGS+=-L. -l$(LIB_NAME)
+THREAD_IMPL?=native
 
 $(PROG): main.c $(LIB)
-	$(call LOG_CMD,Link,$(CC) -o $@ $< $(LDFLAGS))
+	$(call LOG_CMD,Link,$(CC) -o $@ $< $(LDFLAGS) -athread=$(THREAD_IMPL) $(LIBS))
 	$(call LOG_CMD,Readelf,$(READELF) -d $(PROG))
 
 $(LIB): $(RELO)

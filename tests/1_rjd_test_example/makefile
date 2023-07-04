@@ -4,12 +4,13 @@ include ../common.mak
 # Further overriding flags. The default already contains the necessary C LIBRARY
 # and any other flags passed by the user via the adt script
 CXXFLAGS+=-Wall -Werror -pedantic -std=c++11
-LDFLAGS+=-athread=native
+
+THREAD_IMPL?=native
 
 # $(PROG) is the only necessary rule.
 # Note the use of $(call) to write to the log file
 $(PROG): main_$(FILE_INFIX).o
-	$(call LOG_CMD,Link,$(CXX) $(LDFLAGS) -o $@ $^)
+	$(call LOG_CMD,Link,$(CXX) $(LDFLAGS) -athread=$(THREAD_IMPL) -o $@ $^ $(LIBS))
 	$(call LOG_CMD,Readelf,$(READELF) -d $(PROG))
 
 main_$(FILE_INFIX).o: main.cpp
