@@ -28,7 +28,7 @@ EXPORT=INFIX="$${C_LIB}" ;                                                      
 	CFLAGS="${CLFLAGS} -mcrt=$${C_LIB} $(CFLAGS_VERBOSE)" ;                 \
 	CXXFLAGS="${CXXFLAGS} -mcrt=$${C_LIB} $(CFLAGS_VERBOSE)" ;              \
 	LDFLAGS="${LDFLAGS} -mcrt=$${C_LIB} $${DYN} $(LDFLAGS_VERBOSE)" ;       \
-	export C_LIB DYN INFIX CXX CC AR RANLIB READELF CFLAGS CXXFLAGS LDFLAGS $(EXTRA_ARGS)
+	export C_LIB DYN INFIX CXX CC AR RANLIB READELF CFLAGS CXXFLAGS LDFLAGS
 #######
 # ENDER EXPORT STRING
 #######

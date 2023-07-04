@@ -77,7 +77,6 @@ use_this_adtools="${use_this_adtools}"
 gcc_ver="${gcc_ver}"
 binutils_ver="${binutils_ver}"
 expclib2_branch="${expclib2_branch}"
-args="${args}"
 session_prefix="${session_prefix}"
 gcc_path="${gcc_path}"
 adtools_repo_loc="${adtools_repo_loc}"
@@ -127,17 +126,17 @@ function obtain_adt_last_proj
 function _usage
 {
     cat << EOF
-Usage: adt [OPTIONS] [ACTIONS] [EXTRAS] (one, and only one, action is always required)
-
- where:
-
+Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always required)
  OPTIONS: [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
  ACTIONS: [-b [ [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
           ^                                                                                           ^      ^
           BUILD ADTOOLS                                                                               TESTS  CLEAN
- EXTRAS:  Passed to the relevant ACTION Makefile
-          For example: ./adt -t THREAD_IMPL=pthread
-          Will cause THREAD_IMPL to be exported for tests' Makefiles
+ EXPORT:  [VAR[=VAL] ...]
+          ^
+          A string of environment variables with optional values that are
+          exported. For example, "./adt -t THREAD_IMPL=pthread LIBS=-lpthread"
+	  results in THREAD_IMPL and LIBS being exported for potential use in
+	  Makefiles. Note that EXPORT is not cached.
 
        [x] cached proj: Use the variables stored from the previous build action
                         session for this action. This is useful when a complex
@@ -483,7 +482,7 @@ function BUILD
 	    echo "    ${line}" >> "${LOG_FILE}"
 	done < "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}"
     fi
-    BUILD_CMD="${args} make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | "\
+    BUILD_CMD="make -O -j${CORES} -C native-build/ gcc-cross 2>&1 | "\
 "tee -a \"${LOG_FILE}\""
     echo "####################" >> "${LOG_FILE}"
     echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
@@ -514,7 +513,7 @@ function TESTS
     _info "You MUST run \"./adt -c\" if you want to generate a full clean test build"
     _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
     _info "If errors occur the look at the relevant log file in the test directory"
-    EXTRA_ARGS="${args}" make -s -C "${TESTS_DIR}" all || _error "An error occurred while trying to build the tests" 120
+    make -s -C "${TESTS_DIR}" all || _error "An error occurred while trying to build the tests" 120
     _info "Finished building tests..."
     _info "\"${FINAL_LHA}\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
     _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
@@ -611,7 +610,7 @@ do
 done
 
 shift $((OPTIND - 1))
-args="$@"
+args="${@}"
 
 # Check for any influention environment variables before continuing
 if [[ -n "${ADTOOLS_PREFIX}" ]]
@@ -667,6 +666,13 @@ export EXECUTE_SCRIPT
 export CROSS_PREFIX
 export SDK_VERSION
 export PATH="${CROSS_PREFIX}/bin:${PATH}"
+if [[ -n "${args}" ]]
+then
+    for exportee in ${args}
+    do
+	export "${exportee}"
+    done
+fi
 
 if (( do_clean_tests ))
 then
