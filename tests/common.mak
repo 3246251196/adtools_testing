@@ -53,7 +53,7 @@ all: $(LHA_FILE)
 	then                                                                                           \
 		echo "    Failed to build test/variant \"$(PROG)\"" ;                                  \
 	else                                                                                           \
-		echo "    (Re)Built test/variant \"$(PROG)\"" ;                                        \
+		echo "    (Re)Built test/variant       \"$(PROG)\"" ;                                  \
 	fi
 
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)

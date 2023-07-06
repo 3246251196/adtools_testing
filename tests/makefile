@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 INSPECT_EXE=inspect.exe
 LHA_ADD=lha u -q 1>/dev/null 2>&1
-TMP_LOG_RESULTS_FILE=tmp_log_results.txt
+TMP_LOG_RESULTS_FILE=test_results.txt
 export INSPECT_EXE
 export LHA_ADD
 # Nothing more than a long string of a bash export command that is used when
@@ -56,10 +56,16 @@ endif
 		done ;                                                   \
 	done ;                                                           \
 	for p in $${pids[@]} ; do wait $$p ; done
-	sort $(TMP_LOG_RESULTS_FILE)
+	sort -o $(TMP_LOG_RESULTS_FILE) $(TMP_LOG_RESULTS_FILE)
+	cat $(TMP_LOG_RESULTS_FILE)
+	cd .. && $(LHA_ADD)                                              \
+		$@                                                       \
+		tests/*/*.lha                                            \
+		tests/$(EXECUTE_SCRIPT)                                  \
+		tests/$(TMP_LOG_RESULTS_FILE)                            \
+			&& cd - 1>/dev/null 2>&1                         \
+			&& $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)
 	rm $(TMP_LOG_RESULTS_FILE)
-	cd .. && $(LHA_ADD) $@ tests/*/*.lha tests/$(EXECUTE_SCRIPT) && \
-		cd - 1>/dev/null 2>&1 && $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)
 
 clean_stamp: $(BASE_DIR)
 	$(do_clean)
