@@ -49,9 +49,14 @@ endif
 
 .PHONY: clean all
 all: $(LHA_FILE)
+	if [[ ! -f $(PROG) ]] ;                                                                        \
+	then                                                                                           \
+		echo "    Failed to build test/variant \"$(PROG)\"" ;                                  \
+	else                                                                                           \
+		echo "    (Re)Built test/variant \"$(PROG)\"" ;                                        \
+	fi
 
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
-	if [[ ! -f $(PROG) ]] ; then echo "    Failed to build test/variant \"$(PROG)\"" ; fi
 	mkdir -p $(TEMP_DIR)
 ifneq ($(DYN),)
 	$(call LOG_CMD,Listing Shared Objects,,)
@@ -83,9 +88,8 @@ endif
 	cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
 	$(LHA_ADD) $(LHA_FILE) $(PROG) $(LOG_FILE) $(RUN_TEST_SCRIPT) $(INSPECT_EXPECTED) \
 		$(INSPECT_EXE_FILE) $(MAP_FILE)
-	rm -f $(INSPECT_EXE_FILE) # Doing this avoids getting warnings when extracting the LHAs on amiga since the file names are the same
+	rm -f $(INSPECT_EXE_FILE)
 	rm -rf $(TEMP_DIR)
-	echo "    (Re)Built test/variant \"$(PROG)\""
 
 $(RUN_TEST_SCRIPT):
 	echo "FAILAT 21" > $(RUN_TEST_SCRIPT) ;                                                                    \
