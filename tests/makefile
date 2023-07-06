@@ -1,6 +1,7 @@
 SHELL=/bin/bash
 INSPECT_EXE=inspect.exe
 LHA_ADD=lha u -q 1>/dev/null 2>&1
+TMP_LOG_RESULTS_FILE=tmp_log_results.txt
 export INSPECT_EXE
 export LHA_ADD
 # Nothing more than a long string of a bash export command that is used when
@@ -41,19 +42,22 @@ $(FINAL_LHA): $(INSPECT_EXE) clean_stamp
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "adt" script)
 endif
-	for C_LIB in "newlib" "clib2" ;                     \
-	do                                                  \
-		for DYN in "-use-dynld" "" ;                \
-		do                                          \
-			$(EXPORT) ;                         \
-			for TEST in $(tests) ;              \
-			do                                  \
-				$(MAKE) -C "$${TEST}" all & \
-				pids+=( $$! ) ;             \
-			done ;                              \
-		done ;                                      \
-	done ;                                              \
+	for C_LIB in "newlib" "clib2" ;                         \
+	do                                                               \
+		for DYN in "-use-dynld" "" ;                             \
+		do                                                       \
+			$(EXPORT) ;                                      \
+			for TEST in $(tests) ;                           \
+			do                                               \
+				$(MAKE) -C "$${TEST}" all                \
+					1>$(TMP_LOG_RESULTS_FILE) 2>&1 & \
+				pids+=( $$! ) ;                          \
+			done ;                                           \
+		done ;                                                   \
+	done ;                                                           \
 	for p in $${pids[@]} ; do wait $$p ; done
+	sort $(TMP_LOG_RESULTS_FILE)
+	rm $(TMP_LOG_RESULTS_FILE)
 	cd .. && $(LHA_ADD) $@ tests/*/*.lha tests/$(EXECUTE_SCRIPT) && \
 		cd - 1>/dev/null 2>&1 && $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)
 
