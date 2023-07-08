@@ -5,12 +5,20 @@ include ../common.mak
 # and any other flags passed by the user via the adt script
 CXXFLAGS+=-Wall -Werror -pedantic -std=c++11
 
+# We need to also apply the -athread option since when doing a dynamic
+# build, libgcc.so relies on some threading functions that are only
+# brought in with gthr-amigaos-$(THREAD_IMPL).o
+#
+# We ALSO need it for static since
+# IOSTREAM ends up needing routines in gthr-amigaos-$(THREAD_IMPL).o
+# also
 THREAD_IMPL?=native
+LDFLAGS+=-athread=$(THREAD_IMPL)
 
 # $(PROG) is the only necessary rule.
 # Note the use of $(call) to write to the log file
 $(PROG): main_$(FILE_INFIX).o
-	$(call LOG_CMD,Link,$(CXX) $(LDFLAGS) -athread=$(THREAD_IMPL) -o $@ $^ $(LIBS))
+	$(call LOG_CMD,Link,$(CXX) $(LDFLAGS) -o $@ $^)
 	$(call LOG_CMD,Readelf,$(READELF) -d $(PROG))
 
 main_$(FILE_INFIX).o: main.cpp
