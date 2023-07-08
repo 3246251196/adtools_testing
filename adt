@@ -69,7 +69,8 @@ function generate_adt_last_proj
 {
     if [[ -f "${SESSION_CACHE}" ]]
     then
-	_warn "Overwriting previously cached session"
+	_warn "Overwriting previously cached session. Previous session file backed up to: \"${SESSION_CACHE}.bak\""
+	cp "${SESSION_CACHE}" "${SESSION_CACHE}.bak"
     fi
     
     cat > "${SESSION_CACHE}" <<EOF
