@@ -5,7 +5,7 @@ FOREACH t IN ${ts}
 	CD ${t}
 	SET vs `LIST FILES LFORMAT="%M"`
 	FOREACH v IN ${vs}
-		LHA -t x ${v} ${v}/
+		LHA -q -t x ${v} ${v}/
 		CD ${v}
 		; //user.script contents is commented out
 		EXECUTE //user.script
