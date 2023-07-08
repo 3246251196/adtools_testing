@@ -713,8 +713,7 @@ if (( do_tests)) ; then TESTS ; fi
 
 if (( session_was_cached )) ;
 then
-    _info "Session was cached to file \"${SESSION_CACHE}\". You may want to backup this file since "\
-"it will be overwritten on any subsequent NEW builds"
+    _info "Session was cached to file \"${SESSION_CACHE}\". If there was a previous cache file it is now called: \"${SESSION_CACHE}.bak\""
     # Write out the contents of the cache file:
     _info "Cached settings:"
     obtain_adt_last_proj DO_NOT_SOURCE
