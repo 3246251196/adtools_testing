@@ -9,4 +9,4 @@ tests/*/*.script
 *.expected
 clean_stamp
 build/
-*.cache
+*.cache*
