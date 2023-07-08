@@ -42,7 +42,7 @@ $(FINAL_LHA): $(INSPECT_EXE) clean_stamp
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "adt" script)
 endif
-	for C_LIB in "newlib" "clib2" ;                         \
+	for C_LIB in "newlib" "clib2" ;                                  \
 	do                                                               \
 		for DYN in "-use-dynld" "" ;                             \
 		do                                                       \

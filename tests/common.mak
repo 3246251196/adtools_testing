@@ -60,7 +60,7 @@ $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
 	mkdir -p $(TEMP_DIR)
 ifneq ($(DYN),)
 	$(call LOG_CMD,Listing Shared Objects,,)
-	ARR_SO=($$($(READELF) -d $(PROG) 1>/dev/null 2>&1 | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
+	ARR_SO=($$($(READELF) -d $(PROG) 2>/dev/null | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
 	for SO in $${ARR_SO[@]} ;                                                                      \
 	do                                                                                             \
 		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}"            |                               \
