@@ -1,3 +1,4 @@
+# -*- mode: makefile;-*-
 ifeq ($(SCRIPT_INVOCATION),)
 $(error This makefile should only be invoked by the "adt" script)
 endif
