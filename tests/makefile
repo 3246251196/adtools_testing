@@ -67,11 +67,13 @@ endif
 	rm $(TMP_LOG_RESULTS_FILE)
 	CLIB2_LIBRARY_LOC=$$(find $(BASE_DIR)/$(ADTOOLS_DIR)/native-build/downloads/clib2  \
 				-name "clib2.library") ;                                   \
-	if [[ -n $$(CLIB2_LIBRARY_LOC) ]] ;                                                \
+	if [[ -n $${CLIB2_LIBRARY_LOC} ]] ;                                                \
 	then                                                                               \
-		cp $$(CLIB2_LIBRARY_LOC) tests/ ;                                          \
-		$(LHA_ADD) $(LHA_FILE) tests/clib2.library ;                               \
-		rm tests/clib2.library ;                                                   \
+		cp $${CLIB2_LIBRARY_LOC} . ;                                               \
+		cd .. ;                                                                    \
+		$(LHA_ADD) $@ tests/clib2.library ;                                        \
+		cd - 1>/dev/null 2>&1 ;                                                    \
+		rm clib2.library ;                                                         \
 	fi
 
 clean_stamp: $(BASE_DIR)
