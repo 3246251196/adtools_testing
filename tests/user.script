@@ -1,2 +1,13 @@
-; FAILAT 21
-; execute `LIST QUICK FILES NOHEAD run#?.script`
+FAILAT 21
+set PWD "`cd`///"
+
+; Assume that if clib2.library exists that we want to use that in preference
+IF EXISTS "${PWD}clib2.library"
+   ASSIGN LIBS: "${PWD}" PREPEND
+ENDIF
+
+execute `LIST QUICK FILES NOHEAD run#?.script`
+
+IF EXISTS "${PWD}clib2.library"
+   ASSIGN LIBS: "${PWD}" REMOVE
+ENDIF

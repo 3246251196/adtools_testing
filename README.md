@@ -24,18 +24,26 @@ and extracted. The extraction will cause the creation of a folder named "tests"
 and a script (without executable permissions) named "run_all.script" which can
 be invoked with "execute run_all.script" on the AmigaOne machine.
 "run_all.script" will finalise the unpacking of the tests and automatically
-invoke "user.script" on each test case variant. By default, the actions of the
-"user.script" are commented out but this can be modified. Each variant is
-standalone and for each test there are 4 variants; 2 variants of c library
-version (newlib and clib2) and 2 variants of link type (dynamic and static). In
-the case of Shared Object creation, the test framework will copy any necessary
-SO files into the directory for that variant. The ELF.LIBRARY will load local SO
-files in preference. For each executable binary, if the required Shared Object
-cannot be found in either the current test directory or the installed location
-of the ADTOOLS cross compiler, no warning will be issued. No Amiga Shared
-Libraries are sought and added to the LHA for that test variant; instead, it is
-expected that those Shared Libraries will exist on the AmigaOne machine invoking
-the test.
+invoke "user.script" on each test case variant. By default, the "user.script"
+will execute each test variant. Be aware that testing incurs the risk of
+crashing your machine! Each variant is standalone and for each test there are 4
+variants; 2 variants of c library version (newlib and clib2) and 2 variants of
+link type (dynamic and static). In the case of Shared Object creation, the test
+framework will copy any necessary SO files into the directory for that
+variant. The ELF.LIBRARY will load local SO files in preference. For each
+executable binary, if the required Shared Object cannot be found in either the
+current test directory or the installed location of the ADTOOLS cross compiler,
+no warning will be issued. No Amiga Shared Libraries are sought and added to the
+LHA for that test variant; instead, it is expected that those Shared Libraries
+will exist on the AmigaOne machine invoking the test. The only exception to this
+is "clib2.library"; in the case that the build is using the experimental CLIB2
+branch and that branch uses the shared library version of CLIB2 then then test
+framework shall also add the "clib2.library" to the final LHA file,
+"\<PREFIX>adt_tests.lha" and the "user.script" will perform some changes to your
+Amiga's LIBS: assign JUST when performing the test. It will then put back the
+original value of your LIBS: assign. This means that for tests that use such a
+CLIB2 version, you do not need to worry about manually copying over the
+necessary "clib2.library" into your LIBS: assign.
 
 The script named "run_*.script" executes the test
 executable, records the STDOUT and STDERR, compares STDOUT to an expected set of
@@ -91,7 +99,9 @@ compiler. This script will store the build sessions settings in a file. On the
 next invocation of the script - whether building or testing, you can supply the
 "-x" option and the script will parse the last build session's settings which
 saves the need to remember all of the switches. Note, though, that once a new
-build session is performed, the cache file gets written over.
+build session is performed, the cache file gets written over, but it is backed
+up. Alternatively, you can provide an option to avoid writing over the previous
+cache.
 
 ## FYI
 This repo was developed at the time when the last commit to ADTOOLS was
