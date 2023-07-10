@@ -520,7 +520,8 @@ function TESTS
     _info "\"${FINAL_LHA}\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
     _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
     _info "which acts on each variant. The \"run_all.script\" is designed to be re-run again. Alternatively,"
-    _info "copy over the individual test/variant LHA"
+    _info "copy over the individual test/variant LHA. If your tests relies on clib2.library and you do not use"
+    _info "the \"user.script\" then you will have to ensure that clib2.library is available in LIBS: manually"
 }
 
 if (( $# == 0 ))

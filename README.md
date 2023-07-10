@@ -43,7 +43,9 @@ framework shall also add the "clib2.library" to the final LHA file,
 Amiga's LIBS: assign JUST when performing the test. It will then put back the
 original value of your LIBS: assign. This means that for tests that use such a
 CLIB2 version, you do not need to worry about manually copying over the
-necessary "clib2.library" into your LIBS: assign.
+necessary "clib2.library" into your LIBS: assign. This must be done manually,
+or, the clib2.library must exist in LIBS: if you decide to run the tests
+manually.
 
 The script named "run_*.script" executes the test
 executable, records the STDOUT and STDERR, compares STDOUT to an expected set of
@@ -65,7 +67,9 @@ It should be as easy is the following steps:
 - execute run_all_script, OR,
 - cd into the specific test case variant of interest and invoke
   "execute run_*.script", OR,
-- run the executable directly, yourself.
+- run the executable directly, yourself (you may need to make clib2.library
+  available to the LIBS: assign manually if you run it yourself versus using
+  the user.script)
 
 ## Prefixes
 ### Example of testing multiple compilers
