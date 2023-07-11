@@ -7,7 +7,7 @@ FOREACH t IN ${ts}
 	FOREACH v IN ${vs}
 		LHA -q -t x ${v} ${v}/
 		CD ${v}
-		; //user.script contents is commented out
+		; You should check the user.script
 		EXECUTE //user.script
 		CD /
 	END
