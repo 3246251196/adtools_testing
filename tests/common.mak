@@ -50,11 +50,11 @@ endif
 
 .PHONY: clean all
 all: $(LHA_FILE)
-	if [[ ! -f $(PROG) ]] ;                                                                        \
-	then                                                                                           \
-		echo "    Failed to build test/variant \"$(PROG)\"" ;                                  \
-	else                                                                                           \
-		echo "    (Re)Built test/variant       \"$(PROG)\"" ;                                  \
+	if [[ ! -f $(PROG) ]] ;                                       \
+	then                                                          \
+		echo "    Failed to build test/variant \"$(PROG)\"" ; \
+	else                                                          \
+		echo "    (Re)Built test/variant       \"$(PROG)\"" ; \
 	fi
 
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
@@ -62,25 +62,25 @@ $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
 ifneq ($(DYN),)
 	$(call LOG_CMD,Listing Shared Objects,,)
 	ARR_SO=($$($(READELF) -d $(PROG) 2>/dev/null | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
-	for SO in $${ARR_SO[@]} ;                                                                      \
-	do                                                                                             \
-		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}"            |                               \
-						grep $(GREP_OPT_C_LIB) |                               \
-						grep "ppc-amigaos")    ;                               \
-		if [[ -z "$${LOC}" ]] ;                                                                \
-		then                                                                                   \
-			LOC=$$(find . -name "$${SO}") ;                                                \
-			{ test -f "$${LOC}" && $(LHA_ADD) $(LHA_FILE) "$${LOC}" &&                     \
-				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } ||               \
-				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;                \
-		else                                                                                   \
-			{ test -f "$${LOC}" && cp "$${LOC}" $(TEMP_DIR) &&                             \
-				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } ||               \
-				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;                \
-			cd $(TEMP_DIR) ;                                                               \
-			$(LHA_ADD) ../$(LHA_FILE) "$$(basename "$${LOC}")" ;                           \
-			cd .. ;                                                                        \
-		fi ;                                                                                   \
+	for SO in $${ARR_SO[@]} ;                                                                 \
+	do                                                                                        \
+		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}"            |                          \
+						grep $(GREP_OPT_C_LIB) |                          \
+						grep "ppc-amigaos")    ;                          \
+		if [[ -z "$${LOC}" ]] ;                                                           \
+		then                                                                              \
+			LOC=$$(find . -name "$${SO}") ;                                           \
+			{ test -f "$${LOC}" && $(LHA_ADD) $(LHA_FILE) "$${LOC}" &&                \
+				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } ||          \
+				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;           \
+		else                                                                              \
+			{ test -f "$${LOC}" && cp "$${LOC}" $(TEMP_DIR) &&                        \
+				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } ||          \
+				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;           \
+			cd $(TEMP_DIR) ;                                                          \
+			$(LHA_ADD) ../$(LHA_FILE) "$$(basename "$${LOC}")" ;                      \
+			cd .. ;                                                                   \
+		fi ;                                                                              \
 	done
 endif
 	$(call LOG_CMD,Listing Shared Libraries,,)
