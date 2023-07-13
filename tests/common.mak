@@ -29,17 +29,17 @@ LOG_CMD = echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;      
 
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:
-# "lib/gcc/ppc-amigaos/11.3.0/libgcc.so", unlike clib which is in
-# clib2.  GREP_OPT_C_LIB is a hack to get around this. First, assume
-# that for any library we are looking for, we will find it in a
-# location that contains the string of the particular C library being
-# used. Then, in the case that we are newlib, so long as we remove
-# anything that contains "clib2", we assume that is the newlib
-# library. This works for the case that newlib is in the string and is
-# not.
+# "lib/gcc/ppc-amigaos/11.3.0/libgcc.so", unlike clib2 which is in
+# clib2, as in: "lib/gcc/ppc-amigaos/11.3.0/clib2/libgcc.so".
+# GREP_OPT_C_LIB is a hack to get around this. First, assume that for
+# any library we are looking for, we will find it in a location that
+# contains the string of the particular C library being used. Then, in
+# the case that we are newlib, so long as we remove anything that
+# contains "/clib2/", we assume that is the newlib library. This works
+# for the case that newlib is in the string and is not.
 GREP_OPT_C_LIB=$(C_LIB)
 ifeq ($(C_LIB),newlib)
-	GREP_OPT_C_LIB=-v clib2
+	GREP_OPT_C_LIB=-v '/clib2/'
 endif
 # We also want to restrict searches to those with "ppc-amigaos" in the
 # path. This helps the situation where the build was installed using
@@ -64,7 +64,7 @@ ifneq ($(DYN),)
 	ARR_SO=($$($(READELF) -d $(PROG) 2>/dev/null | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
 	for SO in $${ARR_SO[@]} ;                                                                 \
 	do                                                                                        \
-		LOC=$$(find $${CROSS_PREFIX} -name "$${SO}"            |                          \
+		LOC=$$(find "$${CROSS_PREFIX}" -name "$${SO}"            |                        \
 						grep $(GREP_OPT_C_LIB) |                          \
 						grep "ppc-amigaos")    ;                          \
 		if [[ -z "$${LOC}" ]] ;                                                           \
