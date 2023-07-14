@@ -7,6 +7,6 @@
 *.map
 tests/*/*.script
 *.expected
-clean_stamp
+*clean_stamp
 build/
 *.cache*

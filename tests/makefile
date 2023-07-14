@@ -2,7 +2,11 @@ SHELL=/bin/bash
 INSPECT_EXE=inspect.exe
 LHA_ADD=lha u -q 1>/dev/null 2>&1
 TMP_LOG_RESULTS_FILE=test_build_results.txt
-CP_ROOT=cp_root
+PREFIX=$(subst /,_,$(subst .,_,$(CROSS_PREFIX)))
+# Ensure the created link does not contain the word 'clib2'
+# It does not matter what we call our link since we use it internally:
+CP_ROOT=$(subst clib2,,$(PREFIX)_cp_root)
+CLEAN_STAMP=$(PREFIX)_clean_stamp
 export INSPECT_EXE
 export LHA_ADD
 export CP_ROOT
@@ -41,11 +45,11 @@ tests=$(shell ls -d */ | grep -v "^$(CP_ROOT)/$$")
 .PHONY: all $(FINAL_LHA) clean
 all: $(FINAL_LHA)
 
-$(FINAL_LHA): $(INSPECT_EXE) clean_stamp
+$(FINAL_LHA): $(INSPECT_EXE) $(CLEAN_STAMP)
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "adt" script)
 endif
-	ln -s "$(CROSS_PREFIX)" $(CP_ROOT) 1>/dev/null 2>&1
+	ln -s -f "$(CROSS_PREFIX)" $(CP_ROOT) 1>/dev/null 2>&1
 	for C_LIB in "newlib" "clib2" ;                                                     \
 	do                                                                                  \
 		for DYN in "-use-dynld" "" ;                                                \
@@ -81,7 +85,7 @@ endif
 	fi
 	unlink $(CP_ROOT) 1>/dev/null 2>&1
 
-clean_stamp: $(BASE_DIR)
+$(CLEAN_STAMP): $(BASE_DIR)
 	$(do_clean)
 	touch $@
 
