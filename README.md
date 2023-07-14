@@ -29,14 +29,21 @@ will execute each test variant. Be aware that testing incurs the risk of
 crashing your machine! Each variant is standalone and for each test there are 4
 variants; 2 variants of c library version (newlib and clib2) and 2 variants of
 link type (dynamic and static). In the case of Shared Object creation, the test
-framework will copy any necessary SO files into the directory for that
-variant. The ELF.LIBRARY will load local SO files in preference. For each
-executable binary, if the required Shared Object cannot be found in either the
-current test directory or the installed location of the ADTOOLS cross compiler,
-no warning will be issued. No Amiga Shared Libraries are sought and added to the
-LHA for that test variant; instead, it is expected that those Shared Libraries
-will exist on the AmigaOne machine invoking the test. The only exception to this
-is "clib2.library"; in the case that the build is using the experimental CLIB2
+framework will copy any necessary SO files into the directory for that variant
+(Note: If your test creates a Shared Object and the executable needs that Shared
+Object then the test framework will automatically copy that into the LHA
+file. But, if your test relies on some non compiler/C-LIBRARY Shared Object that
+you installed into the SDK path (CROSS_PREFIX) - such as libpng.so that is
+installed into /sdk/newlib/lib/libpng.so then that file will not be added. Only
+compiler/C-LIBRARY Shared Objects in the CROSS_PREFIX are copied. You would have
+to manually copy such a Shared Object into the test directory). The ELF.LIBRARY
+will load local SO files in preference. For each executable binary, if the
+required Shared Object cannot be found in either the current test directory or
+the installed location of the ADTOOLS cross compiler, no warning will be
+issued. No Amiga Shared Libraries are sought and added to the LHA for that test
+variant; instead, it is expected that those Shared Libraries will exist on the
+AmigaOne machine invoking the test. The only exception to this is
+"clib2.library"; in the case that the build is using the experimental CLIB2
 branch and that branch uses the shared library version of CLIB2 then then test
 framework shall also add the "clib2.library" to the final LHA file,
 "\<PREFIX>adt_tests.lha" and the "user.script" will perform some changes to your

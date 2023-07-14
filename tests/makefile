@@ -2,8 +2,10 @@ SHELL=/bin/bash
 INSPECT_EXE=inspect.exe
 LHA_ADD=lha u -q 1>/dev/null 2>&1
 TMP_LOG_RESULTS_FILE=test_results.txt
+CP_ROOT=cp_root
 export INSPECT_EXE
 export LHA_ADD
+export CP_ROOT
 # Nothing more than a long string of a bash export command that is used when
 # invoking a specific test
 # 
@@ -34,7 +36,8 @@ EXPORT=INFIX="$${C_LIB}" ;                                                      
 # ENDER EXPORT STRING
 #######
 
-tests=$(shell ls -d */)
+# Just in case the symbolic link is SOMEHOW not cleaned, we strip it out
+tests=$(shell ls -d */ | grep -v "^$(CP_ROOT)/$$")
 .PHONY: all $(FINAL_LHA) clean
 all: $(FINAL_LHA)
 
@@ -42,6 +45,7 @@ $(FINAL_LHA): $(INSPECT_EXE) clean_stamp
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "adt" script)
 endif
+	ln -s "$(CROSS_PREFIX)" $(CP_ROOT) 1>/dev/null 2>&1
 	for C_LIB in "newlib" "clib2" ;                                                     \
 	do                                                                                  \
 		for DYN in "-use-dynld" "" ;                                                \
@@ -75,6 +79,7 @@ endif
 		cd - 1>/dev/null 2>&1 ;                                                   \
 		rm clib2.library ;                                                        \
 	fi
+	unlink $(CP_ROOT) 1>/dev/null 2>&1
 
 clean_stamp: $(BASE_DIR)
 	$(do_clean)

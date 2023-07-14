@@ -1,6 +1,12 @@
 # The common makefile framework must always be included
 include ../common.mak
 
+# A variable that can be used to archive additional files specific to the test
+#
+# It is suggested to put extra files in a directory since the Makefile clean rules
+# often remove things like *.txt etc
+EXTRA_FILES+=EXTRAS/readme.txt
+
 # Further overriding flags. The default already contains the necessary C LIBRARY
 # and any other flags passed by the user via the adt script
 CXXFLAGS+=-Wall -Werror -pedantic -std=c++11

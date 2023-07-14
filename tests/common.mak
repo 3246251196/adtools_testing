@@ -64,7 +64,7 @@ ifneq ($(DYN),)
 	ARR_SO=($$($(READELF) -d $(PROG) 2>/dev/null | grep NEEDED | sed 's,.*\[\(.*\)\],\1,')) ; \
 	for SO in $${ARR_SO[@]} ;                                                                 \
 	do                                                                                        \
-		LOC=$$(find "$${CROSS_PREFIX}" -name "$${SO}"            |                        \
+		LOC=$$(find ../$(CP_ROOT)/ -name "$${SO}"              |                          \
 						grep $(GREP_OPT_C_LIB) |                          \
 						grep "ppc-amigaos")    ;                          \
 		if [[ -z "$${LOC}" ]] ;                                                           \
@@ -88,7 +88,7 @@ endif
 
 	cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
 	$(LHA_ADD) $(LHA_FILE) $(PROG) $(LOG_FILE) $(RUN_TEST_SCRIPT) $(INSPECT_EXPECTED) \
-		$(INSPECT_EXE_FILE) $(MAP_FILE)
+		$(INSPECT_EXE_FILE) $(MAP_FILE) $(EXTRA_FILES)
 	rm -f $(INSPECT_EXE_FILE)
 	rm -rf $(TEMP_DIR)
 
