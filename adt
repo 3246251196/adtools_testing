@@ -67,13 +67,7 @@ function _error
 #
 function generate_adt_last_proj
 {
-    if [[ -f "${SESSION_CACHE}" ]]
-    then
-	_warn "Overwriting previously cached session. Previous session file backed up to: \"${SESSION_CACHE}.bak\""
-	cp "${SESSION_CACHE}" "${SESSION_CACHE}.bak"
-    fi
-    
-    cat > "${SESSION_CACHE}" <<EOF
+    cat > "${SESSION_CACHE}.tmp" <<EOF
 use_this_adtools="${use_this_adtools}"
 gcc_ver="${gcc_ver}"
 binutils_ver="${binutils_ver}"
@@ -95,9 +89,17 @@ export SDK_VERSION
 export CROSS_PREFIX
 EOF
 
-    if (( ${?} ))
+    if [[ -f "${SESSION_CACHE}" ]]
     then
-	_error "Unable to write to \"${SESSION_CACHE}\". See error above" 104
+	# Do not overwrite / create a BAK in the case that there is no difference!
+	if ! diff "${SESSION_CACHE}" "${SESSION_CACHE}.tmp" 1>/dev/null 2>&1
+	then
+	    _warn "Overwriting previously cached session. Previous session file backed up to: \"${SESSION_CACHE}.bak\""
+	    cp "${SESSION_CACHE}" "${SESSION_CACHE}.bak"
+	    mv "${SESSION_CACHE}.tmp" "${SESSION_CACHE}"
+	fi
+    else
+	mv "${SESSION_CACHE}.tmp" "${SESSION_CACHE}"
     fi
 
     session_was_cached=1
