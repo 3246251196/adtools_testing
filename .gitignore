@@ -10,3 +10,4 @@ tests/*/*.script
 *clean_stamp
 build/
 *.cache*
+*build/
