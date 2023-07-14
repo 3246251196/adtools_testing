@@ -5,7 +5,7 @@ TMP_LOG_RESULTS_FILE=test_build_results.txt
 PREFIX=$(subst /,_,$(subst .,_,$(CROSS_PREFIX)))
 # Ensure the created link does not contain the word 'clib2'
 # It does not matter what we call our link since we use it internally:
-CP_ROOT=$(subst clib2,,$(PREFIX)_cp_root)
+CP_ROOT=$(subst clib2,CLIB2,$(PREFIX)_cp_root)
 CLEAN_STAMP=$(PREFIX)_clean_stamp
 export INSPECT_EXE
 export LHA_ADD
@@ -40,8 +40,8 @@ EXPORT=INFIX="$${C_LIB}" ;                                                      
 # ENDER EXPORT STRING
 #######
 
-# Just in case the symbolic link is SOMEHOW not cleaned, we strip it out
-tests=$(shell ls -d */ | grep -v "^$(CP_ROOT)/$$")
+tests=$(shell find . -mindepth 1 -maxdepth 1 -type d | xargs echo)
+
 .PHONY: all $(FINAL_LHA) clean
 all: $(FINAL_LHA)
 
