@@ -3,6 +3,12 @@ SET CLIB2LIBLOC "`cd`///"
 
 ; Assume that if clib2.library exists that we want to use that in preference
 IF EXISTS "${CLIB2LIBLOC}clib2.library"
+   IF ${LIBSWARNED} EQ 0
+      ECHO "INFO: During testing your LIBS: assign will be prepended with ${CLIB2LIBLOC}"
+      ECHO "INFO: When testing is finished it should be restored to its original value."
+      ECHO "INFO: In the case of a crash / guru it may not be so you should check manually in such a case"
+      SETENV LIBSWARNED 1
+   ENDIF
    ASSIGN LIBS: "${CLIB2LIBLOC}" PREPEND
 ENDIF
 

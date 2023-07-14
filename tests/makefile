@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 INSPECT_EXE=inspect.exe
 LHA_ADD=lha u -q 1>/dev/null 2>&1
-TMP_LOG_RESULTS_FILE=test_results.txt
+TMP_LOG_RESULTS_FILE=test_build_results.txt
 CP_ROOT=cp_root
 export INSPECT_EXE
 export LHA_ADD
