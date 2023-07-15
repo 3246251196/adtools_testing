@@ -431,6 +431,11 @@ function BUILD
 	    return
 	fi
     else
+	if (( do_clone_only ))
+	then
+	    _error "The -q option implies no building. No further action will be taken" 31
+	fi
+
         cd "${BASE_DIR}/${ADTOOLS_DIR}"
 
 	# In the case that we just performed a clean (-C), then we do
