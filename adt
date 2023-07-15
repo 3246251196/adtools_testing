@@ -2,6 +2,7 @@
 set -o pipefail
 
 do_build=0
+do_clone_only=0
 do_tests=0
 do_clean_tests=0
 use_this_adtools=0
@@ -132,9 +133,9 @@ function _usage
     cat << EOF
 Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always required)
  OPTIONS: [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
- ACTIONS: [-b [ [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
-          ^                                                                                           ^      ^
-          BUILD ADTOOLS                                                                               TESTS  CLEAN
+ ACTIONS: [-b [ [-q] [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
+          ^                                                                                                ^      ^
+          BUILD ADTOOLS                                                                                    TESTS  CLEAN
  EXPORT:  [VAR[=VAL] ...]
           ^
           A string of environment variables with optional values that are
@@ -196,21 +197,25 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         along with -t
        [k] cores      : Number of cores/jobs to pass to Makefiles
                         (DEFAULT: the result of the command NPROC)
-       !! NOTE !!     : This is option is NOT cached
+       !! NOTE !!     : This option is NOT cached
        [i] ignore dep : Ignore dependency checker routine
-       !! NOTE !!     : This is option is NOT cached
+       !! NOTE !!     : This option is NOT cached
        [y] auto answer: Automatically answer script questions with whatever
                         answer will result in script progression where safe to
                         do so
-       !! NOTE !!     : This is option is NOT cached
+       !! NOTE !!     : This option is NOT cached
        [d] don't cache: Do not update the cache for this invocation
-       !! NOTE !!     : This is option is NOT cached
+       !! NOTE !!     : This option is NOT cached
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. The in-place location is
                         the folder named "<PREFIX>build". If the directory 
                         already exists then this script invokes a build in the
                         already existing in-place ADTOOLS without firstly 
                         performing a clean
+       [q] Don't build: ADTOOLS is cloned, as normal, and, any modification
+                        script is applied and then this script quits without
+                        building ADTOOLS
+       !! NOTE !!     : This option is NOT cached
        [r] repo       : The repository location of ADTOOLS. <REPO> is the
                         location to clone from in the case you have forked
                         from the original location and BRANCH is switched to
@@ -353,6 +358,12 @@ function BUILD
     local INFO_STRING="[$(date)] Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\", CROSS_PREFIX (installation location of the cross-compiler) \"${CROSS_PREFIX}\""
     if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\"" ; fi
 
+    local _cloneLoc="${BASE_DIR}/${ADTOOLS_DIR}"
+    if [[ -n "${gcc_path}" ]]
+    then
+       _cloneLoc="${BASE_DIR}"
+    fi
+
     if [[ ! -d "${BASE_DIR}" ]]
     then
 	if (( !ignore_depends ))
@@ -410,6 +421,14 @@ function BUILD
 	if (( !no_cache ))
 	then
 	    generate_adt_last_proj
+	fi
+
+	# Quit now if we do not want to build ADTOOLS
+	if (( do_clone_only ))
+	then
+	    _info "Your build directory (where the ADTOOLS repository and its source was cloned to) is: \"${_cloneLoc}\""
+	    _info "Since you supplied the -q option, ADTOOLS has only been cloned and modified"
+	    return
 	fi
     else
         cd "${BASE_DIR}/${ADTOOLS_DIR}"
@@ -498,11 +517,6 @@ function BUILD
     touch "${BASE_DIR}"
 
     _info "Finished building ADTOOLS..."
-    local _cloneLoc="${BASE_DIR}/${ADTOOLS_DIR}"
-    if [[ -n "${gcc_path}" ]]
-    then
-       _cloneLoc="${BASE_DIR}"
-    fi
     _info "Your build directory (where the ADTOOLS repository and its source was cloned to) is: \"${_cloneLoc}\""
     _info "Your installation directory (where the cross compiler was INSTALLED to) is: \"${CROSS_PREFIX}\""
 }
@@ -533,7 +547,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbr:eg:n:s:m:tcC opt
+while getopts xp:o:uk:iydbqr:eg:n:s:m:tcC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -569,6 +583,9 @@ do
     b)
         do_build=1
         ;;
+    q)
+	do_clone_only=1
+	;;
     r)
 	repo_branch=(${OPTARG})
 	adtools_repo_loc="${repo_branch[0]}"
