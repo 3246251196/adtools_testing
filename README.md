@@ -7,14 +7,15 @@ At the heart of it, this script does two things:
 - And/Or, builds the tests in this repository ready for execution on an
   AmigaOne.
 
-It acts like a CHROOT almost in the sense that everything is performed at the
-location of where this repository, "adtools_testing", is cloned. Nothing in your
-environment is molested since everything is initiated from the process of the
-script "adt". It is meant to enable the rapid development and testing of
-ADTOOLS. Hopefully, a lot of the laborious work has been wrapped up in the
-scripts and makefiles contained herein but it is completely capable of using an
-already existing version of ADTOOLS on your machine versus building or using the
-in-place version if desired.
+It acts like a CHROOT almost in the sense that everything is performed
+at the location of where this repository, "adtools_testing", is
+cloned. Nothing in your environment is molested outside of the
+location from where you have cloned this respoistory. It is meant to
+enable the rapid development and testing of ADTOOLS. Hopefully, a lot
+of the laborious work has been wrapped up in the scripts and makefiles
+contained herein but it is completely capable of using an already
+existing version of ADTOOLS on your machine versus building or using
+the in-place version if desired.
 
 The usage of the "adt" script can be seen by merely invoking "./adt".
 
