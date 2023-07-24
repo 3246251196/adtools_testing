@@ -391,6 +391,11 @@ function BUILD
 	git config user.name 1>/dev/null 2>&1 || \
 	    _error "Git has no user.name configured. This will lead to errors in building ADTOOLS" 209 1
 
+	# TODO: gild does not return a NON-ZERO exit status, so these
+	#       ORs are pretty useless unfortunately.
+	#
+	# Right now, GCC version 4.9 causes an issue since the remote
+	# branch hash is not found in upstream.
         git submodule init || _error "Unable to initialise submodules in ADTOOLS repo" 202 1
         git submodule update || _error "Unable to update submodules in ADTOOLS repo" 203 1
         gild/bin/gild checkout binutils "${binutils_ver}" || _error "Unable to clone binutils in ADTOOLS repo" 204 1
