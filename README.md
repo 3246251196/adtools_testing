@@ -120,6 +120,10 @@ This repo was developed at the time when the last commit to ADTOOLS was
 "1501a4a26cf1bcffdd6dd4bcd603167a3e00f51b".
 
 ## Adding tests
+### SPE
+See example "10_x_div_by_float_zero_wchar" for a possible approach to building a
+test with SPE in mind. 
+
 ### Standalone
 Just create a directory under tests with a makefile with an "all" target and a
 "clean" target. Variables are exported in the parent makefile (the one under
