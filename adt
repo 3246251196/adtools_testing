@@ -538,7 +538,6 @@ function TESTS
 " You may have forgotten to set the prefix with option -p or build the cross compiler or specify the -u option or use the -x option to retain your previously cached settings" 50
 
     _info "Building tests..."
-    _info "You MUST run \"./adt -c\" if you want to generate a full clean test build"
     _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
     _info "If errors occur the look at the relevant log file in the test directory"
     make -s -C "${TESTS_DIR}" all || _error "An error occurred while trying to build the tests" 120
