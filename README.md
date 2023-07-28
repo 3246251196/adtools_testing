@@ -126,6 +126,13 @@ Just create a directory under tests with a makefile with an "all" target and a
 tests, which include some useful variables if needed). A standalone test is
 shown in "99_rjd_standalone"; the test framework will still build it for you.
 
+The test framework will log all output to a file named log.txt inside the test
+folder, but, this log file is primitive. Your Standalone test's makefile should
+handle logging on its own.
+
+Standalone tests are also added to the final archive under the folder named
+"Standalone_Tests".
+
 ### Integration into the test framework
 Alternatively, use the existing framework which attempts to make life
 easier. The only target required would be "$(PROG)". There is a makefile

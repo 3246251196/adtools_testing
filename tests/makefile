@@ -40,7 +40,12 @@ EXPORT=INFIX="$${C_LIB}" ;                                                      
 # ENDER EXPORT STRING
 #######
 
-tests=$(shell find . -mindepth 1 -maxdepth 1 -type d | xargs echo)
+# We do not want to include standalone tests. Those are tests that
+# have a file named makefile/Makefile that contains:
+# "include ../common.mak" somewhere in them.
+tests=$(shell grep 'include ../common.mak' */[Mm]akefile | cut -f1 -d'/')
+# All Standlone tests:
+sa_tests=$(filter-out $(tests),$(shell find -maxdepth 1 -mindepth 1 -type d -exec basename {} \;))
 
 .PHONY: all $(FINAL_LHA) clean
 all: $(FINAL_LHA)
@@ -83,6 +88,22 @@ endif
 		cd - 1>/dev/null 2>&1 ;                                                   \
 		rm clib2.library ;                                                        \
 	fi
+# Now, attempt any standalone tests. Do not fail on error, and add them to the archive
+	echo "    Building Standalone tests. No logging is performed for Standalone tests; see their log.txt"
+	mkdir Standalone_Tests
+	-for TEST in $(sa_tests) ;                              \
+	do                                                      \
+		$(MAKE) -C "$${TEST}" 1>$${TEST}/log.txt 2>&1 & \
+		pids+=( $$! ) ;                                 \
+	done ;                                                  \
+	for p in $${pids[@]} ; do wait $$p ; done
+	-for TEST in $(sa_tests) ;                \
+	do                                        \
+		cp -r $${TEST} Standalone_Tests ; \
+	done ;                                    \
+	$(LHA_ADD) ../$@ Standalone_Tests/
+	rm -rf Standalone_Tests
+#
 	unlink $(CP_ROOT) 1>/dev/null 2>&1
 
 $(CLEAN_STAMP): $(BASE_DIR)
@@ -90,13 +111,13 @@ $(CLEAN_STAMP): $(BASE_DIR)
 	touch $@
 
 clean:
-	$(do_clean)
+	-$(do_clean)
 
 $(INSPECT_EXE): inspect.c
 	ppc-amigaos-gcc -mcrt=newlib -o $@ $< -Wall -Werror -pedantic -std=c11
 
 do_clean=                                                                  \
-	for TEST in $(tests) ;                                             \
+	for TEST in $(tests) $(sa_tests) ;                                 \
 	do                                                                 \
 		$(MAKE) -C "$${TEST}" clean ;                              \
 	done

@@ -18,14 +18,14 @@ INSPECT_EXE_FILE=inspect_$(FILE_INFIX)_$(INSPECT_EXE)
 MAP_FILE=$(PROG).map
 TEMP_DIR=temp_$(FILE_INFIX).tmp # We need this for parallel jobs otherwise the located libraries may become corrupt
 
-LOG_CMD = echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;            \
+LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;           \
 	echo  "TIME STAMP                     : $$(date)" >> $(LOG_FILE) ;            \
 	echo  "TARGET                         : $@" >> $(LOG_FILE) ;                  \
 	echo  "PHASE                          : $(1)" >> $(LOG_FILE) ;                \
 	echo  "COMMAND                        : $(2)" >> $(LOG_FILE) ;                \
 	echo  "COMMAND OUTPUT (STDOUT/STDERR) : See following lines" >> $(LOG_FILE) ; \
 	echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;              \
-	$(2) 1>> $(LOG_FILE) 2>&1 || exit 0
+	$(2) 1>> $(LOG_FILE) 2>&1
 
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:
