@@ -95,8 +95,9 @@ EOF
 	# Do not overwrite / create a BAK in the case that there is no difference!
 	if ! diff "${SESSION_CACHE}" "${SESSION_CACHE}.tmp" 1>/dev/null 2>&1
 	then
-	    _warn "Overwriting previously cached session. Previous session file backed up to: \"${SESSION_CACHE}.bak\""
-	    cp "${SESSION_CACHE}" "${SESSION_CACHE}.bak"
+            local prevFile="${SESSION_CACHE}_$(date +%s).bak"
+	    _warn "Overwriting previously cached session. Previous session file backed up to: \"${prevFile}\""
+	    cp "${SESSION_CACHE}" "${prevFile}"
 	    mv "${SESSION_CACHE}.tmp" "${SESSION_CACHE}"
 	fi
     else
