@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
   FILE *actual=NULL,*expected=NULL;
   char *actual_contents=NULL,*expected_contents=NULL;
   long actual_size=-1,expected_size=-1;
-  /* assuming any character will be ASCII characters 0-127 */
+  /* assuming any output will be ASCII characters 0-127 */
   int char_map[128]={0};
   if(argc!=3)
     {
@@ -36,27 +36,15 @@ int main(int argc, char *argv[])
     {
       expected_size=ftell(expected);
       if(0L==expected_size)
-        {
-          /* This must not be an inspection test! */
-          res=PASS; goto ENDER;
-        }
+	{
+	  /* This must not be an inspection test! */
+	  res=PASS; goto ENDER;
+	}
       actual_size=ftell(actual);
       if(actual_size!=expected_size)
-        {
-          if(actual_size>expected_size)
-            {
-              /* It maybe that some c-library functions generate a
-                 NULL character.  For example, it seems that fwprintf
-                 always appends a \0 character.  For now, assume this
-                 is the case and check it below; see "TRAILING NULL
-                 CHECK", below */
-              res=PARTIAL;
-            }
-          else
-            {
-              res=FAIL; goto ENDER;
-            }
-        }
+	{
+	  res=FAIL; goto ENDER;
+	}
       rewind(actual);
       rewind(expected);
     }
@@ -66,45 +54,34 @@ int main(int argc, char *argv[])
     expected_contents=(char*)malloc(expected_size);
     if(!(actual_contents&&expected_contents))
       {
-        res=ERR; goto ENDER;
+	res=ERR; goto ENDER;
       }
     if((1!=(long)fread(&actual_contents[0],actual_size,1,actual))||
        (1!=(long)fread(&expected_contents[0],expected_size,1,expected)))
       {
-        res=ERR; goto ENDER;
+	res=ERR; goto ENDER;
       }
-    for(;i<expected_size;i++)
+    for(;i<actual_size;i++)
       {
-        char_map[(int)actual_contents[i]]++;
-        char_map[(int)expected_contents[i]]--;
-        if(actual_contents[i]!=expected_contents[i])
-          {
-            /* We have a mismatch. The contents may still be the same, though,
-               in a different order.  This can happen when threading occurs. We
-               use a different return code for this.  We are now AT LEAST a
-               PARTIAL */
-            res=PARTIAL;
-          }
+	char_map[(int)actual_contents[i]]++;
+	char_map[(int)expected_contents[i]]--;
+	if(actual_contents[i]!=expected_contents[i])
+	  {
+	    /* We have a mismatch. The contents may still be the same, though,
+	       in a different order.  This can happen when threading occurs. We
+	       use a different return code for this.  We are now AT LEAST a
+	       PARTIAL */
+	    res=PARTIAL;
+	  }
       }
-    /* TRAILING NULL CHECK */
-    while(i<actual_size)
+    i=0;
+    for(;i<128;i++)
       {
-        if(actual_contents[i]!='\0')
-          {
-            res=FAIL; goto ENDER;
-          }
-        i++;
+	if(char_map[i]!=0)
+	  {
+	    res=FAIL; goto ENDER;
+	  }
       }
-    {
-      i=0;
-      for(;i<128;i++)
-        {
-          if(char_map[i]!=0)
-            {
-              res=FAIL; goto ENDER;
-            }
-        }
-    }
   }
  ENDER:
   if(actual) fclose(actual);
@@ -113,3 +90,4 @@ int main(int argc, char *argv[])
   if(expected_contents) free(expected_contents);
   return res;
 }
+
