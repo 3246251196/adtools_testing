@@ -72,7 +72,7 @@ function generate_adt_last_proj
 use_this_adtools="${use_this_adtools}"
 gcc_ver="${gcc_ver}"
 binutils_ver="${binutils_ver}"
-# `expclib2_branch' is only relevant if `EXP_CLIB2' is set to `1' (see below)
+# expclib2_branch is only relevant if EXP_CLIB2 is set to 1. See below
 expclib2_branch="${expclib2_branch}"
 session_prefix="${session_prefix}"
 gcc_path="${gcc_path}"
