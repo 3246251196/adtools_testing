@@ -1,5 +1,6 @@
 include ../common.mak
 
+# We do not care about static variants. Just create a dummy passing test:
 ifeq ($(DYN),)
 $(PROG):
 	$(call DUMMY_TEST)
@@ -27,6 +28,8 @@ $(LIBCAT): cat.c
 $(LIBDOG): dog.c
 	$(call LOG_CMD,Creating Shared Object,$(CC) -shared -fPIC cat.c $(CFLAGS) -o $@)
 endif
+
+# Expected output:
 
 #@ argv1 = dog
 #@ Pochi is a dog.
