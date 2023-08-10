@@ -27,6 +27,9 @@ LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;     
 	echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;              \
 	$(2) 1>> $(LOG_FILE) 2>&1
 
+# For test variants that we do not care about:
+DUMMY_TEST = $(call LOG_CMD,DUMMY_TEST,cp ../$(DUMMY_EXE) $(PROG))
+
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:
 # "lib/gcc/ppc-amigaos/11.3.0/libgcc.so", unlike clib2 which is in
@@ -93,27 +96,31 @@ endif
 	rm -rf $(TEMP_DIR)
 
 $(RUN_TEST_SCRIPT):
-	echo "FAILAT 21" > $(RUN_TEST_SCRIPT) ;                                                                    \
-	echo "$(PROG) > $(INSPECT_STDOUT) *> $(INSPECT_STDERR)" >> $(RUN_TEST_SCRIPT) ;                            \
-	echo "IF NOT \$${RC} EQ 0" >> $(RUN_TEST_SCRIPT) ;                                                         \
-	echo "  ECHO \"'$(PROG)': Failed: Expected RETURN CODE 0\"" >> $(RUN_TEST_SCRIPT) ;                        \
-	echo "ELSE" >> $(RUN_TEST_SCRIPT) ;                                                                        \
-	echo "  $(INSPECT_EXE_FILE) $(INSPECT_STDOUT) $(INSPECT_EXPECTED)" >> $(RUN_TEST_SCRIPT) ;                 \
-	echo "  SET RET=\$${RC}" >> $(RUN_TEST_SCRIPT) ;                                                           \
-	echo "  IF \$${RET} EQ 0" >> $(RUN_TEST_SCRIPT) ;                                                          \
-	echo "    ECHO \"'$(PROG)': Passed\"" >> $(RUN_TEST_SCRIPT) ;                                              \
-	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                     \
-	echo "  IF \$${RET} EQ 5" >> $(RUN_TEST_SCRIPT) ;                                                          \
-	echo "    ECHO \"'$(PROG)': Partial: Same size, contents, but different order\"" >> $(RUN_TEST_SCRIPT) ;   \
-	echo "    ECHO \"Inspect '$(INSPECT_STDOUT)' against '$(INSPECT_EXPECTED)'\"" >> $(RUN_TEST_SCRIPT) ;      \
-	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                     \
-	echo "  IF \$${RET} EQ 10" >> $(RUN_TEST_SCRIPT) ;                                                         \
-	echo "    ECHO \"'$(PROG)': Failed: Expected output did not match actual output\"" >> $(RUN_TEST_SCRIPT) ; \
-	echo "    ECHO \"Inspect '$(INSPECT_STDOUT)' against '$(INSPECT_EXPECTED)'\"" >> $(RUN_TEST_SCRIPT) ;      \
-	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                     \
-	echo "  IF \$${RET} EQ 20" >> $(RUN_TEST_SCRIPT) ;                                                         \
-	echo "    ECHO \"'$(PROG)': Error: '$(INSPECT_EXE_FILE)' returned unexpectedly\"" >> $(RUN_TEST_SCRIPT) ;  \
-	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                     \
+	echo "FAILAT 22" > $(RUN_TEST_SCRIPT) ;                                                                      \
+	echo "$(PROG) > $(INSPECT_STDOUT) *> $(INSPECT_STDERR)" >> $(RUN_TEST_SCRIPT) ;                              \
+	echo "IF \$${RC} EQ 21" >> $(RUN_TEST_SCRIPT) ;                                                              \
+	echo "  ECHO \"'$(PROG)': Passed: DUMMY TEST\"" >> $(RUN_TEST_SCRIPT) ;                                      \
+	echo "ELSE" >> $(RUN_TEST_SCRIPT) ;                                                                          \
+	echo "  IF NOT \$${RC} EQ 0" >> $(RUN_TEST_SCRIPT) ;                                                         \
+	echo "    ECHO \"'$(PROG)': Failed: Expected RETURN CODE 0\"" >> $(RUN_TEST_SCRIPT) ;                        \
+	echo "  ELSE" >> $(RUN_TEST_SCRIPT) ;                                                                        \
+	echo "    $(INSPECT_EXE_FILE) $(INSPECT_STDOUT) $(INSPECT_EXPECTED)" >> $(RUN_TEST_SCRIPT) ;                 \
+	echo "    SET RET=\$${RC}" >> $(RUN_TEST_SCRIPT) ;                                                           \
+	echo "    IF \$${RET} EQ 0" >> $(RUN_TEST_SCRIPT) ;                                                          \
+	echo "      ECHO \"'$(PROG)': Passed\"" >> $(RUN_TEST_SCRIPT) ;                                              \
+	echo "    ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                     \
+	echo "    IF \$${RET} EQ 5" >> $(RUN_TEST_SCRIPT) ;                                                          \
+	echo "      ECHO \"'$(PROG)': Partial: Same size, contents, but different order\"" >> $(RUN_TEST_SCRIPT) ;   \
+	echo "      ECHO \"Inspect '$(INSPECT_STDOUT)' against '$(INSPECT_EXPECTED)'\"" >> $(RUN_TEST_SCRIPT) ;      \
+	echo "    ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                     \
+	echo "    IF \$${RET} EQ 10" >> $(RUN_TEST_SCRIPT) ;                                                         \
+	echo "      ECHO \"'$(PROG)': Failed: Expected output did not match actual output\"" >> $(RUN_TEST_SCRIPT) ; \
+	echo "      ECHO \"Inspect '$(INSPECT_STDOUT)' against '$(INSPECT_EXPECTED)'\"" >> $(RUN_TEST_SCRIPT) ;      \
+	echo "    ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                     \
+	echo "    IF \$${RET} EQ 20" >> $(RUN_TEST_SCRIPT) ;                                                         \
+	echo "      ECHO \"'$(PROG)': Error: '$(INSPECT_EXE_FILE)' returned unexpectedly\"" >> $(RUN_TEST_SCRIPT) ;  \
+	echo "    ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                     \
+	echo "  ENDIF" >> $(RUN_TEST_SCRIPT) ;                                                                       \
 	echo "ENDIF" >> $(RUN_TEST_SCRIPT)
 	sed -n 's/^#@ \(.*\)/\1/p' $(firstword $(MAKEFILE_LIST)) > $(INSPECT_EXPECTED)
 

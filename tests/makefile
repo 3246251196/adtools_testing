@@ -1,5 +1,6 @@
 SHELL=/bin/bash
 INSPECT_EXE=inspect.exe
+DUMMY_EXE=dummy.exe
 LHA_ADD=lha u -q 1>/dev/null 2>&1
 TMP_LOG_RESULTS_FILE=test_build_results.txt
 PREFIX=$(subst /,_,$(subst .,_,$(CROSS_PREFIX)))
@@ -8,6 +9,7 @@ PREFIX=$(subst /,_,$(subst .,_,$(CROSS_PREFIX)))
 CP_ROOT=$(subst clib2,CLIB2,$(PREFIX)_cp_root)
 CLEAN_STAMP=$(PREFIX)_clean_stamp
 export INSPECT_EXE
+export DUMMY_EXE
 export LHA_ADD
 export CP_ROOT
 # Nothing more than a long string of a bash export command that is used when
@@ -40,17 +42,22 @@ EXPORT=INFIX="$${C_LIB}" ;                                                      
 # ENDER EXPORT STRING
 #######
 
-# We do not want to include standalone tests. Those are tests that
-# have a file named makefile/Makefile that contains:
-# "include ../common.mak" somewhere in them.
-tests=$(shell grep 'include ../common.mak' */[Mm]akefile | cut -f1 -d'/')
+# Handle the case that a specific test pattern has been provided
+ifneq ($(TEST_PATTERN),)
+PATTERN1=$(TEST_PATTERN)*
+PATTERN2=-name "*$(PATTERN1)"
+endif
+# We do not want to include standalone tests. Those are tests that have a file
+# named makefile/Makefile that contains: "include ../common.mak" somewhere in
+# them.
+tests=$(shell grep 'include ../common.mak' *$(PATTERN1)/[Mm]akefile | cut -f1 -d'/')
 # All Standlone tests:
-sa_tests=$(filter-out $(tests),$(shell find -maxdepth 1 -mindepth 1 -type d -exec basename {} \;))
+sa_tests=$(filter-out $(tests),$(shell find -maxdepth 1 -mindepth 1 -type d $(PATTERN2) -exec basename {} \;))
 
 .PHONY: all $(FINAL_LHA) clean
 all: $(FINAL_LHA)
 
-$(FINAL_LHA): $(INSPECT_EXE) $(CLEAN_STAMP)
+$(FINAL_LHA): $(INSPECT_EXE) $(DUMMY_EXE) $(CLEAN_STAMP)
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "adt" script)
 endif
@@ -70,6 +77,10 @@ endif
 	for p in $${pids[@]} ; do wait $$p ; done
 	sort -o $(TMP_LOG_RESULTS_FILE) $(TMP_LOG_RESULTS_FILE)
 	cat $(TMP_LOG_RESULTS_FILE)
+ifneq ($(TEST_PATTERN),)
+	echo "!!! NOTE !!! This file only contains the build results for test(s): \"$(tests) $(sa_tests)\"" \
+	" due to the use of the -S (test pattern subset option)" >> $(TMP_LOG_RESULTS_FILE)
+endif
 	cd .. && $(LHA_ADD)                                   \
 		$@                                            \
 		tests/*/*.lha                                 \
@@ -113,7 +124,11 @@ $(CLEAN_STAMP): $(BASE_DIR)
 clean:
 	-$(do_clean)
 
+# It does not matter which c-library implementation is used for these:
 $(INSPECT_EXE): inspect.c
+	ppc-amigaos-gcc -mcrt=newlib -o $@ $< -Wall -Werror -pedantic -std=c11
+
+$(DUMMY_EXE): dummy.c
 	ppc-amigaos-gcc -mcrt=newlib -o $@ $< -Wall -Werror -pedantic -std=c11
 
 do_clean=                                                                  \

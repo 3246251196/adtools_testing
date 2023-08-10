@@ -5,6 +5,7 @@ do_build=0
 do_clone_only=0
 do_tests=0
 do_clean_tests=0
+TEST_PATTERN=
 use_this_adtools=0
 gcc_ver=11 # default
 binutils_ver=2.23.2
@@ -134,16 +135,21 @@ function _usage
 {
     cat << EOF
 Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always required)
- OPTIONS: [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
- ACTIONS: [-b [ [-q] [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t] | [ [-c] | [-C] ]
-          ^                                                                                                ^      ^
-          BUILD ADTOOLS                                                                                    TESTS  CLEAN
- EXPORT:  [VAR[=VAL] ...]
-          ^
-          A string of environment variables with optional values that are
-          exported. For example, "./adt -t THREAD_IMPL=pthread LIBS=-lpthread"
-	  results in THREAD_IMPL and LIBS being exported for potential use in
-	  Makefiles. Note that EXPORT is not cached.
+ OPTIONS: 
+  [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
+
+ ACTIONS:
+   [-b [ [-q] [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t [-S <PAT>] | [ [-c] | [-C] ]
+   ^                                                                                                ^                ^
+   BUILD ADTOOLS                                                                                    TESTS            CLEAN
+
+ EXPORT:
+  [VAR[=VAL] ...]
+  ^
+  A string of environment variables with optional values that are  exported. 
+  For example, "./adt -t THREAD_IMPL=pthread LIBS=-lpthread"  ts in THREAD_IMPL
+  and LIBS being exported for potential use in Makefiles. Note that EXPORT is 
+  not cached.
 
        [x] cached proj: Use the variables stored from the previous build action
                         session for this action. This is useful when a complex
@@ -246,6 +252,9 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
        [t] tests      : Builds all of the tests under the "tests" folder. 
                         Logging of each build of each variant is appended to
                         the log file
+       [S] pattern    : Only perform a test build on the test(s) that match the
+                        pattern in <PAT>. <PAT> should represent a substring
+                        since globbing is automatically added
        [c] clean_tests: Performs a clean on all tests
        [C] clean_build: Performs a clean on the in-place ADTOOLS which will
                         also remove the built cross-compiler binaries. In the
@@ -562,7 +571,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbqr:eg:n:s:m:tcC opt
+while getopts xp:o:uk:iydbqr:eg:n:s:m:tS:cC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -632,6 +641,10 @@ do
 	;;
     t)
         do_tests=1
+        ;;
+    S)
+        TEST_PATTERN="${OPTARG}"
+        export TEST_PATTERN
         ;;
     c)
         do_clean_tests=1
