@@ -139,9 +139,9 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
 
  ACTIONS:
-   [-b [ [-q] [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t [-S <PAT>] | [ [-c] | [-C] ]
-   ^                                                                                                ^                ^
-   BUILD ADTOOLS                                                                                    TESTS            CLEAN
+   [-b [ [-q] [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t [-S <PAT>] ] | [ [-c] | [-C] ]
+   ^                                                                                                ^                  ^
+   BUILD ADTOOLS                                                                                    TESTS              CLEAN
 
  EXPORT:
   [VAR[=VAL] ...]
