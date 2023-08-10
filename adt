@@ -255,6 +255,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
        [S] pattern    : Only perform a test build on the test(s) that match the
                         pattern in <PAT>. <PAT> should represent a substring
                         since globbing is automatically added
+       !! NOTE !!     : This option is NOT cached
        [c] clean_tests: Performs a clean on all tests
        [C] clean_build: Performs a clean on the in-place ADTOOLS which will
                         also remove the built cross-compiler binaries. In the
