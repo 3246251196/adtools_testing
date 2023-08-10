@@ -2,8 +2,7 @@ include ../common.mak
 
 # We do not care about static variants. Just create a dummy passing test:
 ifeq ($(DYN),)
-$(PROG):
-	$(call DUMMY_TEST)
+$(eval $(call DUMMY_TEST))
 else
 CFLAGS+=-Wall -Wpedantic
 THREAD_IMPL?=native

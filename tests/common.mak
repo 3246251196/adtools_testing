@@ -27,8 +27,11 @@ LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;     
 	echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;              \
 	$(2) 1>> $(LOG_FILE) 2>&1
 
-# For test variants that we do not care about:
-DUMMY_TEST = $(call LOG_CMD,DUMMY_TEST,cp ../$(DUMMY_EXE) $(PROG))
+# For test that do not care about a particular variant:
+define DUMMY_TEST
+$(PROG):
+	$(call LOG_CMD,DUMMY_TEST,cp ../$(DUMMY_EXE) $(PROG))
+endef
 
 # Unfortunately, the compiler libraries for newlib are not in a folder
 # named newlib. For example, libgcc.so is inside:

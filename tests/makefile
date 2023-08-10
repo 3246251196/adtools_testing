@@ -50,7 +50,7 @@ endif
 # We do not want to include standalone tests. Those are tests that have a file
 # named makefile/Makefile that contains: "include ../common.mak" somewhere in
 # them.
-tests=$(shell grep 'include ../common.mak' *$(PATTERN1)/[Mm]akefile | cut -f1 -d'/')
+tests=$(shell grep -l 'include ../common.mak' *$(PATTERN1)/[Mm]akefile | cut -f1 -d'/')
 # All Standlone tests:
 sa_tests=$(filter-out $(tests),$(shell find -maxdepth 1 -mindepth 1 -type d $(PATTERN2) -exec basename {} \;))
 

@@ -154,6 +154,15 @@ Inspections can be added to tests by simply providing commented lines in the
 makefile of the test being added. See "1_rjd_test_example" for an example. Also,
 see "0_rjd_simplest_example" for the simplest example.
 
+The framework will always attempt to create 4 variants, as mentioned above, but
+in some test cases the test may not care about a particular variant. For
+instance, a test created using dlopen() may not not care about any of the 2
+static variants. In such a case, a DUMMY test can be created for that
+situation. The framework builds a dummy binary adhering to the naming convention
+that just returns a particular exit code that the scripts know to mean a dummy
+test. Dummy tests always pass. An example can be seen in
+"12_dlopen_binutils_test".
+
 Since the testing framework runs all the building of the tests in parallel it is
 important to rename any test specific artifacts - such as relocatable object
 files, archives files or shared objects - with a unique name. This allows
