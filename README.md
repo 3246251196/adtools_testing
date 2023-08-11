@@ -27,15 +27,15 @@ be invoked with "execute run_all.script" on the AmigaOne machine.
 "run_all.script" will finalise the unpacking of the tests and automatically
 invoke "user.script" on each test case variant. By default, the "user.script"
 will execute each test variant. Be aware that testing incurs the risk of
-crashing your machine! Each variant is standalone and for each test there are 4
-variants; 2 variants of c library version (newlib and clib2) and 2 variants of
-link type (dynamic and static). In the case of Shared Object creation, the test
-framework will copy any necessary SO files into the directory for that variant
-(Note: If your test creates a Shared Object and the executable needs that Shared
-Object then the test framework will automatically copy that into the LHA
-file. But, if your test relies on some non compiler/C-LIBRARY Shared Object that
-you installed into the SDK path (CROSS_PREFIX) - such as libpng.so that is
-installed into /sdk/newlib/lib/libpng.so then that file will not be added. Only
+crashing your machine! For each test there are 4 variants: 2 variants of c
+library version (newlib and clib2) and 2 variants of link type (dynamic and
+static). In the case of Shared Object creation, the test framework will copy any
+necessary SO files into the directory for that variant (Note: If your test
+creates a Shared Object and the executable needs that Shared Object then the
+test framework will automatically copy that into the LHA file. But, if your test
+relies on some non compiler/C-LIBRARY Shared Object that you installed into the
+SDK path (CROSS_PREFIX) - such as libpng.so that is installed into
+/sdk/newlib/lib/libpng.so then that file will not be added. Only
 compiler/C-LIBRARY Shared Objects in the CROSS_PREFIX are copied. You would have
 to manually copy such a Shared Object into the test directory). The ELF.LIBRARY
 will load local SO files in preference. For each executable binary, if the
@@ -125,17 +125,22 @@ See example "10_x_div_by_float_zero_wchar" for a possible approach to building a
 test with SPE in mind. 
 
 ### Standalone
-Just create a directory under tests with a makefile with an "all" target and a
-"clean" target. Variables are exported in the parent makefile (the one under
-tests, which include some useful variables if needed). A standalone test is
-shown in "99_rjd_standalone"; the test framework will still build it for you.
+In the case you just want to add a test without needing to follow the test
+framework, then you can add a standalone test. Just create a directory under
+tests with a makefile with an "all" target and a "clean" target. Variables are
+exported in the parent makefile (the one under tests, which include some useful
+variables if needed). A standalone test is shown in "99_rjd_standalone"; the
+test framework will still build it for you.
 
 The test framework will log all output to a file named log.txt inside the test
-folder, but, this log file is primitive. Your Standalone test's makefile should
-handle logging on its own.
+folder, but, this log file is primitive.
 
 Standalone tests are also added to the final archive under the folder named
 "Standalone_Tests".
+
+Standalone tests to not have all 4 variants built. The test framework invokes
+the "all" rule once. That will have to be handled manually, in the makefile, if
+desired.
 
 ### Integration into the test framework
 Alternatively, use the existing framework which attempts to make life
