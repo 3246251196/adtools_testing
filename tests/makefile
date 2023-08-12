@@ -89,6 +89,7 @@ endif
 			&& cd - 1>/dev/null 2>&1              \
 			&& $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)
 	rm $(TMP_LOG_RESULTS_FILE)
+ifneq ($(EXP_CLIB2),)
 	CLIB2_LIBRARY_LOC=$$(find $(BASE_DIR)/$(ADTOOLS_DIR)/native-build/downloads/clib2 \
 				-name "clib2.library") ;                                  \
 	if [[ -n $${CLIB2_LIBRARY_LOC} ]] ;                                               \
@@ -99,6 +100,7 @@ endif
 		cd - 1>/dev/null 2>&1 ;                                                   \
 		rm clib2.library ;                                                        \
 	fi
+endif
 # Now, attempt any standalone tests. Do not fail on error, and add them to the archive
 	echo "    Building Standalone tests. No logging is performed for Standalone tests; see their log.txt"
 	mkdir Standalone_Tests

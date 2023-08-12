@@ -178,3 +178,11 @@ an example of how to name any specific test artifacts using the already provided
 described above (newlib,clib * dynamic,static) running in parallel which is also
 running in parallel with every other test case. The test framework handles
 contention everywhere else using this exact approach.
+
+#### Testing framework deletion of files
+In the case you are integrating a test into the test framework and you want to
+forcefully request certain files to be deleted when using ./adt -c you can add a
+Makefile variable named CLEAN_ME with a list of file that you want to
+delete. See test 13_constructor_destructor for an example. By default, the
+testing framework will delete commonly anticipated files, such as those that
+have an extension of .so or .o, but there are always exceptions.

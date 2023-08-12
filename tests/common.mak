@@ -127,5 +127,6 @@ $(RUN_TEST_SCRIPT):
 	echo "ENDIF" >> $(RUN_TEST_SCRIPT)
 	sed -n 's/^#@ \(.*\)/\1/p' $(firstword $(MAKEFILE_LIST)) > $(INSPECT_EXPECTED)
 
+# Any test's Makefile can set a variable named CLEAN_ME to forcefully delete additional files
 clean:
-	-rm -rf *.o *.exe log*.txt *.a *.so *.lha *.map *.script *.expected $(TEMP_DIR) 1>/dev/null 2>&1
+	-rm -rf *.o *.exe log*.txt *.a *.so *.lha *.map *.script *.expected $(TEMP_DIR) $(CLEAN_ME) 1>/dev/null 2>&1
