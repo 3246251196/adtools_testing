@@ -179,10 +179,30 @@ described above (newlib,clib * dynamic,static) running in parallel which is also
 running in parallel with every other test case. The test framework handles
 contention everywhere else using this exact approach.
 
-#### Testing framework deletion of files
+#### Integration test user configurable variables
+##### Deletion of files (variable: CLEAN_ME)
 In the case you are integrating a test into the test framework and you want to
 forcefully request certain files to be deleted when using ./adt -c you can add a
 Makefile variable named CLEAN_ME with a list of file that you want to
 delete. See test 13_constructor_destructor for an example. By default, the
 testing framework will delete commonly anticipated files, such as those that
 have an extension of .so or .o, but there are always exceptions.
+
+##### Mandatory depedencies (variable: NEED_DEP)
+The framework checks for the existence, finally, of $(PROG). As stated above,
+that is the only required rule. There can be situations where the test may
+require the creation of a file as well as $(PROG). For instance, a test that
+generates two separate executable files. Since the framework is purposefully
+permissive in order to log as much information as possible, its success check is
+merely the existence of $(PROG). By adding files to the NEED_DEP variable, the
+framework will ensure that $(PROG) and any of the files in $(NEED_DEP) exist,
+otherwise it will consider it a fail.
+
+##### Thread implementation (variable: THREAD_IMPL)
+This variable is not really used internally, but it is worth mentioning. We know
+about the -athread option. This specifies which threading implementation to
+use. Normally, we use -athread=native to specify that we want to use the
+AmigaOS4 native approach to threading. See an example of its use in
+"1_rjd_test_example" and how it defaults to native, but can be overridden. For
+instance, to build with "pthread", i.e. -athread=pthread, you could issue the
+command "./adt -t THREAD_IMPL=pthread".

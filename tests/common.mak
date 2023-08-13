@@ -3,6 +3,28 @@ ifeq ($(SCRIPT_INVOCATION),)
 $(error This makefile should only be invoked by the "adt" script)
 endif
 
+# User modifiable variables (can be extended in the test's makefile):
+#
+# Any files in this variable are also added to $(FINAL_LHA)
+EXTRA_FILES=
+#
+# Any files in here are also necessary (as well as the existence of $(PROG)) for
+# a test to show itself as successful. The framework assumes that as long as
+# $(PROG) exists - i.e. that an executable was finally generated - then the
+# test/variant was successful. This is commonly the case, but not always the
+# desire. See also the NEEDED_DEP_CHECK variable below
+NEED_DEP=
+#
+# The following is not really used in the framework, but it is worth mentioning
+# it. In ADTOOLS we have an AmigaOS4 specific implementation of threading. The
+# -athread option specifies which implementation should be used. For the longest
+# time, this has been -athread=native: which is the native AmigaOS4
+# implementation of threading. In the near future, we wish to finish off /
+# extend -athread=posix/pthread. It can be an idea to use THREAD_IMPL and
+# default it to "native" in your makefile:
+# THREAD_IMPL=
+#######
+
 SHELL=/bin/bash
 CWD=$(shell basename $$(pwd))
 FILE_INFIX=test_$(CWD)_$(INFIX)
@@ -54,13 +76,17 @@ endif
 # which Shared Object to add to the archive, we may match on non cross
 # compiler objects! This is handled directly below.
 
+NEEDED_DEP_CHECK=-f $(PROG)
+ifneq ($(NEED_DEP),,)
+NEEDED_DEP_CHECK+=$(foreach DEP,$(NEED_DEP),&& -f $(DEP))
+endif
 .PHONY: clean all
 all: $(LHA_FILE)
-	if [[ ! -f $(PROG) ]] ;                                       \
-	then                                                          \
-		echo "    Failed to build test/variant \"$(PROG)\"" ; \
-	else                                                          \
-		echo "    (Re)Built test/variant       \"$(PROG)\"" ; \
+	if [[ $(NEEDED_DEP_CHECK) ]] ;                                      \
+	then                                                                \
+		echo "    (Re)Built test/variant       \"$(FILE_INFIX)\"" ; \
+	else                                                                \
+		echo "    Failed to build test/variant \"$(FILE_INFIX)\"" ; \
 	fi
 
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
