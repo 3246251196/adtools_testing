@@ -189,14 +189,14 @@ testing framework will delete commonly anticipated files, such as those that
 have an extension of .so or .o, but there are always exceptions.
 
 ##### Mandatory depedencies (variable: NEED_DEP)
-The framework checks for the existence, finally, of $(PROG). As stated above,
+The framework checks for the existence, finally, of "$(PROG)". As stated above,
 that is the only required rule. There can be situations where the test may
-require the creation of a file as well as $(PROG). For instance, a test that
+require the creation of a file as well as "$(PROG)". For instance, a test that
 generates two separate executable files. Since the framework is purposefully
 permissive in order to log as much information as possible, its success check is
-merely the existence of $(PROG). By adding files to the NEED_DEP variable, the
-framework will ensure that $(PROG) and any of the files in $(NEED_DEP) exist,
-otherwise it will consider it a fail.
+merely the existence of "$(PROG)". By adding files to the NEED_DEP variable, the
+framework will ensure that "$(PROG)" and any of the files in "$(NEED_DEP)"
+exist, otherwise it will consider it a fail.
 
 ##### Thread implementation (variable: THREAD_IMPL)
 This variable is not really used internally, but it is worth mentioning. We know
