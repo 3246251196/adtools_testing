@@ -1,7 +1,7 @@
 # adtools_testing
 
 ## Using this repository
-### For more information
+### Goal
 At the heart of it, this script does two things:
 - Builds ADTOOLS in-place,
 - And/Or, builds the tests in this repository ready for execution on an
@@ -54,6 +54,13 @@ CLIB2 version, you do not need to worry about manually copying over the
 necessary "clib2.library" into your LIBS: assign. This must be done manually,
 or, the clib2.library must exist in LIBS: if you decide to run the tests
 manually.
+
+It should be understood that some tests may fail to build for differently
+configured cross-compilers. This is not necessarily a failure. For example,
+there may be tests that can only be built using GCC 11. In the event of a
+failure, simply inspect the log file for that variant. See further below -
+"Integration into the test framework" - for ways to build dummy executables if
+build failures for particular environments should be avoided.
 
 The script named "run_*.script" executes the test
 executable, records the STDOUT and STDERR, compares STDOUT to an expected set of
