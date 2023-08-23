@@ -368,7 +368,10 @@ function CHECK_DEPENDS
 function BUILD
 {
     local INFO_STRING="[$(date)] Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\", CROSS_PREFIX (installation location of the cross-compiler) \"${CROSS_PREFIX}\""
-    if (( EXP_CLIB2 )) ; then INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\"" ; fi
+    if (( EXP_CLIB2 ))
+    then
+        INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\""
+    fi
 
     local _cloneLoc="${BASE_DIR}/${ADTOOLS_DIR}"
     if [[ -n "${gcc_path}" ]]
@@ -560,6 +563,11 @@ function TESTS
     _info "copy over the individual test/variant LHA. If your tests relies on clib2.library and you do not use"
     _info "the \"user.script\" then you will have to ensure that clib2.library is available in LIBS: manually"
     _info ""
+    if (( use_this_adtools ))
+    then
+        _info "The -u option was used. If your specified cross-compiler uses experimental CLIB2 and"\
+" the CLIB2 shared library, then, you should ensure that the relevant \"clib2.library\" is available on the PATH of your AmigaOne machine. It will not be stored into this LHA file"
+    fi
     _info "NOTE! For subsequent test runs with different prefixes, you should consider running the -c option first"
     _info "      since the test directories contain generated code for a different compiler. For example:"
     _info "      ./adt -c ; ./adt -p MyDifferentPrefixFromLastBuildTestAction -t"
