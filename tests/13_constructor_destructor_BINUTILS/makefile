@@ -15,7 +15,7 @@ CPPFLAGS+=-D__USE_INLINE__
 # Recommended:
 # CFLAGS+=-O0 fno-aggressive-loop-optimizations
 
-CHILD=child_$(FILE_INFIX)
+CHILD=child_$(FILE_INFIX).exe
 
 # Make the test framework recognise that this is a needed dependency
 # and to fail if it does not exist.
