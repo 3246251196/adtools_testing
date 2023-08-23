@@ -701,6 +701,7 @@ then
 	    _error "Desired ADTOOLS cross-compiler not found on PATH" 70
 	fi
 	CROSS_PREFIX="${this_adtools}/../"
+        _info "The -u option was used. Assuming that \"CROSS_PREFIX=${CROSS_PREFIX}\""
     else
 	# unless we are using the deviation -o option!
 	if [[ -z "${gcc_path}" ]]
