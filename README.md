@@ -186,6 +186,17 @@ described above (newlib,clib * dynamic,static) running in parallel which is also
 running in parallel with every other test case. The test framework handles
 contention everywhere else using this exact approach.
 
+#### Standalone makefiles with integrated tests
+In various tests there may be a file named "sa.makefile". This file can be used
+instead of the makefile in the case that there should also be an option to run
+the test without using the test framework. This file must be manually
+created. The file does not have to be called "sa.makefile", it can be called
+whatever is desired, but that name is a general guideline.
+
+The test framework will never do anything with this file. It is just useful for
+those that want to pull this repository down and run the tests immediately in
+their own way.
+
 #### Integration test user configurable variables
 ##### Deletion of files (variable: CLEAN_ME)
 In the case you are integrating a test into the test framework and you want to
