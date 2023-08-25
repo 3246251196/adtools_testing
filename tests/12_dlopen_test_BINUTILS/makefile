@@ -22,10 +22,10 @@ $(PROG): $(SOs) dlopen_sample.c
 	$(call LOG_CMD,Link,$(CC) dlopen_sample.c $(CFLAGS) -o $@ $(SOs) $(LDFLAGS) $(LIBS))
 
 $(LIBCAT): cat.c
-	$(call LOG_CMD,Creating Shared Object,$(CC) -shared -fPIC cat.c $(CFLAGS) -o $@)
+	$(call LOG_CMD,Creating Shared Object,$(CC) -shared -fPIC $< $(CFLAGS) -o $@)
 
 $(LIBDOG): dog.c
-	$(call LOG_CMD,Creating Shared Object,$(CC) -shared -fPIC cat.c $(CFLAGS) -o $@)
+	$(call LOG_CMD,Creating Shared Object,$(CC) -shared -fPIC $< $(CFLAGS) -o $@)
 endif
 
 # Expected output:
