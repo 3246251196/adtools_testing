@@ -30,7 +30,7 @@ readonly RUN_ALL_SCRIPT=run_all.script
 readonly EXECUTE_SCRIPT=user.script
 readonly SESSION_CACHE="${ORIG_DIR}/.adt_session.cache"
 readonly ADT_LOG_FILE=adt.log
-BUILD_DIR=
+BUILD_DIR=build
 FINAL_LHA=
 BASE_DIR=
 CROSS_PREFIX=
@@ -267,7 +267,25 @@ EOF
 
 function SETUP_PATHS
 {
-    BUILD_DIR="${session_prefix}build"
+    # Allow for the case that the user has just directly specified the
+    # full path to the BUILD_DIR for `session_prefix'. This is
+    # convenient because you can then just use TAB completion without
+    # needed to remove the "build" manually at the end!
+    if [[ -n "${session_prefix}" ]]
+    then
+        if [[ ! -d "${session_prefix}build" ]]
+        then
+            if [[ -d "${session_prefix}" ]]
+            then
+                # But, we need to get rid of any trailing slash if one exists
+	        session_prefix="$(basename "${session_prefix}")"
+                BUILD_DIR="${session_prefix}"
+            fi
+        else
+            BUILD_DIR="${session_prefix}build"
+        fi
+    fi
+
     FINAL_LHA="${session_prefix}adt_tests.lha"
     BASE_DIR="${ORIG_DIR}/${BUILD_DIR}"
     if [[ -z "${CROSS_PREFIX}" ]]
