@@ -49,7 +49,7 @@ PATTERN1=$(TEST_PATTERN)*
 PATTERN2=-name "*$(PATTERN1)"
 endif
 # We do not want to include standalone tests. Those are tests that have a file
-# named makefile/Makefile that contains: "include ../common.mak" somewhere in
+# named makefile/Makefile that doesn't contain: "include ../common.mak" somewhere in
 # them.
 tests=$(shell grep -l 'include ../common.mak' *$(PATTERN1)/[Mm]akefile | cut -f1 -d'/')
 # All Standlone tests:
