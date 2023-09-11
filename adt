@@ -280,6 +280,11 @@ function SETUP_PATHS
                 # But, we need to get rid of any trailing slash if one exists
 	        session_prefix="$(basename "${session_prefix}")"
                 BUILD_DIR="${session_prefix}"
+            else
+                # If the above fails and we get here then the user has
+                # either provided a bad prefix or we are building a
+                # new cross compiler.
+                BUILD_DIR="${session_prefix}build"
             fi
         else
             BUILD_DIR="${session_prefix}build"
