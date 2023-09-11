@@ -30,6 +30,7 @@ readonly RUN_ALL_SCRIPT=run_all.script
 readonly EXECUTE_SCRIPT=user.script
 readonly SESSION_CACHE="${ORIG_DIR}/.adt_session.cache"
 readonly ADT_LOG_FILE=adt.log
+prev_session_cache="${SESSION_CACHE}_$(date +%s).bak"
 BUILD_DIR=build
 FINAL_LHA=
 BASE_DIR=
@@ -97,9 +98,8 @@ EOF
 	# Do not overwrite / create a BAK in the case that there is no difference!
 	if ! diff "${SESSION_CACHE}" "${SESSION_CACHE}.tmp" 1>/dev/null 2>&1
 	then
-            local prevFile="${SESSION_CACHE}_$(date +%s).bak"
-	    _warn "Overwriting previously cached session. Previous session file backed up to: \"${prevFile}\""
-	    cp "${SESSION_CACHE}" "${prevFile}"
+	    _warn "Overwriting previously cached session. Previous session file backed up to: \"${prev_session_cache}\""
+	    cp "${SESSION_CACHE}" "${prev_session_cache}"
 	    mv "${SESSION_CACHE}.tmp" "${SESSION_CACHE}"
 	fi
     else
@@ -789,7 +789,7 @@ if (( do_tests)) ; then TESTS ; fi
 
 if (( session_was_cached )) ;
 then
-    _info "Session was cached to file \"${SESSION_CACHE}\". If there was a previous cache file it is now called: \"${SESSION_CACHE}.bak\""
+    _info "Session was cached to file \"${SESSION_CACHE}\". If there was a previous cache file it is now called: \"${prev_session_cache}.bak\""
     # Write out the contents of the cache file:
     _info "Cached settings:"
     obtain_adt_last_proj DO_NOT_SOURCE
