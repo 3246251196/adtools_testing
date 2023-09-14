@@ -122,10 +122,6 @@ build session is performed, the cache file gets written over, but it is backed
 up. Alternatively, you can provide an option to avoid writing over the previous
 cache.
 
-## FYI
-This repo was developed at the time when the last commit to ADTOOLS was
-"1501a4a26cf1bcffdd6dd4bcd603167a3e00f51b".
-
 ## Adding tests
 ### SPE
 See example "10_x_div_by_float_zero_wchar" for a possible approach to building a
