@@ -794,7 +794,7 @@ if (( do_tests)) ; then TESTS ; fi
 
 if (( session_was_cached )) ;
 then
-    _info "Session was cached to file \"${SESSION_CACHE}\". If there was a previous cache file it is now called: \"${prev_session_cache}.bak\""
+    _info "Session was cached to file \"${SESSION_CACHE}\". If there was a previous cache file it is now called: \"${prev_session_cache}\""
     # Write out the contents of the cache file:
     _info "Cached settings:"
     obtain_adt_last_proj DO_NOT_SOURCE
