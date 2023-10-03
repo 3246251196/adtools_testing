@@ -18,7 +18,11 @@ CORES=$(nproc)
 session_was_cached=0
 ignore_depends=0
 adtools_repo_loc="https://github.com/sba1/adtools.git"
-adtools_repo_branch=
+
+# Oct 2023: Currently pinned to the latest commit for which this script
+#           works. The subsequent commit now removes the use of the EXP_CLIB2
+#           option and this script needs re-work to handle that.
+adtools_repo_branch=a43fe95894dde2ef0c2b9d5cde7d6caf28da81f6
 just_continue=0
 no_cache=0
 
@@ -417,7 +421,7 @@ function BUILD
         cd "${ADTOOLS_DIR}"
 	if [[ -n "${adtools_repo_branch}" ]]
 	then
-	    git switch "${adtools_repo_branch}" || _error "Unable to switch to branch: \"${adtools_repo_branch}\"" 301 1
+	    git checkout "${adtools_repo_branch}" || _error "Unable to checkout: \"${adtools_repo_branch}\"" 301 1
 	fi
 	
 	# Check that the user has configured git email/username; especially
