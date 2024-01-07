@@ -2,6 +2,7 @@
 set -o pipefail
 
 do_build=0
+just_preq=0
 do_clone_only=0
 do_tests=0
 do_clean_tests=0
@@ -143,9 +144,9 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
 
  ACTIONS:
-   [-b [ [-q] [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t [-S <PAT>] ] | [ [-c] | [-C] ]
-   ^                                                                                                ^                  ^
-   BUILD ADTOOLS                                                                                    TESTS              CLEAN
+  [-b [ [-j] [-q] [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t [-S <PAT>] ] | [ [-c] | [-C] ]
+  ^                                                                                                ^                  ^
+  BUILD ADTOOLS                                                                                    TESTS              CLEAN
 
  EXPORT:
   [VAR[=VAL] ...]
@@ -224,6 +225,8 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         already exists then this script invokes a build in the
                         already existing in-place ADTOOLS without firstly 
                         performing a clean
+       [j] Just preqs : Just check the prequisite libraries to build ADTOOLS.
+                        This is useful to see which libraries to install.
        [q] Don't build: ADTOOLS is cloned, as normal, and, any modification
                         script is applied and then this script quits without
                         building ADTOOLS
@@ -378,7 +381,7 @@ function CHECK_DEPENDS
 	_continue=0
     fi
 
-    if (( !_continue ))
+    if (( !_continue && !just_preq ))
     then
 	_info "Dependency check was not clean. Continue ([y]/n)?"
 	if (( !just_continue ))
@@ -607,7 +610,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbqr:eg:n:s:m:tS:cC opt
+while getopts xp:o:uk:iydbjqr:eg:n:s:m:tS:cC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -643,6 +646,9 @@ do
     b)
         do_build=1
         ;;
+    j)
+	just_preq=1
+	;;
     q)
 	do_clone_only=1
 	;;
@@ -697,6 +703,13 @@ done
 
 shift $((OPTIND - 1))
 args="${@}"
+
+# Check if the user simply wants to install prerequisite libraries for ADTOOLS
+if (( just_preq ))
+then
+    CHECK_DEPENDS
+    exit 0
+fi
 
 # Check for any influention environment variables before continuing
 if [[ -n "${ADTOOLS_PREFIX}" ]]
