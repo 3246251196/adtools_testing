@@ -392,6 +392,8 @@ function CHECK_DEPENDS
 	       _error "Not continuing due to issues with the dependency checker" 207 1
            fi
 	fi
+    else
+	_info "Dependency check OKAY"
     fi
 }
 
