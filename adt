@@ -144,9 +144,19 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
 
  ACTIONS:
-  [-b [ [-j] [-q] [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ] | [-t [-S <PAT>] ] | [ [-c] | [-C] ]
-  ^                                                                                                ^                  ^
-  BUILD ADTOOLS                                                                                    TESTS              CLEAN
+  ===
+  BUILD ADTOOLS:
+  -b [ [-j] [-q] [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ]
+  ===
+  TESTS:
+  -t [-S <PAT>]
+  ===
+  CLEAN:
+  -c | -C
+  ===
+  CHECK REQUISITES FOR BUILDING:
+  -j
+  ===
 
  EXPORT:
   [VAR[=VAL] ...]
@@ -225,8 +235,6 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         already exists then this script invokes a build in the
                         already existing in-place ADTOOLS without firstly 
                         performing a clean
-       [j] Just preqs : Just check the prequisite libraries to build ADTOOLS.
-                        This is useful to see which libraries to install.
        [q] Don't build: ADTOOLS is cloned, as normal, and, any modification
                         script is applied and then this script quits without
                         building ADTOOLS
@@ -269,6 +277,8 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         case that you are using a cross-compiler outside of the
                         the self-contained directory then it is not recommended
                         to use this option without strict consideration
+       [j] Just preqs : Just check the prequisite libraries to build ADTOOLS.
+                        This is useful to see which libraries to install.
 EOF
 }
 
@@ -381,16 +391,21 @@ function CHECK_DEPENDS
 	_continue=0
     fi
 
-    if (( !_continue && !just_preq ))
+    if (( !_continue ))
     then
-	_info "Dependency check was not clean. Continue ([y]/n)?"
-	if (( !just_continue ))
+	if (( just_preq ))
 	then
-           read _selection
-           if [[ "${_selection}" != y ]]
-           then
-	       _error "Not continuing due to issues with the dependency checker" 207 1
-           fi
+	    _info "Dependency check was not clean"
+	else
+	    _info "Dependency check was not clean. Continue ([y]/n)?"
+	    if (( !just_continue ))
+	    then
+		read _selection
+		if [[ "${_selection}" != y ]]
+		then
+		    _error "Not continuing due to issues with the dependency checker" 207 1
+		fi
+	    fi
 	fi
     else
 	_info "Dependency check OKAY"
