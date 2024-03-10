@@ -14,7 +14,7 @@ $(PROG).o: main.c
 	$(call LOG_CMD,Compile Relocatable Object,$(CC) -c -o $@ $< $(CFLAGS))
 
 $(SO): $(patsubst lib%.so,%.o,$(SO))
-	$(call LOG_CMD,Creating Shared Obect,$(CC) -shared -o $@ $<)
+	$(call LOG_CMD,Creating Shared Object,$(CC) -shared -o $@ $<)
 
 $(patsubst lib%.so,%.o,$(SO)): $(patsubst lib%.so,%.c,$(SO))
 	$(call LOG_CMD,Creating FPIC object,$(CC) -c -o $@ $< -fPIC $(CFLAGS))
