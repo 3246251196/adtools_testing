@@ -266,6 +266,14 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
        [j] Just preqs : Just check the prequisite libraries to build ADTOOLS.
                         This is useful to see which libraries may be needed on
                         your current system.
+
+ TL;DR:
+  If you want to just build ADTOOLS then run the following:
+   - ./adt -j (this checks that you have the necessary libraries)
+   - ./adt -b -g 11 (to build a cross compiler version gcc 11)
+
+  Then, if you want to build all of the tests
+   - ./adt -x -t
 EOF
 }
 
