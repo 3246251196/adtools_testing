@@ -4,9 +4,9 @@ DUMMY_EXE=dummy.exe
 LHA_ADD=lha u -q 1>/dev/null 2>&1
 TMP_LOG_RESULTS_FILE=test_build_results.txt
 PREFIX=$(subst /,_,$(subst .,_,$(CROSS_PREFIX)))
-# Ensure the created link does not contain the word 'clib2'
+# Ensure the created link does not contain the word 'clib4'
 # It does not matter what we call our link since we use it internally:
-CP_ROOT=$(subst clib2,CLIB2,$(PREFIX)_cp_root)
+CP_ROOT=$(subst clib4,CLIB4,$(PREFIX)_cp_root)
 CLEAN_STAMP=$(PREFIX)_clean_stamp
 export INSPECT_EXE
 export DUMMY_EXE
@@ -15,7 +15,7 @@ export CP_ROOT
 
 # Nothing more than a long string of a bash export command that is used when
 # invoking a specific test
-# 
+#
 #######
 # START EXPORT STRING
 #######
@@ -63,7 +63,7 @@ ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "adt" script)
 endif
 	ln -s -f "$(CROSS_PREFIX)" $(CP_ROOT) 1>/dev/null 2>&1
-	for C_LIB in "newlib" "clib2" ;                                                     \
+	for C_LIB in "newlib" "clib2" "clib4" ;                                             \
 	do                                                                                  \
 		for DYN in "-use-dynld" "" ;                                                \
 		do                                                                          \
@@ -90,16 +90,16 @@ endif
 			&& cd - 1>/dev/null 2>&1              \
 			&& $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)
 	rm $(TMP_LOG_RESULTS_FILE)
-# Try to locate a clib2.library and add it to the LHA file
-	CLIB2_LIBRARY_LOC=$$(find $(BASE_DIR)/$(ADTOOLS_DIR)/native-build/downloads/clib2 \
-				-name "clib2.library" 2>/dev/null || true ) ;             \
-	if [[ -n $${CLIB2_LIBRARY_LOC} ]] ;                                               \
+# Try to locate a clib4.library and add it to the LHA file
+	CLIB4_LIBRARY_LOC=$$(find $(BASE_DIR)/$(ADTOOLS_DIR)/native-build/downloads/clib4 \
+				-name "clib4.library" 2>/dev/null || true ) ;             \
+	if [[ -n $${CLIB4_LIBRARY_LOC} ]] ;                                               \
 	then                                                                              \
-		cp $${CLIB2_LIBRARY_LOC} . ;                                              \
+		cp $${CLIB4_LIBRARY_LOC} . ;                                              \
 		cd .. ;                                                                   \
-		$(LHA_ADD) $@ tests/clib2.library ;                                       \
+		$(LHA_ADD) $@ tests/clib4.library ;                                       \
 		cd - 1>/dev/null 2>&1 ;                                                   \
-		rm clib2.library ;                                                        \
+		rm clib4.library ;                                                        \
 	fi
 # Now, attempt any standalone tests. Do not fail on error, and add them to the archive
 	echo "    Building Standalone tests. No logging is performed for Standalone tests; see their log.txt"

@@ -11,7 +11,6 @@ use_this_adtools=0
 gcc_ver=11 # default
 binutils_ver=2.23.2
 SDK_VERSION=54.16
-expclib2_branch=master
 args=
 session_prefix=
 gcc_path=
@@ -19,11 +18,7 @@ CORES=$(nproc)
 session_was_cached=0
 ignore_depends=0
 adtools_repo_loc="https://github.com/sba1/adtools.git"
-
-# Oct 2023: Currently pinned to the latest commit for which this script
-#           works. The subsequent commit now removes the use of the EXP_CLIB2
-#           option and this script needs re-work to handle that.
-adtools_repo_branch=a43fe95894dde2ef0c2b9d5cde7d6caf28da81f6
+adtools_repo_branch=master
 just_continue=0
 no_cache=0
 
@@ -79,21 +74,15 @@ function generate_adt_last_proj
 use_this_adtools="${use_this_adtools}"
 gcc_ver="${gcc_ver}"
 binutils_ver="${binutils_ver}"
-# expclib2_branch is only relevant if EXP_CLIB2 is set to 1. See below
-expclib2_branch="${expclib2_branch}"
 session_prefix="${session_prefix}"
 gcc_path="${gcc_path}"
 adtools_repo_loc="${adtools_repo_loc}"
 adtools_repo_branch="${adtools_repo_branch}"
 
 # ADTOOLS_MOD_SCRIPT="${ADTOOLS_MOD_SCRIPT}"
-EXP_CLIB2="${EXP_CLIB2}"
-CLIB2_SHA1="${CLIB2_SHA1}"
 SDK_VERSION="${SDK_VERSION}"
 CROSS_PREFIX="${CROSS_PREFIX}"
 
-export EXP_CLIB2
-export CLIB2_SHA1
 export SDK_VERSION
 export CROSS_PREFIX
 EOF
@@ -140,13 +129,13 @@ function _usage
 {
     cat << EOF
 Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always required)
- OPTIONS: 
+ OPTIONS:
   [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
 
  ACTIONS:
   ===
   BUILD ADTOOLS:
-  -b [ [-j] [-q] [-r "<REPO [BRANCH]>"] [-e [BRANCH]] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] ]
+  -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>]
   ===
   TESTS:
   -t [-S <PAT>]
@@ -161,9 +150,9 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
  EXPORT:
   [VAR[=VAL] ...]
   ^
-  A string of environment variables with optional values that are  exported. 
+  A string of environment variables with optional values that are  exported.
   For example, "./adt -t THREAD_IMPL=pthread LIBS=-lpthread"  ts in THREAD_IMPL
-  and LIBS being exported for potential use in Makefiles. Note that EXPORT is 
+  and LIBS being exported for potential use in Makefiles. Note that EXPORT is
   not cached.
 
        [x] cached proj: Use the variables stored from the previous build action
@@ -172,8 +161,8 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         that they do not need to be remembered. This cache file
                         is only updated on a build action which requires a new
                         build of ADTOOLS. For example, if a build action such
-                        as "-b -e beta10 -s 53.30 -g 10 -p beta10" was provided
-                        then running the tests for that session is as easy as
+                        as "-b -s 53.30 -g 10 -p beta10" was provided then
+                        running the tests for that session is as easy as
                         "-x -t", or, making a modification to the cross
                         compiler source files and wanting to build the cross
                         compiler again is as easy as "-x -b"
@@ -184,8 +173,8 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         of ADTOOLS and/or perform tests on another version. For
                         example, building an ADTOOLS with GCC 11 and building
                         the tests for it and also building another version with
-                        GCC 8 which would result in two build directories and 
-                        two final test LHA files, one for each version 
+                        GCC 8 which would result in two build directories and
+                        two final test LHA files, one for each version
        !! NOTE !!     : It is important to use this option when invoking a
                         build, test or clean action so as to ensure operation
                         on the expected session/prefix. Rather than supplying
@@ -231,9 +220,9 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
        !! NOTE !!     : This option is NOT cached
        [b] build      : Clones and builds ADTOOLS in-place respecting the
                         additionally supplied options. The in-place location is
-                        the folder named "<PREFIX>build". If the directory 
+                        the folder named "<PREFIX>build". If the directory
                         already exists then this script invokes a build in the
-                        already existing in-place ADTOOLS without firstly 
+                        already existing in-place ADTOOLS without firstly
                         performing a clean
        [q] Don't build: ADTOOLS is cloned, as normal, and, any modification
                         script is applied and then this script quits without
@@ -247,9 +236,6 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
        !! NOTE !!     : In the case you specify BRANCH you must quote the
                         option argument. For example
                         -r "https://myRepo/ MY_BRANCH"
-       [e] AFXGROUP C : Enables the experimental AFXGROUP's version of the C
-                        Library, CLIB2, when building in-place ADTOOLS using
-                        the branch specified (DEFAULT: master)
        [g] gcc        : Selects the version of GCC to use when building
                         in-place ADTOOLS (DEFAULT: 11)
        [n] binutils   : Selects the version of BINUTILS to use when building
@@ -264,7 +250,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         script should reside in the same directory as this
                         script (the adt script). There is also an example mod
                         script named "adtools_mod"
-       [t] tests      : Builds all of the tests under the "tests" folder. 
+       [t] tests      : Builds all of the tests under the "tests" folder.
                         Logging of each build of each variant is appended to
                         the log file
        [S] pattern    : Only perform a test build on the test(s) that match the
@@ -278,7 +264,8 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         the self-contained directory then it is not recommended
                         to use this option without strict consideration
        [j] Just preqs : Just check the prequisite libraries to build ADTOOLS.
-                        This is useful to see which libraries to install.
+                        This is useful to see which libraries may be needed on
+                        your current system.
 EOF
 }
 
@@ -368,7 +355,7 @@ function CHECK_DEPENDS
     do
 	_info "- ${package}"
     done
-    
+
     if [[ ! "$(lha --version 2>&1)" =~ "LHa for UNIX version" ]]
     then
 	_warn "Unexpected or no version of \"LHA\". Please use \"https://github.com/jca02266/lha\""
@@ -415,10 +402,6 @@ function CHECK_DEPENDS
 function BUILD
 {
     local INFO_STRING="[$(date)] Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\", CROSS_PREFIX (installation location of the cross-compiler) \"${CROSS_PREFIX}\""
-    if (( EXP_CLIB2 ))
-    then
-        INFO_STRING+=", AFXGROUP's CLIB2 branch \"${expclib2_branch}\""
-    fi
 
     local _cloneLoc="${BASE_DIR}/${ADTOOLS_DIR}"
     if [[ -n "${gcc_path}" ]]
@@ -434,7 +417,7 @@ function BUILD
 	    CHECK_DEPENDS
 	fi
         _info "Building ADTOOLS..."
-        
+
         mkdir "${BASE_DIR}"
         cd "${BASE_DIR}"
         git clone "${adtools_repo_loc}" "${ADTOOLS_DIR}" || _error "Unable to clone ADTOOLS repo" 201 1
@@ -443,7 +426,7 @@ function BUILD
 	then
 	    git checkout "${adtools_repo_branch}" || _error "Unable to checkout: \"${adtools_repo_branch}\"" 301 1
 	fi
-	
+
 	# Check that the user has configured git email/username; especially
 	# since ADTOOLS silently just does not apply the patches if this
 	# information is not there and then binutils fails to build with someone
@@ -462,14 +445,14 @@ function BUILD
         git submodule update || _error "Unable to update submodules in ADTOOLS repo" 203 1
         gild/bin/gild checkout binutils "${binutils_ver}" || _error "Unable to clone binutils in ADTOOLS repo" 204 1
         gild/bin/gild checkout gcc "${gcc_ver}" || _error "Unable to clone gcc in ADTOOLS repo" 205 1
-	
+
         # Performs the modification (if any) that are provided in the
         # following script
 	if [[ -n "${ADTOOLS_MOD_SCRIPT}" ]]
 	then
             "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}" || _error "Modification script to ADTOOLS failed" 206 1
 	fi
-	
+
         # Clear any of these variables in the unlikely event they are set. If not, then
         # they are picked up during the building ADTOOLS and they may not point to the
         # native gcc that we just tested for before.
@@ -511,13 +494,13 @@ function BUILD
 	then
 	    local _selection=
 	    _info "Assuming you want to build the cross compiler"
-	    _info "Did you make any changes to the CLIB2 source files? (y/[n])?"
+	    _info "Did you make any changes to the CLIB4 source files? (y/[n])?"
 	    if (( !just_continue ))
 	    then
 		read _selection
 		if [[ "${_selection}" == y ]]
 		then
-		    rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/clib2-cross-done-"*
+		    rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/clib4-cross-done-"*
 		fi
 	    fi
 	    _info "Did you make any changes to the BINUTILS source files? (y/[n])?"
@@ -532,7 +515,7 @@ function BUILD
 	    rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/gcc-cross-done-"*
 	fi
     fi
-    
+
     native_gcc=
     # We also need g++
     { which gcc && which g++ ; } 1>/dev/null 2>&1
@@ -562,9 +545,9 @@ function BUILD
 	which ppc-amigaos-gcc 1>/dev/null 2>&1 && _warn "Already found a cross compiler on the path. "\
 "Since you used the -o option then this script assumes this is expected"
     fi
-    
+
     sleep 5 # let the user at least notice if there were some messages
-    
+
     LOG_FILE="${BASE_DIR}/${ADT_LOG_FILE}"
     echo "####################" >> "${LOG_FILE}"
     echo "${INFO_STRING}" >> "${LOG_FILE}"
@@ -607,14 +590,11 @@ function TESTS
     _info "\"${FINAL_LHA}\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
     _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
     _info "which acts on each variant. The \"run_all.script\" is designed to be re-run again. Alternatively,"
-    _info "copy over the individual test/variant LHA. If your tests relies on clib2.library and you do not use"
-    _info "the \"user.script\" then you will have to ensure that clib2.library is available in LIBS: manually"
+    _info "copy over the individual test/variant LHA. If your tests relies on clib4.library and you do not use"
+    _info "the \"user.script\" then you will have to ensure that clib4.library is available in LIBS:, manually"
+    _info "or PWD."
     _info ""
-    if (( use_this_adtools ))
-    then
-        _info "The -u option was used. If your specified cross-compiler uses experimental CLIB2 and"\
-" the CLIB2 shared library, then, you should ensure that the relevant \"clib2.library\" is available on the PATH of your AmigaOne machine. It will not be stored into this LHA file"
-    fi
+
     _info "NOTE! For subsequent test runs with different prefixes, you should consider running the -c option first"
     _info "      since the test directories contain generated code for a different compiler. For example:"
     _info "      ./adt -c ; ./adt -p MyDifferentPrefixFromLastBuildTestAction -t"
@@ -677,15 +657,6 @@ do
 	   adtools_repo_branch="${repo_branch[1]}"
 	fi
 	;;
-    e)
-        export EXP_CLIB2=1
-        next="${!OPTIND}"
-        if [[ -n "${next}" && "${next}" != -* ]] ; then
-            OPTIND=$((OPTIND + 1))
-            expclib2_branch="${next}"
-        fi
-        export CLIB2_SHA1="${expclib2_branch}"
-        ;;
     g)
         gcc_ver="${OPTARG}"
         ;;
