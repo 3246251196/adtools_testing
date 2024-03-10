@@ -598,6 +598,9 @@ function TESTS
     _info "NOTE! For subsequent test runs with different prefixes, you should consider running the -c option first"
     _info "      since the test directories contain generated code for a different compiler. For example:"
     _info "      ./adt -c ; ./adt -p MyDifferentPrefixFromLastBuildTestAction -t"
+    _info ""
+    _info "NOTE! Do not expect all builds to pass for tests. It may be expected that some fail. Inspect the logs for"
+    _info "      more information."
 }
 
 if (( $# == 0 ))
