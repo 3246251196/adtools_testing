@@ -4,9 +4,12 @@ DUMMY_EXE=dummy.exe
 LHA_ADD=lha u -q 1>/dev/null 2>&1
 TMP_LOG_RESULTS_FILE=test_build_results.txt
 PREFIX=$(subst /,_,$(subst .,_,$(CROSS_PREFIX)))
+
 # Ensure the created link does not contain the word 'clib4'
 # It does not matter what we call our link since we use it internally:
+# RJD: I guess this was some work-around for which I do not understand!
 CP_ROOT=$(subst clib4,CLIB4,$(PREFIX)_cp_root)
+
 CLEAN_STAMP=$(PREFIX)_clean_stamp
 export INSPECT_EXE
 export DUMMY_EXE
@@ -20,7 +23,7 @@ export CP_ROOT
 # START EXPORT STRING
 #######
 ifeq ($(NO_VERBOSE),)
-CFLAGS_VERBOSE=-v
+CFLAGS_VERBOSE=-v -Wl,--verbose
 LDFLAGS_VERBOSE=-Wl,--verbose
 endif
 EXPORT=INFIX="$${C_LIB}" ;                                                      \
