@@ -131,11 +131,12 @@ previous cache.
 ## Adding tests
 ### SPE
 See example "10_x_div_by_float_zero_wchar" for a possible approach to
-building a test with SPE in mind.
+building a test with SPE in mind. Currently, only GCC 6 can generate SPE
+instructions.
 
 ### Standalone
 In the case you just want to add a test without needing to follow the
-test framework, then you can add a standalone test. Just create a
+test framework then you can add a standalone test. Just create a
 directory under tests with a makefile with an "all" target and a "clean"
 target. Variables are exported in the parent makefile (the one under
 tests, which include some useful variables if needed). A standalone test
@@ -148,9 +149,12 @@ the test folder, but, this log file is primitive.
 Standalone tests are also added to the final archive under the folder
 named "Standalone_Tests".
 
-Standalone tests to not have all 4 variants built. The test framework
+Standalone tests do not have all 4 variants built. The test framework
 invokes the "all" rule once. That will have to be handled manually, in
 the makefile, if desired.
+
+Also see the section `Standalone makefiles with integrated tests`,
+below.
 
 ### Integration into the test framework
 Alternatively, use the existing framework which attempts to make life
