@@ -28,7 +28,7 @@ run_all.script" on the AmigaOne machine.  "run_all.script" will finalise
 the unpacking of the tests and automatically invoke "user.script" on
 each test case variant. By default, the "user.script" will execute each
 test variant. Be aware that testing incurs the risk of crashing your
-machine! For each test there are 4 variants: 3 variants of c library
+machine! For each test there are 6 variants: 3 variants of c library
 version (newlib, clib2 and clib4) and 2 variants of link type (dynamic
 and static). In the case of Shared Object creation, the test framework
 will copy any necessary SO files into the directory for that variant
@@ -149,7 +149,7 @@ the test folder, but, this log file is primitive.
 Standalone tests are also added to the final archive under the folder
 named "Standalone_Tests".
 
-Standalone tests do not have all 4 variants built. The test framework
+Standalone tests do not have all 6 variants built. The test framework
 invokes the "all" rule once. That will have to be handled manually, in
 the makefile, if desired.
 
@@ -174,7 +174,7 @@ Inspections can be added to tests by simply providing commented lines in
 the makefile of the test being added. See "1_rjd_test_example" for an
 example. Also, see "0_rjd_simplest_example" for the simplest example.
 
-The framework will always attempt to create 4 variants, as mentioned
+The framework will always attempt to create 6 variants, as mentioned
 above, but in some test cases the test may not care about a particular
 variant. For instance, a test created using dlopen() may not not care
 about any of the 2 static variants. In such a case, a DUMMY test can be
@@ -190,8 +190,8 @@ unique name. This allows parallel builds where the same files are not
 being incorrectly linked with or added to the incorrect archive. See
 "2_capehill_adtools_issue_139_test_code" for an example of how to name
 any specific test artifacts using the already provided "FILE_INFIX"
-variable. Recall that for every test there are 4 dimensions as described
-above (newlib,clib * dynamic,static) running in parallel which is also
+variable. Recall that for every test there are 6 dimensions as described
+above (newlib,clibs * dynamic,static) running in parallel which is also
 running in parallel with every other test case. The test framework
 handles contention everywhere else using this exact approach.
 
