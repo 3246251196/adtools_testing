@@ -52,8 +52,13 @@ PATTERN1=$(TEST_PATTERN)*
 PATTERN2=-name "*$(PATTERN1)"
 endif
 # We do not want to include standalone tests. Those are tests that have a file
-# named makefile/Makefile that doesn't contain: "include ../common.mak" somewhere in
-# them.
+# named makefile/Makefile that doesn't contain: "include ../common.mak"
+# somewhere in them.
+#
+# Note that a test may contain a file named sa.makefile as well as a
+# makeile. This is so that the test can be build in standalone mode if desired
+# but it is not considered a standalone test because it includes a [Mm]akefile
+# with the inclusion of common.mak!
 tests=$(shell grep -l 'include ../common.mak' *$(PATTERN1)/[Mm]akefile | cut -f1 -d'/')
 # All Standlone tests:
 sa_tests=$(filter-out $(tests),$(shell find -maxdepth 1 -mindepth 1 -type d $(PATTERN2) -exec basename {} \;))
