@@ -89,6 +89,7 @@ It should be as easy is the following steps:
 - run the executable directly, yourself (you may need to make
   clib4.library available to the LIBS: assign manually if you run it
   yourself versus using the user.script)
+- ./adt -c will then clean out the tests directory, recursively
 
 ## Prefixes
 ### Example of testing multiple compilers
@@ -134,6 +135,50 @@ See example "10_x_div_by_float_zero_wchar" for a possible approach to
 building a test with SPE in mind. Currently, only GCC 6 can generate SPE
 instructions.
 
+### Integration into the test framework
+Alternatively, use the existing framework which attempts to make life
+easier. The only target required would be "$(PROG)". There is a makefile
+function, "LOG_CMD", which enables automatic logging to an appropriately
+named file. Using this approach will also archive up the test executable
+and necessary, dependent Shared Objects (in the case the Shared Objects
+are used) and log files and AmigaOS scripts into an LHA file which is
+ready to be transferred to the AmigaOne machine. The log files are
+useful to get verbose output from the compiler phase, linker phase,
+output of READELF, needed Shared Objects and suspected required Shared
+Libraries; suspected because the framework merely greps for a pattern of
+"*.library" in the binary and assumes that the executable will try to
+open that library.
+
+The framework will always attempt to create 6 variants, as mentioned
+above, but in some test cases the test may not care about a particular
+variant. For instance, a test created using dlopen() may not not care
+about any of the 2 static variants. In such a case, a DUMMY test can be
+created for that situation. The framework builds a dummy binary adhering
+to the naming convention that just returns a particular exit code that
+the scripts know to mean a dummy test. Dummy tests always pass. An
+example can be seen in "12_dlopen_binutils_test".
+
+The most basic example of an integrated test can be found in
+"0_rjd_simplest_example".
+
+#### Automated inspections
+Inspections can be added to tests by simply providing commented lines in
+the makefile of the test being added. See "1_rjd_test_example" for an
+example.
+
+#### Naming generated outputs
+Since the testing framework runs all the building of the tests in
+parallel it is important to rename any test specific artifacts - such as
+relocatable object files, archives files or shared objects - with a
+unique name. This allows parallel builds where the same files are not
+being incorrectly linked with or added to the incorrect archive. See
+"2_capehill_adtools_issue_139_test_code" for an example of how to name
+any specific test artifacts using the already provided "FILE_INFIX"
+variable. Recall that for every test there are 6 dimensions as described
+above (newlib,clibs * dynamic,static) running in parallel which is also
+running in parallel with every other test case. The test framework
+handles contention everywhere else using this exact approach.
+
 ### Standalone
 In the case you just want to add a test without needing to follow the
 test framework then you can add a standalone test. Just create a
@@ -153,49 +198,6 @@ Standalone tests do not have all 6 variants built. The test framework
 invokes the "all" rule once. That will have to be handled manually, in
 the makefile, if desired.
 
-Also see the section `Standalone makefiles with integrated tests`,
-below.
-
-### Integration into the test framework
-Alternatively, use the existing framework which attempts to make life
-easier. The only target required would be "$(PROG)". There is a makefile
-function, "LOG_CMD", which enables automatic logging to an appropriately
-named file. Using this approach will also archive up the test executable
-and necessary, dependent Shared Objects (in the case the Shared Objects
-are used) and log files and AmigaOS scripts into an LHA file which is
-ready to be transferred to the AmigaOne machine. The log files are
-useful to get verbose output from the compiler phase, linker phase,
-output of READELF, needed Shared Objects and suspected required Shared
-Libraries; suspected because the framework merely greps for a pattern of
-"*.library" in the binary and assumes that the executable will try to
-open that library.
-
-Inspections can be added to tests by simply providing commented lines in
-the makefile of the test being added. See "1_rjd_test_example" for an
-example. Also, see "0_rjd_simplest_example" for the simplest example.
-
-The framework will always attempt to create 6 variants, as mentioned
-above, but in some test cases the test may not care about a particular
-variant. For instance, a test created using dlopen() may not not care
-about any of the 2 static variants. In such a case, a DUMMY test can be
-created for that situation. The framework builds a dummy binary adhering
-to the naming convention that just returns a particular exit code that
-the scripts know to mean a dummy test. Dummy tests always pass. An
-example can be seen in "12_dlopen_binutils_test".
-
-Since the testing framework runs all the building of the tests in
-parallel it is important to rename any test specific artifacts - such as
-relocatable object files, archives files or shared objects - with a
-unique name. This allows parallel builds where the same files are not
-being incorrectly linked with or added to the incorrect archive. See
-"2_capehill_adtools_issue_139_test_code" for an example of how to name
-any specific test artifacts using the already provided "FILE_INFIX"
-variable. Recall that for every test there are 6 dimensions as described
-above (newlib,clibs * dynamic,static) running in parallel which is also
-running in parallel with every other test case. The test framework
-handles contention everywhere else using this exact approach.
-
-#### Standalone makefiles with integrated tests
 In various tests there may be a file named "sa.makefile". This file can
 be used instead of the makefile in the case that there should also be an
 option to run the test without using the test framework. This file must
@@ -207,7 +209,7 @@ The test framework will never do anything with this file. It is just
 useful for those that want to pull this repository down and run the
 tests immediately in their own way.
 
-#### Integration test user configurable variables
+#### Integration tests' user configurable variables
 ##### Deletion of files (variable: CLEAN_ME)
 In the case you are integrating a test into the test framework and you
 want to forcefully request certain files to be deleted when using ./adt
