@@ -18,3 +18,5 @@ $(SO): $(patsubst lib%.so,%.o,$(SO))
 
 $(patsubst lib%.so,%.o,$(SO)): $(patsubst lib%.so,%.c,$(SO))
 	$(call LOG_CMD,Creating FPIC object,$(CC) -c -o $@ $< -fPIC $(CFLAGS))
+
+#@ Count: 100000000
