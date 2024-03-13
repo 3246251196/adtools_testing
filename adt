@@ -5,7 +5,6 @@ do_build=0
 just_preq=0
 do_clone_only=0
 do_tests=0
-do_clean_tests=0
 TEST_PATTERN=
 use_this_adtools=0
 gcc_ver=11 # default
@@ -140,8 +139,8 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   TESTS:
   -t [-S <PAT>]
   ===
-  CLEAN:
-  -c | -C
+  CLEAN ADTOOLS:
+  -C
   ===
   CHECK REQUISITES FOR BUILDING:
   -j
@@ -168,13 +167,10 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         compiler again is as easy as "-x -b"
        !! NOTE !!     : This option must be the first option provided. Not all
                         arguments are cached. See below
-       [p] prefix     : Sets the prefix of the build, test or clean session.
+       [p] prefix :     Sets the prefix of the build, test or clean session.
                         This may be useful if you wish to build another version
-                        of ADTOOLS and/or perform tests on another version. For
-                        example, building an ADTOOLS with GCC 11 and building
-                        the tests for it and also building another version with
-                        GCC 8 which would result in two build directories and
-                        two final test LHA files, one for each version
+                        of ADTOOLS and/or perform tests on another version. The
+                        value should be the name of the ADTOOLS build directory
        !! NOTE !!     : It is important to use this option when invoking a
                         build, test or clean action so as to ensure operation
                         on the expected session/prefix. Rather than supplying
@@ -252,7 +248,9 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         script named "adtools_mod"
        [t] tests      : Builds all of the tests under the "tests" folder.
                         Logging of each build of each variant is appended to
-                        the log file
+                        the log file. This will implicitly clean out all the
+                        build files at the end, finally leeaving the test LHA
+                        file
        [S] pattern    : Only perform a test build on the test(s) that match the
                         pattern in <PAT>. <PAT> should represent a substring
                         since globbing is automatically added
@@ -602,13 +600,9 @@ function TESTS
     _info "the \"user.script\" then you will have to ensure that clib4.library is available in LIBS:, manually"
     _info "or PWD."
     _info ""
-
-    _info "NOTE! For subsequent test runs with different prefixes, you should consider running the -c option first"
-    _info "      since the test directories contain generated code for a different compiler. For example:"
-    _info "      ./adt -c ; ./adt -p MyDifferentPrefixFromLastBuildTestAction -t"
-    _info ""
     _info "NOTE! Do not expect all builds to pass for tests. It may be expected that some fail. Inspect the logs for"
     _info "      more information."
+    make -s -C "${TESTS_DIR}" clean
 }
 
 if (( $# == 0 ))
@@ -618,7 +612,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbjqr:eg:n:s:m:tS:cC opt
+while getopts xp:o:uk:iydbjqr:g:n:s:m:tS:C opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -687,9 +681,6 @@ do
         TEST_PATTERN="${OPTARG}"
         export TEST_PATTERN
         ;;
-    c)
-        do_clean_tests=1
-        ;;
     C)
         do_clean_build=1
         ;;
@@ -726,11 +717,11 @@ if (( do_build && do_tests ))
 then
     _error "Building the tests and building ADTOOLS is mutually exclusive" 20
 fi
-if (( !do_build && !do_tests && !do_clean_tests && !do_clean_build ))
+if (( !do_build && !do_tests && !do_clean_build ))
 then
     _error "No action performed" 80
 fi
-if (( !do_clean_tests && !do_clean_build ))
+if (( !do_clean_build ))
 then
     if (( use_this_adtools ))
     then
@@ -773,11 +764,6 @@ then
     done
 fi
 
-if (( do_clean_tests ))
-then
-    make -s -C "${TESTS_DIR}" clean
-    _info "Test cases have been cleaned. You may still want to delete the final LHA file manually"
-fi
 if (( do_clean_build ))
 then
     if (( use_this_adtools ))
