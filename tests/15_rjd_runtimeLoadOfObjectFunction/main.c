@@ -20,7 +20,7 @@ int main( int argc, char *argv[] )
 	}
       else
 	{
-	  fprintf( stderr, "Unable to location symbol: `%s'\n", sym_str );
+	  fprintf( stderr, "Unable to locate symbol: `%s'\n", sym_str );
 	}
     }
   else
