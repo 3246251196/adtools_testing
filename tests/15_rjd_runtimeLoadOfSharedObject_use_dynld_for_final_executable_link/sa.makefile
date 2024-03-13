@@ -4,7 +4,7 @@ CFLAGS=-mcrt=clib4 -Wall -Wextra
 all: main
 
 main: main.o librelo.so
-	$(CC) $(CFLAGS) -use-dynld -o $@ $<
+	$(CC) $(CFLAGS) -use-dynld -athread=native -o $@ $<
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c -o $@ $<
