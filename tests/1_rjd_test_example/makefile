@@ -30,6 +30,7 @@ $(PROG): main_$(FILE_INFIX).o
 main_$(FILE_INFIX).o: main.cpp
 	$(call LOG_CMD,Compile,$(CXX) $(CXXFLAGS) -c -o $@ $^)
 
+
 # In this case, as well as the executable returning status 0, we want to check
 # that its output is as we expected. Any line that begins with '#@ ' is assumed
 # to be an expected output. The inspection test will strip away '#@ '. These

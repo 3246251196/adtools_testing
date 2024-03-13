@@ -77,7 +77,7 @@ endif
 # compiler objects! This is handled directly below.
 
 NEEDED_DEP_CHECK=-f $(PROG)
-ifneq ($(NEED_DEP),,)
+ifneq ($(NEED_DEP),)
 NEEDED_DEP_CHECK+=$(foreach DEP,$(NEED_DEP),&& -f $(DEP))
 endif
 .PHONY: clean all

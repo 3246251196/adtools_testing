@@ -12,6 +12,7 @@ $(PROG): main$(FILE_INFIX).o
 main$(FILE_INFIX).o: main.cpp
 	$(call LOG_CMD,Compile,$(CXX) $(CXXFLAGS) -c -o $@ $^)
 
+
 #@ Simple example: called once
 #@ throw: call_once will retry
 #@ throw: call_once will retry

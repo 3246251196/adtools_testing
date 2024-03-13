@@ -12,3 +12,4 @@ $(PROG): main$(FILE_INFIX).o
 
 main$(FILE_INFIX).o: main.c
 	$(call LOG_CMD,Compile,$(CC) $(CFLAGS) -c -o $@ $^)
+

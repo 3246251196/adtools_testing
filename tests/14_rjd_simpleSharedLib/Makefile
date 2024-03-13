@@ -1,5 +1,7 @@
 include ../common.mak
 
+# This is a clib4 test
+ifeq ($(C_LIB),clib4)
 SO=libsharedObj.so
 
 CFLAGS+=-Wall -Wextra -pedantic
@@ -18,5 +20,8 @@ $(SO): $(patsubst lib%.so,%.o,$(SO))
 
 $(patsubst lib%.so,%.o,$(SO)): $(patsubst lib%.so,%.c,$(SO))
 	$(call LOG_CMD,Creating FPIC object,$(CC) -c -o $@ $< -fPIC $(CFLAGS))
+else
+$(eval $(call DUMMY_TEST))
+endif
 
 #@ Count: 100000000
