@@ -10,12 +10,6 @@ else
 
 THREAD_IMPL=native
 CFLAGS+=-athread=$(THREAD_IMPL)
-ifneq ($(C_LIB),clib4)
-# We know that with clib4 libdl is built into the libc already!
-#
-# I am not sure about newlib, clib2 - subject to change!
-LDFLAGS=-ldl
-endif
 
 $(PROG): main.c librelo.so
 # Not linked here, the function will be loaded at runtime
