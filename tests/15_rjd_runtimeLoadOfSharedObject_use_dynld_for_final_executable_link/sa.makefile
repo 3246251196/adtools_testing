@@ -1,5 +1,11 @@
 CC=ppc-amigaos-gcc
 CFLAGS=-mcrt=clib4 -Wall -Wextra
+
+V?=0
+ifeq ($(V),1)
+CFLAGS+=-v -Wl,--verbose
+endif
+
 .PHONY: all
 all: main
 
