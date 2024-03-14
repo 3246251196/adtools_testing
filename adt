@@ -5,6 +5,7 @@ do_build=0
 just_preq=0
 do_clone_only=0
 do_tests=0
+do_clean_tests=0
 TEST_PATTERN=
 use_this_adtools=0
 gcc_ver=11 # default
@@ -139,8 +140,8 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   TESTS:
   -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"]
   ===
-  CLEAN ADTOOLS:
-  -C
+  CLEAN:
+  -c | -C
   ===
   CHECK REQUISITES FOR BUILDING:
   -j
@@ -618,7 +619,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbjqr:g:n:s:m:tS:l:z:C opt
+while getopts xp:o:uk:iydbjqr:g:n:s:m:tS:l:z:cC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -723,6 +724,9 @@ do
 	fi
 	export LINKER_TYPE_LIST
 	;;
+    c)
+        do_clean_tests=1
+	;;
     C)
         do_clean_build=1
         ;;
@@ -759,11 +763,11 @@ if (( do_build && do_tests ))
 then
     _error "Building the tests and building ADTOOLS is mutually exclusive" 20
 fi
-if (( !do_build && !do_tests && !do_clean_build ))
+if (( !do_build && !do_tests && !do_clean_tests && !do_clean_build ))
 then
     _error "No action performed" 80
 fi
-if (( !do_clean_build ))
+if (( !do_clean_tests && !do_clean_build ))
 then
     if (( use_this_adtools ))
     then
@@ -806,6 +810,11 @@ then
     done
 fi
 
+if (( do_clean_tests ))
+then
+    make -s -C "${TESTS_DIR}" clean
+    _info "Test cases have been cleaned. You may still want to delete the final LHA file manually"
+fi
 if (( do_clean_build ))
 then
     if (( use_this_adtools ))
