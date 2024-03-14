@@ -1,6 +1,20 @@
 # adtools_testing
 
 ## Using this repository
+### Ideal scenario (TL;DR)
+It should be as easy is the following steps:
+- ./adt -b (if you want to build a cross compiler)
+- ./adt -t (if you want to run tests using that cross compiler)
+- copy the adt_tests.lha to the AmigaOne machine
+- lha x adt_tests.lha
+- execute run_all_script, OR,
+- cd into the specific test case variant of interest and invoke
+  "execute run_*.script", OR,
+- run the executable directly, yourself (you may need to make
+  clib4.library available to the LIBS: assign manually if you run it
+  yourself versus using the user.script)
+- ./adt -c will then clean out the tests directory, recursively
+
 ### Goal
 At the heart of it, this script does two things:
 - Builds ADTOOLS in-place,
@@ -48,16 +62,15 @@ Libraries are sought and added to the LHA for that test variant;
 instead, it is expected that those Shared Libraries will exist on the
 AmigaOne machine invoking the test. The only exception to this is
 "clib4.library"; the test framework shall also add the "clib4.library"
-to the final LHA file, "\<PREFIX>adt_tests.lha" and the "user.script"
-will perform some changes to your Amiga's LIBS: assign JUST when
-performing the test. It will then put back the original value of your
-LIBS: assign. This means that for tests that use such a CLIB4 version,
-you do not need to worry about manually copying over the necessary
-"clib4.library" into your LIBS: assign. This must be done manually, or,
-the clib4.library must exist in LIBS: if you decide to run the tests
-manually. Alternatively - and I have added this text in March 2024 - it
-seems that clib4 will also consider the PWD of the program. So, you can
-probably just have clib4.library in the PWD.
+to the final LHA file, "\<PREFIX>adt_tests.lha". It does this be
+searching two locations and taking the first one it finds. Firstly, the
+assumption is that the used compiler is one built by this script, so the
+clib4.library is searched for in the cloned location of the ADTOOLS
+repository, i.e. the source code. The reason for this is that it may be
+that you are modifying the clib4 source code but not invoking "make
+install". The fallback location is the CROSS_PREFIX which is set by the
+framework is essentially the installation directory of the cross
+compiler SDK.
 
 It should be understood that some tests may fail to build for differently
 configured cross-compilers. This is not necessarily a failure. For example,
@@ -76,20 +89,6 @@ reports the result as:
 - FAIL    (there was a difference in content),
 - ERROR (the inspection executable, whose source code is in this
           repository, unexpectedly failed).
-
-### Ideal scenario
-It should be as easy is the following steps:
-- ./adt -b
-- ./adt -t
-- copy the adt_tests.lha to the AmigaOne machine
-- lha x adt_tests.lha
-- execute run_all_script, OR,
-- cd into the specific test case variant of interest and invoke
-  "execute run_*.script", OR,
-- run the executable directly, yourself (you may need to make
-  clib4.library available to the LIBS: assign manually if you run it
-  yourself versus using the user.script)
-- ./adt -c will then clean out the tests directory, recursively
 
 ## Prefixes
 ### Example of testing multiple compilers

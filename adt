@@ -137,7 +137,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>]
   ===
   TESTS:
-  -t [-S <PAT>]
+  -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"]
   ===
   CLEAN ADTOOLS:
   -C
@@ -255,6 +255,13 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         pattern in <PAT>. <PAT> should represent a substring
                         since globbing is automatically added
        !! NOTE !!     : This option is NOT cached
+
+       [l] C LIBS :   : Provide a list of the C libraries for which you want to
+                        test (DEFAULT: newlib clib2 clib4)
+       !! NOTE !!     : This option is NOT cached
+       [z] LINK TYPE :  Provide a list of the link type for which you want to
+                        test (DEFAULT: static dynamic)
+       !! NOTE !!     : This option is NOT cached
        [c] clean_tests: Performs a clean on all tests
        [C] clean_build: Performs a clean on the in-place ADTOOLS which will
                         also remove the built cross-compiler binaries. In the
@@ -266,12 +273,11 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         your current system.
 
  TL;DR:
-  If you want to just build ADTOOLS then run the following:
-   - ./adt -j (this checks that you have the necessary libraries)
-   - ./adt -b -g 11 (to build a cross compiler version gcc 11)
+  If you want to just build an ADTOOLS cross-compiler then run the following:
+     ./adt -b
 
-  Then, if you want to build all of the tests
-   - ./adt -x -t
+  Then, if you want to build all of the tests:
+     ./adt -t
 EOF
 }
 
@@ -612,7 +618,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbjqr:g:n:s:m:tS:C opt
+while getopts xp:o:uk:iydbjqr:g:n:s:m:tS:l:z:C opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -681,6 +687,42 @@ do
         TEST_PATTERN="${OPTARG}"
         export TEST_PATTERN
         ;;
+    l)
+	C_LIB_LIST=
+	if [[ ${OPTARG} =~ newlib ]]
+	then
+	    C_LIB_LIST="\"newlib\""
+	fi
+	if [[ ${OPTARG} =~ clib2 ]]
+	then
+	    C_LIB_LIST="${C_LIB_LIST} \"clib2\""
+	fi
+	if [[ ${OPTARG} =~ clib4 ]]
+	then
+	    C_LIB_LIST="${C_LIB_LIST} \"clib4\""
+	fi
+	if [[ -z ${C_LIB_LIST} ]]
+	then
+	    _error "-l can only take \"newlib\" and/or \"clib2\" and/or \"clib4\" as arguments" 106
+	fi
+	export C_LIB_LIST
+	;;
+    z)
+	LINKER_TYPE_LIST=
+	if [[ ${OPTARG} =~ static ]]
+	then
+	    LINKER_TYPE_LIST="\"\""
+	fi
+	if [[ ${OPTARG} =~ dynamic ]]
+	then
+	    LINKER_TYPE_LIST="${LINKER_TYPE_LIST} \"-use-dynld\""
+	fi
+	if [[ -z ${LINKER_TYPE_LIST} ]]
+	then
+	    _error "-z can only take \"dynamic\" and/or \"static\" as arguments" 104
+	fi
+	export LINKER_TYPE_LIST
+	;;
     C)
         do_clean_build=1
         ;;
@@ -701,7 +743,7 @@ then
     exit 0
 fi
 
-# Check for any influention environment variables before continuing
+# Check for any influential environment variables before continuing
 if [[ -n "${ADTOOLS_PREFIX}" ]]
 then
     session_prefix="${ADTOOLS_PREFIX}"

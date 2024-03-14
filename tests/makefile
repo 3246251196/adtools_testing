@@ -5,16 +5,25 @@ LHA_ADD=lha u -q 1>/dev/null 2>&1
 TMP_LOG_RESULTS_FILE=test_build_results.txt
 PREFIX=$(subst /,_,$(subst .,_,$(CROSS_PREFIX)))
 
-# Ensure the created link does not contain the word 'clib4'
-# It does not matter what we call our link since we use it internally:
-# RJD: I guess this was some work-around for which I do not understand!
-CP_ROOT=$(subst clib4,CLIB4,$(PREFIX)_cp_root)
+# Ensure the created link does not contain the word 'clib4' or 'clib2' It does
+# not matter what we call our link since we use it internally:
+#
+# This is a workaround in the case that the prefix contains the string 'clib4'
+# or 'clib2' otherwise the variable $(LOC) in the common.mak will not work as
+# expected during the invocation of `find' for which we seek the SO files in the
+# prefix.
+CP_ROOT=$(subst clib2,CLIB2,$(subst clib4,CLIB4,$(PREFIX)_cp_root))
 
 CLEAN_STAMP=$(PREFIX)_clean_stamp
 export INSPECT_EXE
 export DUMMY_EXE
 export LHA_ADD
 export CP_ROOT
+
+# Prepare the dimensionality of the testing which defaults to the cross product
+# of C_LIB_LIST and LINKER_TYPE_LIST.
+C_LIB_LIST?="newlib clib2 clib4"
+LINKER_TYPE_LIST?="-use-dynld" ""
 
 # Nothing more than a long string of a bash export command that is used when
 # invoking a specific test
@@ -23,6 +32,9 @@ export CP_ROOT
 # START EXPORT STRING
 #######
 ifeq ($(NO_VERBOSE),)
+# We add the linker verbosity in the case of creating a shared object. $(CC) is
+# called without $(LDFLAGS) there, so just add verbsoity options to everything
+# since there is no harm
 CFLAGS_VERBOSE=-v -Wl,--verbose
 LDFLAGS_VERBOSE=-Wl,--verbose
 endif
@@ -71,9 +83,9 @@ ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "adt" script)
 endif
 	ln -s -f "$(CROSS_PREFIX)" $(CP_ROOT) 1>/dev/null 2>&1
-	for C_LIB in "newlib" "clib2" "clib4" ;                                             \
+	for C_LIB in $(C_LIB_LIST) ;                                                        \
 	do                                                                                  \
-		for DYN in "-use-dynld" "" ;                                                \
+		for DYN in $(LINKER_TYPE_LIST) ;                                            \
 		do                                                                          \
 			$(EXPORT) ;                                                         \
 			for TEST in $(tests) ;                                              \
@@ -98,17 +110,6 @@ endif
 			&& cd - 1>/dev/null 2>&1              \
 			&& $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)
 	rm $(TMP_LOG_RESULTS_FILE)
-# Try to locate a clib4.library and add it to the LHA file
-	CLIB4_LIBRARY_LOC=$$(find $(BASE_DIR)/$(ADTOOLS_DIR)/native-build/downloads/clib4 \
-				-name "clib4.library" 2>/dev/null || true ) ;             \
-	if [[ -n $${CLIB4_LIBRARY_LOC} ]] ;                                               \
-	then                                                                              \
-		cp $${CLIB4_LIBRARY_LOC} . ;                                              \
-		cd .. ;                                                                   \
-		$(LHA_ADD) $@ tests/clib4.library ;                                       \
-		cd - 1>/dev/null 2>&1 ;                                                   \
-		rm clib4.library ;                                                        \
-	fi
 # Now, attempt any standalone tests. Do not fail on error, and add them to the archive
 	echo "    Building Standalone tests. No logging is performed for Standalone tests; see their log.txt"
 	mkdir Standalone_Tests
@@ -133,6 +134,7 @@ $(CLEAN_STAMP): $(BASE_DIR)
 
 clean:
 	-$(do_clean)
+	-rm -f clib4.library # in case it exists
 
 # It does not matter which c-library implementation is used for these:
 $(INSPECT_EXE): inspect.c

@@ -122,7 +122,35 @@ ifneq ($(DYN),)
 endif
 	$(call LOG_CMD,Listing Shared Libraries,,)
 	grep -a -o -E "[A-Za-z_0-9]+\.library" $(PROG) 2>/dev/null | sort -u >> $(LOG_FILE)
-
+# Try to locate a clib4.library and add it to the LHA file. We take the one from
+# $(ADTOOLS_DIR) because it may be the case that we are modifying and rebuilding
+# clib4 source and it may be that we are not performing a make install on that
+# rebuilt version which would prevent it from being updated in the
+# $(ADTOOLS_BUILD) dir. In the case that lookup fails, we will fallback to using
+# any clib4.library that is found in CP_ROOT.
+ifeq ($(C_LIB),clib4)
+# Short cut it if the file was already found and placed in ../clib4.library!
+	if [[ ! -f ../clib4.library ]] ;                                                          \
+	then                                                                                      \
+		CLIB4_LIBRARY_LOC=$$(find $(BASE_DIR)/$(ADTOOLS_DIR)/native-build/downloads/clib4 \
+					-name "clib4.library" 2>/dev/null || true ) ;             \
+		if [[ -z $${CLIB4_LIBRARY_LOC} ]] ;                                               \
+		then                                                                              \
+			CLIB4_LIBRARY_LOC=$$(find $(CP_ROOT)                                      \
+					-name "clib4.library" 2>/dev/null || true ) ;             \
+		fi ;                                                                              \
+	else                                                                                      \
+		CLIB4_LIBRARY_LOC=../clib4.library ;                                              \
+	fi ;                                                                                      \
+	if [[ -n $${CLIB4_LIBRARY_LOC} ]] ;                                                       \
+	then                                                                                      \
+		cp $${CLIB4_LIBRARY_LOC} .. ;                                                     \
+		cd .. ;                                                                           \
+		$(LHA_ADD) $@ clib4.library ;                                                     \
+		cd - 1>/dev/null 2>&1 ;                                                           \
+	fi
+endif
+#
 	cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
 	$(LHA_ADD) $(LHA_FILE) $(PROG) $(LOG_FILE) $(RUN_TEST_SCRIPT) $(INSPECT_EXPECTED) \
 		$(INSPECT_EXE_FILE) $(MAP_FILE) $(EXTRA_FILES)

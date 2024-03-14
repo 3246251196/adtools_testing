@@ -1,6 +1,4 @@
 FAILAT 21
-; Used to warn about the molestation of the LIBS: assign
-SETENV LIBSWARNED 0
 
 CD tests
 SET ts `LIST DIRS QUICK NOHEAD`
@@ -19,5 +17,3 @@ FOREACH t IN ${ts}
 END
 UNSET ts
 CD /
-
-UNSETENV LIBSWARNED
