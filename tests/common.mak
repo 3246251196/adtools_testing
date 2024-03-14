@@ -107,7 +107,7 @@ ifneq ($(DYN),)
 		if [[ -z "$${LOC}" ]] ;                                                           \
 		then                                                                              \
 			LOC=$$(find . -name "$${SO}") ;                                           \
-			{ test -f "$${LOC}" && $(LHA_ADD) $(LHA_FILE) "$${LOC}" &&                \
+			{ test -f "$${LOC}" && $(LHA_ADD) $@ "$${LOC}" &&                         \
 				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } ||          \
 				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;           \
 		else                                                                              \
@@ -115,7 +115,7 @@ ifneq ($(DYN),)
 				echo "Needed SO, \"$${SO}\" FOUND" >> $(LOG_FILE) ; } ||          \
 				echo "Needed SO, \"$${SO}\" NOT FOUND" >> $(LOG_FILE) ;           \
 			cd $(TEMP_DIR) ;                                                          \
-			$(LHA_ADD) ../$(LHA_FILE) "$$(basename "$${LOC}")" ;                      \
+			$(LHA_ADD) ../$@ "$$(basename "$${LOC}")" ;                               \
 			cd .. ;                                                                   \
 		fi ;                                                                              \
 	done
@@ -144,16 +144,15 @@ ifeq ($(C_LIB),clib4)
 	fi ;                                                                                      \
 	if [[ -n $${CLIB4_LIBRARY_LOC} ]] ;                                                       \
 	then                                                                                      \
-		cp $${CLIB4_LIBRARY_LOC} .. ;                                                     \
-		cd .. ;                                                                           \
+		cp $${CLIB4_LIBRARY_LOC} .. 2>/dev/null ;                                         \
+		cp $${CLIB4_LIBRARY_LOC} . 2>/dev/null ;                                          \
 		$(LHA_ADD) $@ clib4.library ;                                                     \
-		cd - 1>/dev/null 2>&1 ;                                                           \
+		rm -f $$(basename $${CLIB4_LIBRARY_LOC}) ;                                        \
 	fi
 endif
 #
 	cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
-	$(LHA_ADD) $(LHA_FILE) $(PROG) $(LOG_FILE) $(RUN_TEST_SCRIPT) $(INSPECT_EXPECTED) \
-		$(INSPECT_EXE_FILE) $(MAP_FILE) $(EXTRA_FILES)
+	$(LHA_ADD) $@ $^ $(LOG_FILE) $(INSPECT_EXPECTED) $(INSPECT_EXE_FILE) $(MAP_FILE) $(EXTRA_FILES)
 	rm -f $(INSPECT_EXE_FILE)
 	rm -rf $(TEMP_DIR)
 
