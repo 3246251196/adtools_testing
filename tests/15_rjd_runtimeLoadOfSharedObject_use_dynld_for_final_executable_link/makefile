@@ -8,6 +8,8 @@ ifeq ($(DYN),)
 $(eval $(call DUMMY_TEST))
 else
 
+EXTRA_FILES+=librelo.so
+
 THREAD_IMPL=native
 CFLAGS+=-athread=$(THREAD_IMPL)
 

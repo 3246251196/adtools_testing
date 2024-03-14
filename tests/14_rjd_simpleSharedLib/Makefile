@@ -4,6 +4,8 @@ include ../common.mak
 ifeq ($(C_LIB),clib4)
 SO=libsharedObj.so
 
+EXTRA_FILES+=$(SO)
+
 CFLAGS+=-Wall -Wextra -pedantic
 THREAD_IMPL?=native
 LDFLAGS+=-L. -athread=$(THREAD_IMPL)

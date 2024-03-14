@@ -1,21 +1,21 @@
 FAILAT 21
-SET CLIB2LIBLOC "`cd`///"
+SET CLIB4LIBLOC "`cd`///"
 
-; Assume that if clib2.library exists that we want to use that in preference
-IF EXISTS "${CLIB2LIBLOC}clib2.library"
+; Assume that if CLIB4.library exists that we want to use that in preference
+IF EXISTS "${CLIB4LIBLOC}clib4.library"
 	IF ${LIBSWARNED} EQ 0
-		ECHO "INFO: During testing your LIBS: assign will be prepended with ${CLIB2LIBLOC}"
+		ECHO "INFO: During testing your LIBS: assign will be prepended with ${CLIB4LIBLOC}"
 		ECHO "INFO: When testing is finished it should be restored to its original value."
 		ECHO "INFO: In the case of a crash / guru it may not be so you should check manually in such a case"
 		SETENV LIBSWARNED 1
 	ENDIF
-	ASSIGN LIBS: "${CLIB2LIBLOC}" PREPEND
+	ASSIGN LIBS: "${CLIB4LIBLOC}" PREPEND
 ENDIF
 
 execute `LIST QUICK FILES NOHEAD run#?.script`
 
-IF EXISTS "${CLIB2LIBLOC}clib2.library"
-	ASSIGN LIBS: "${CLIB2LIBLOC}" REMOVE
+IF EXISTS "${CLIB4LIBLOC}clib4.library"
+	ASSIGN LIBS: "${CLIB4LIBLOC}" REMOVE
 ENDIF
 
-UNSET CLIB2LIBLOC
+UNSET CLIB4LIBLOC

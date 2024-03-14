@@ -6,6 +6,11 @@ endif
 # User modifiable variables (can be extended in the test's makefile):
 #
 # Any files in this variable are also added to $(FINAL_LHA)
+#
+# Another use case this variable is needed for is the following use case: when
+# the program tests dlopen and therefore does not link to a library at link
+# time, but opens it at runtime. It is likely that you will need to add the
+# library (.so) file into this variable so that it is included in the LHA file.
 EXTRA_FILES=
 #
 # Any files in here are also necessary (as well as the existence of $(PROG)) for
