@@ -22,7 +22,7 @@ export CP_ROOT
 
 # Prepare the dimensionality of the testing which defaults to the cross product
 # of C_LIB_LIST and LINKER_TYPE_LIST.
-C_LIB_LIST?="newlib clib2 clib4"
+C_LIB_LIST?="newlib" "clib2" "clib4"
 LINKER_TYPE_LIST?="-use-dynld" ""
 
 # Nothing more than a long string of a bash export command that is used when
