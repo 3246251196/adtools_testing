@@ -4,7 +4,7 @@
 ### Ideal scenario (TL;DR)
 It should be as easy as the following steps:
 - ./adt -b (if you want to build a cross compiler)
-- ./adt -t (if you want to run tests using that cross compiler)
+- ./adt -t (if you want to build the tests using that cross compiler)
 - copy the adt_tests.lha to the AmigaOne machine
 - lha x adt_tests.lha
 - execute run_all_script, OR,
