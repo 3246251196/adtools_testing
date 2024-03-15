@@ -10,9 +10,7 @@ It should be as easy as the following steps:
 - execute run_all_script, OR,
 - cd into the specific test case variant of interest and invoke
   "execute run_*.script", OR,
-- run the executable directly, yourself (you may need to make
-  clib4.library available to the LIBS: assign manually if you run it
-  yourself versus using the user.script)
+- run the executable directly, yourself
 - ./adt -c will then clean out the tests directory, recursively
 
 ### Goal
