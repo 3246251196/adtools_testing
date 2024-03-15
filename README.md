@@ -2,7 +2,7 @@
 
 ## Using this repository
 ### Ideal scenario (TL;DR)
-It should be as easy is the following steps:
+It should be as easy as the following steps:
 - ./adt -b (if you want to build a cross compiler)
 - ./adt -t (if you want to run tests using that cross compiler)
 - copy the adt_tests.lha to the AmigaOne machine
