@@ -54,6 +54,10 @@ LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;     
 	echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;              \
 	$(2) 1>> $(LOG_FILE) 2>&1
 
+# Default to create a .o file from a .c using the log command above
+%.o: %.c
+	$(call LOG_CMD,Compile Unit,$(CC) $(CFLAGS) -o $@ $<)
+
 # For test that do not care about a particular variant:
 define DUMMY_TEST
 $(PROG):
