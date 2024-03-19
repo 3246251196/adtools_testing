@@ -206,7 +206,7 @@ The test framework will never do anything with this file. It is just
 useful for those that want to pull this repository down and run the
 tests immediately in their own way.
 
-#### Integration tests' user configurable variables
+#### Integration tests' user configurable Makefile variables
 ##### Deletion of files (variable: CLEAN_ME)
 In the case you are integrating a test into the test framework and you
 want to forcefully request certain files to be deleted when using ./adt
@@ -215,6 +215,13 @@ that you want to delete. See test 13_constructor_destructor for an
 example. By default, the testing framework will delete commonly
 anticipated files, such as those that have an extension of .so or .o,
 but there are always exceptions.
+
+##### Extra files (variable: EXTRA_FILES)
+Add any files to this variable and they will be included into the test
+variant. Look at the Makefile in "14_rjd_simpleSharedLib" for an
+example. Without adding the shared object that will be loaded at runtime
+to the EXTRA_FILES variable, it would not be added to the overall
+variant LHA file.
 
 ##### Mandatory depedencies (variable: NEED_DEP)
 The framework checks for the existence, finally, of "$(PROG)". As stated
