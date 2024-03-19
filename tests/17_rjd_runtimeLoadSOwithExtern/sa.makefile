@@ -2,14 +2,20 @@ ifeq ($(V),1)
 VERBOSE:=-v -Wl,--verbose
 endif
 
+ifeq ($(shell uname),AmigaOS)
 CC=ppc-amigaos-gcc
-CFLAGS=-mcrt=clib4 -Wall -Wextra $(VERBOSE)
+CFLAGS=-mcrt=clib4
 LDFLAGS=-use-dynld
+AOS4_THREADING=-athread=native
+endif
+
+CFLAGS+=-Wall -Wextra $(VERBOSE)
+
 .PHONY: all
 all: main
 
 main: main.o librelo.so extern.o
-	$(CC) $(CFLAGS) -o  $@ $< $(LDFLAGS) -athread=native
+	$(CC) $(CFLAGS) -o  $@ $< $(LDFLAGS) $(AOS4_THREADING)
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c -o $@ $<
