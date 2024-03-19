@@ -13,7 +13,7 @@ EXTRA_FILES+=librelo.so
 THREAD_IMPL=native
 CFLAGS+=-athread=$(THREAD_IMPL)
 
-$(PROG): main.c librelo.so
+$(PROG): main.c librelo.so extern.o
 # Not linked here, the function will be loaded at runtime
 	$(call LOG_CMD,Link,$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS))
 

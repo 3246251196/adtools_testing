@@ -8,13 +8,13 @@ LDFLAGS=-use-dynld
 .PHONY: all
 all: main
 
-main: main.o librelo.so
+main: main.o librelo.so extern.o
 	$(CC) $(CFLAGS) -o  $@ $< $(LDFLAGS) -athread=native
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-relo.o: relo.c extern.o
+relo.o: relo.c
 	$(CC) $(CFLAGS) -c -o $@ $< -fPIC
 
 librelo.so: relo.o

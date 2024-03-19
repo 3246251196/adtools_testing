@@ -1,6 +1,11 @@
 #include <dlfcn.h>
 #include <stdio.h>
 
+void someExternFn( void )
+{
+  ;
+}
+
 const char so_str[] = "librelo.so", sym_str[] = "add42";
 
 int main( int argc, char *argv[] )
