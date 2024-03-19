@@ -3,7 +3,7 @@
 
 void someExternFn( void )
 {
-  ;
+  printf("Inside main's someExternFn()\n");
 }
 
 const char so_str[] = "librelo.so", sym_str[] = "add42";
@@ -37,6 +37,8 @@ int main( int argc, char *argv[] )
     {
       dlclose( dl );
     }
+
+  someExternFn();
 
   return ret;
 }

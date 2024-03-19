@@ -8,12 +8,12 @@ ifeq ($(DYN),)
 $(eval $(call DUMMY_TEST))
 else
 
-EXTRA_FILES+=librelo.so
+EXTRA_FILES+=librelo.so libextern.so
 
 THREAD_IMPL=native
 CFLAGS+=-athread=$(THREAD_IMPL)
 
-$(PROG): main.c librelo.so extern.o
+$(PROG): main.o librelo.so libextern.so
 # Not linked here, the function will be loaded at runtime
 	$(call LOG_CMD,Link,$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS))
 
@@ -23,7 +23,15 @@ librelo.so: relo.o
 relo.o: relo.c
 	$(call LOG_CMD,Create Relocatable Object,$(CC) $(CFLAGS) -c -fPIC -o $@ $<)
 
+libextern.so: extern.o
+	$(call LOG_CMD,Create Shared Object,$(CC) $(CFLAGS) -shared -o $@ $<)
+
+extern.o: relo.c
+	$(call LOG_CMD,Create Relocatable Object,$(CC) $(CFLAGS) -c -fPIC -o $@ $<)
+
 endif
 endif
 
+#@ Inside extern's someExternFn()
 #@ Answer: 84
+#@ Inside main's someExternFn()
