@@ -11,7 +11,7 @@ else
 EXTRA_FILES+=librelo.so libextern.so
 
 THREAD_IMPL=native
-CFLAGS+=-athread=$(THREAD_IMPL)
+LDFLAGS+=-athread=$(THREAD_IMPL)
 
 $(PROG): main.o librelo.so libextern.so
 # Not linked here, the function will be loaded at runtime
@@ -26,7 +26,7 @@ relo.o: relo.c
 libextern.so: extern.o
 	$(call LOG_CMD,Create Shared Object,$(CC) $(CFLAGS) -shared -o $@ $<)
 
-extern.o: relo.c
+extern.o: extern.c
 	$(call LOG_CMD,Create Relocatable Object,$(CC) $(CFLAGS) -c -fPIC -o $@ $<)
 
 endif
