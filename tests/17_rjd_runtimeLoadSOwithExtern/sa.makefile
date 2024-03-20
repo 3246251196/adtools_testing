@@ -24,9 +24,11 @@ relo.o: relo.c
 
 librelo.so: relo.o
 	$(CC) $(CFLAGS) -shared -o $@ $<
+
 libextern.so: extern.o
 	$(CC) $(CFLAGS) -shared -o $@ $<
 
 extern.o: extern.c
+	$(CC) $(CFLAGS) -c -o $@ $< -fPIC
 clean:
 	-rm *.o *.so main
