@@ -61,6 +61,7 @@ LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;     
 # For test that do not care about a particular variant:
 define DUMMY_TEST
 $(PROG):
+	echo "    BUILDING DUMMY TEST FOR      \"$(FILE_INFIX)\""
 	$(call LOG_CMD,DUMMY_TEST,cp ../$(DUMMY_EXE) $(PROG))
 endef
 
