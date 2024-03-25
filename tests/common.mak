@@ -5,14 +5,20 @@ endif
 
 # User modifiable variables (can be extended in the test's makefile):
 #
+# ===
 # Any files in this variable are also added to $(FINAL_LHA)
 #
 # Another use case this variable is needed for is the following use case: when
 # the program tests dlopen and therefore does not link to a library at link
 # time, but opens it at runtime. It is likely that you will need to add the
 # library (.so) file into this variable so that it is included in the LHA file.
-EXTRA_FILES=
 #
+# By default, all files matching the patterns below will be added to each
+# variant:
+EXTRA_FILES=$(wildcard *.c *.h *.asm *.s *.S *.cpp *.hpp *.cxx *.hpp \
+				*.hxx *makefile* *Makefile* *MAKEFILE* )
+#
+# ===
 # Any files in here are also necessary (as well as the existence of $(PROG)) for
 # a test to show itself as successful. The framework assumes that as long as
 # $(PROG) exists - i.e. that an executable was finally generated - then the
@@ -20,6 +26,7 @@ EXTRA_FILES=
 # desire. See also the NEEDED_DEP_CHECK variable below
 NEED_DEP=
 #
+# ===
 # The following is not really used in the framework, but it is worth mentioning
 # it. In ADTOOLS we have an AmigaOS4 specific implementation of threading. The
 # -athread option specifies which implementation should be used. For the longest

@@ -221,7 +221,8 @@ Add any files to this variable and they will be included into the test
 variant. Look at the Makefile in "14_rjd_simpleSharedLib" for an
 example. Without adding the shared object that will be loaded at runtime
 to the EXTRA_FILES variable, it would not be added to the overall
-variant LHA file.
+variant LHA file. By default the test framework tries to add all source
+files and makefiles to each variant.
 
 ##### Mandatory depedencies (variable: NEED_DEP)
 The framework checks for the existence, finally, of "$(PROG)". As stated
