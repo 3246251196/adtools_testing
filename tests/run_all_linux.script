@@ -3,9 +3,10 @@
 cd tests
 for t in $(ls -d */)
 do
-    cd "$t"
+    cd "$t" || exit 1
     for v in *.lha
     do
 	lha x "$v" -w "${v:0:-4}"
     done
+    cd ..
 done
