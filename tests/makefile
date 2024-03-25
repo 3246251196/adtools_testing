@@ -102,13 +102,14 @@ ifneq ($(TEST_PATTERN),)
 	echo "!!! NOTE !!! This file only contains the build results for test(s): \"$(tests) $(sa_tests)\"" \
 	" due to the use of the -S (test pattern subset option)" >> $(TMP_LOG_RESULTS_FILE)
 endif
-	cd .. && $(LHA_ADD)                                   \
-		$@                                            \
-		tests/*/*.lha                                 \
-		tests/$(EXECUTE_SCRIPT)                       \
-		tests/$(TMP_LOG_RESULTS_FILE)                 \
-			&& cd - 1>/dev/null 2>&1              \
-			&& $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)
+	cd .. && $(LHA_ADD)                                         \
+		$@                                                  \
+		tests/*/*.lha                                       \
+		tests/$(EXECUTE_SCRIPT)                             \
+		tests/$(TMP_LOG_RESULTS_FILE)                       \
+			&& cd - 1>/dev/null 2>&1                    \
+			&& $(LHA_ADD) ../$@ $(RUN_ALL_SCRIPT)       \
+			&& $(LHA_ADD) ../$@ $(RUN_ALL_LINUX_SCRIPT)
 	rm $(TMP_LOG_RESULTS_FILE)
 # Now, attempt any standalone tests. Do not fail on error, and add them to the archive
 	echo "    Building Standalone tests. No logging is performed for Standalone tests; see their log.txt"

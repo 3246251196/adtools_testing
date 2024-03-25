@@ -27,6 +27,7 @@ readonly ADTOOLS_DIR=adt_adtools
 readonly TESTS_DIR=tests
 readonly SCRIPT_INVOCATION=1
 readonly RUN_ALL_SCRIPT=run_all.script
+readonly RUN_ALL_LINUX_SCRIPT=run_all_linux.script
 readonly EXECUTE_SCRIPT=user.script
 readonly SESSION_CACHE="${ORIG_DIR}/.adt_session.cache"
 readonly ADT_LOG_FILE=adt.log
@@ -607,6 +608,8 @@ function TESTS
     _info "the \"user.script\" then you will have to ensure that clib4.library is available in LIBS: manually"
     _info "or in the current program path of the executable"
     _info ""
+    _info "In the case that you want to extract on a linux machine then extract and run \"run_all_linux.script\""
+    _info ""
     _info "NOTE! Do not expect all builds to pass for tests. It may be expected that some fail. Inspect the logs for"
     _info "      more information"
     _info ""
@@ -799,6 +802,7 @@ export ORIG_DIR
 export SCRIPT_INVOCATION
 export FINAL_LHA
 export RUN_ALL_SCRIPT
+export RUN_ALL_LINUX_SCRIPT
 export EXECUTE_SCRIPT
 export CROSS_PREFIX
 export SDK_VERSION

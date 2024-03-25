@@ -1,0 +1,11 @@
+#!/bin/bash --
+
+cd tests
+for t in $(ls -d */)
+do
+    cd "$t"
+    for v in *.lha
+    do
+	lha x "$v" -w "${v:0:-4}"
+    done
+done
