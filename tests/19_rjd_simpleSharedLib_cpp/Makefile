@@ -20,8 +20,8 @@ $(SO): $(patsubst lib%.so,%.o,$(SO))
 
 $(patsubst lib%.so,%.o,$(SO)): $(patsubst lib%.so,%.cpp,$(SO))
 	$(call LOG_CMD,Creating FPIC object,$(CXX) -c -o $@ $< -fPIC $(CXXFLAGS))
+
+#@ Count: 100000000
 else
 $(eval $(call DUMMY_TEST))
 endif
-
-#@ Count: 100000000
