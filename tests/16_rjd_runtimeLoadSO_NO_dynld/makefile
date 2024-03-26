@@ -26,7 +26,7 @@ librelo.so: relo.o
 relo.o: relo.c
 	$(call LOG_CMD,Create Relocatable Object,$(CC) $(CFLAGS) -c -fPIC -o $@ $<)
 
-endif
-endif
 
 #@ Answer: 84
+endif
+endif

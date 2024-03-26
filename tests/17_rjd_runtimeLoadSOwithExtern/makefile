@@ -29,9 +29,9 @@ libextern.so: extern.o
 extern.o: extern.c
 	$(call LOG_CMD,Create Relocatable Object,$(CC) $(CFLAGS) -c -fPIC -o $@ $<)
 
-endif
-endif
-
 #@ Inside extern's someExternFn()
 #@ Answer: 84
 #@ Inside main's someExternFn()
+
+endif
+endif
