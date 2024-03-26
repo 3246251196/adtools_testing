@@ -9,8 +9,10 @@ endif
 .PHONY: all
 all: main
 
+CFLAGS+=-athread=native
+
 main: main.o librelo.so
-	$(CC) $(CFLAGS) -use-dynld -athread=native -o $@ $<
+	$(CC) $(CFLAGS) -use-dynld -o $@ $<
 
 main.o: main.c
 	$(CC) $(CFLAGS) -c -o $@ $<

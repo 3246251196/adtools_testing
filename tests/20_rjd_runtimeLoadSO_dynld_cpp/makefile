@@ -11,7 +11,7 @@ else
 EXTRA_FILES+=librelo.so
 
 THREAD_IMPL=native
-CFLAGS+=-athread=$(THREAD_IMPL)
+CXXFLAGS+=-athread=$(THREAD_IMPL)
 
 $(PROG): main.cpp librelo.so
 # Not linked here, the function will be loaded at runtime

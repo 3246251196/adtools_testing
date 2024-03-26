@@ -1,5 +1,5 @@
 CC=ppc-amigaos-gcc
-CFLAGS=-mcrt=clib4 -Wall -Wextra
+CFLAGS=-mcrt=clib4 -Wall -Wextra -athread=native
 .PHONY: all
 all: main
 
