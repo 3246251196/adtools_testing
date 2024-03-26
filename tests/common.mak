@@ -23,7 +23,7 @@ EXTRA_FILES=$(wildcard *.c *.h *.asm *.s *.S *.cpp *.hpp *.cxx *.hpp \
 # a test to show itself as successful. The framework assumes that as long as
 # $(PROG) exists - i.e. that an executable was finally generated - then the
 # test/variant was successful. This is commonly the case, but not always the
-# desire. See also the NEEDED_DEP_CHECK variable below
+# desire
 NEED_DEP=
 #
 # ===
@@ -88,24 +88,14 @@ GREP_OPT_C_LIB=$(C_LIB)
 ifeq ($(C_LIB),newlib)
 	GREP_OPT_C_LIB=-v '/clib2/\|/clib4/'
 endif
-# We also want to restrict searches to those with "ppc-amigaos" in the
-# path. This helps the situation where the build was installed using
-# the -o option: for instance, the cross compiler may have been
-# installed to /usr. When attempting to invoke FIND to figure out
-# which Shared Object to add to the archive, we may match on non cross
-# compiler objects! This is handled directly below.
 
-NEEDED_DEP_CHECK=-f $(PROG)
-ifneq ($(NEED_DEP),)
-NEEDED_DEP_CHECK+=$(foreach DEP,$(NEED_DEP),&& -f $(DEP))
-endif
 .PHONY: clean all
 all: $(LHA_FILE)
-	if [[ $(NEEDED_DEP_CHECK) ]] ;                                      \
-	then                                                                \
-		echo "    (Re)Built test/variant       \"$(FILE_INFIX)\"" ; \
-	else                                                                \
-		echo "    Failed to build test/variant \"$(FILE_INFIX)\"" ; \
+	if [[ -f '$(PROG)' $(if $(NEED_DEP),$(foreach DEP,$(NEED_DEP),&& -f '$(DEP)')) ]] ; \
+	then                                                                                \
+		echo "    (Re)Built test/variant       \"$(FILE_INFIX)\"" ;                 \
+	else                                                                                \
+		echo "    Failed to build test/variant \"$(FILE_INFIX)\"" ;                 \
 	fi
 
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
