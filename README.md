@@ -77,7 +77,9 @@ advised that the main makefile will not be usable outside of the testing
 framework environment which is generally a linux machine that is
 building the tests. In most cases, there is a standalone makefile
 generally named sa.makefile that can be used instead if it is desired to
-re-buld the program on the AmigaOne machine.
+re-buld the program on the AmigaOne machine but, it should be noted that
+the sa.makefile is not gauranteed to be the same as the framework
+makefile since these may become unsynchronised.
 
 It should be understood that some tests may fail to build for differently
 configured cross-compilers. This is not necessarily a failure. For example,
