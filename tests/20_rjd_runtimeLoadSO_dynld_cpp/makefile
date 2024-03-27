@@ -8,6 +8,7 @@ ifeq ($(DYN),)
 $(eval $(call DUMMY_TEST))
 else
 
+NEED_DEP+=librelo.so
 EXTRA_FILES+=librelo.so
 
 THREAD_IMPL=native
@@ -23,7 +24,7 @@ librelo.so: relo.o
 relo.o: relo.cpp
 	$(call LOG_CMD,Create Relocatable Object,$(CXX) $(CXXFLAGS) -c -fPIC -o $@ $<)
 
-#@ Answer: 84
+#@ Answer: 126
 
 endif
 endif
