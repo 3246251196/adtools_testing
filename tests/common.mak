@@ -69,8 +69,9 @@ LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;     
 
 # For test that do not care about a particular variant:
 define DUMMY_TEST
+DUMMY=1
 $(PROG):
-	echo "    BUILDING DUMMY TEST FOR      \"$(FILE_INFIX)\""
+	echo "    (Re)Built test/variant DUMMY \"$(FILE_INFIX)\""
 	$(call LOG_CMD,DUMMY_TEST,cp ../$(DUMMY_EXE) $(PROG))
 endef
 
@@ -91,11 +92,15 @@ endif
 
 .PHONY: clean all
 all: $(LHA_FILE)
-	if [[ -f '$(PROG)' $(if $(NEED_DEP),$(foreach DEP,$(NEED_DEP),&& -f '$(DEP)')) ]] ; \
-	then                                                                                \
-		echo "    (Re)Built test/variant       \"$(FILE_INFIX)\"" ;                 \
-	else                                                                                \
-		echo "    Failed to build test/variant \"$(FILE_INFIX)\"" ;                 \
+	# If it is a dummy test then we have already stated such
+	if [[ -z "$(DUMMY)" ]] ;                                                                    \
+	then                                                                                        \
+		if [[ -f '$(PROG)' $(if $(NEED_DEP),$(foreach DEP,$(NEED_DEP),&& -f '$(DEP)')) ]] ; \
+		then                                                                                \
+			echo "    (Re)Built test/variant       \"$(FILE_INFIX)\"" ;                 \
+		else                                                                                \
+			echo "    Failed to build test/variant \"$(FILE_INFIX)\"" ;                 \
+		fi ;                                                                                \
 	fi
 
 $(LHA_FILE): $(PROG) $(RUN_TEST_SCRIPT)
