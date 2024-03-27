@@ -38,37 +38,44 @@ of a folder named "tests" and a script (without executable permissions)
 named "run_all.script" which can be invoked with "execute
 run_all.script" on the AmigaOne machine.  "run_all.script" will finalise
 the unpacking of the tests and automatically invoke "user.script" on
-each test case variant. By default, the "user.script" will execute each
-test variant. Be aware that testing incurs the risk of crashing your
-machine! For each test there are 6 variants: 3 variants of c library
-version (newlib, clib2 and clib4) and 2 variants of link type (dynamic
-and static). In the case of Shared Object creation, the test framework
-will copy any necessary SO files into the directory for that variant
-(Note: If your test creates a Shared Object and the executable needs
-that Shared Object then the test framework will automatically copy that
-into the LHA file. But, if your test relies on some non
-compiler/C-LIBRARY Shared Object that you installed into the SDK path
-(CROSS_PREFIX) - such as libpng.so that is installed into
-/sdk/newlib/lib/libpng.so then that file will not be added. Only
-compiler/C-LIBRARY Shared Objects in the CROSS_PREFIX are copied. You
-would have to manually copy such a Shared Object into the test
-directory). The ELF.LIBRARY will load local SO files in preference. For
-each executable binary, if the required Shared Object cannot be found in
-either the current test directory or the installed location of the
-ADTOOLS cross compiler, no warning will be issued. No Amiga Shared
-Libraries are sought and added to the LHA for that test variant;
-instead, it is expected that those Shared Libraries will exist on the
-AmigaOne machine invoking the test. The only exception to this is
-"clib4.library"; the test framework shall also add the "clib4.library"
-to the final LHA file, "\<PREFIX>adt_tests.lha". It does this be
-searching two locations and taking the first one it finds. Firstly, the
-assumption is that the used compiler is one built by this script, so the
-clib4.library is searched for in the cloned location of the ADTOOLS
-repository, i.e. the source code. The reason for this is that it may be
-that you are modifying the clib4 source code but not invoking "make
-install". The fallback location is the CROSS_PREFIX which is set by the
-framework is essentially the installation directory of the cross
-compiler SDK.
+each test case variant. Each variant, itself, is compressed inside
+"\<PREFIX>adt_tests.lha" which is knows as the variant LHA. By default,
+the "user.script" will execute each test variant. Be aware that testing
+incurs the risk of crashing your machine! For each test there are 6
+variants: 3 variants of c library version (newlib, clib2 and clib4; at
+least, there are 6 if the GCC compiler supports clib4, otherwise there
+are just 4) and 2 variants of link type (dynamic and static). In the
+case of Shared Object creation, the test framework will copy any
+necessary SO files into the directory for that variant (Note: If your
+test creates a Shared Object and the executable needs that Shared Object
+then the test framework will automatically copy that into the LHA
+file. But, if your test relies on some non compiler/C-LIBRARY Shared
+Object that you installed into the SDK path (CROSS_PREFIX) - such as
+libpng.so that is installed into /sdk/newlib/lib/libpng.so then that
+file will not be added. Only compiler/C-LIBRARY Shared Objects in the
+CROSS_PREFIX are copied. You would have to manually copy such a Shared
+Object into the test directory). The ELF.LIBRARY will load local SO
+files in preference. For each executable binary, if the required Shared
+Object cannot be found in either the current test directory or the
+installed location of the ADTOOLS cross compiler, no warning will be
+issued. No Amiga Shared Libraries are sought and added to the LHA for
+that test variant; instead, it is expected that those Shared Libraries
+will exist on the AmigaOne machine invoking the test. The only exception
+to this is "clib4.library"; the test framework shall also add the
+"clib4.library" to the variant LHA file. It does this be searching two
+locations and taking the first one it finds. Firstly, the assumption is
+that the used compiler is one built by this script, so the clib4.library
+is searched for in the cloned location of the ADTOOLS repository,
+i.e. the source code. The reason for this is that it may be that you are
+modifying the clib4 source code but not invoking "make install". The
+fallback location is the CROSS_PREFIX which is set by the framework is
+essentially the installation directory of the cross compiler SDK.
+
+Each variant LHA will contain the source code and generated object or
+library files. Be advised that the makefile will not be usable outside
+of the testing framework environment. In most cases, there is a
+standalone makefile generally named sa.makefile that could be used
+instead if it is desired to re-buld the program on the AmigaOne machine.
 
 It should be understood that some tests may fail to build for differently
 configured cross-compilers. This is not necessarily a failure. For example,

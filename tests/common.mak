@@ -15,8 +15,12 @@ endif
 #
 # By default, all files matching the patterns below will be added to each
 # variant:
+#
+# TODO: We add *.so into this which is already handled down below when
+#       checking through readelf's NEEDED sections. Is this a good or
+#       bad thing?
 EXTRA_FILES=$(wildcard *.c *.h *.asm *.s *.S *.cpp *.hpp *.cxx *.hpp \
-				*.hxx *makefile* *Makefile* *MAKEFILE* )
+		*.hxx *makefile* *Makefile* *MAKEFILE* *.a *.o *.so )
 #
 # ===
 # Any files in here are also necessary (as well as the existence of $(PROG)) for
