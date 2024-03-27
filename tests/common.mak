@@ -49,17 +49,26 @@ INSPECT_EXPECTED=inspect_$(FILE_INFIX).expected
 INSPECT_STDOUT=inspect_$(FILE_INFIX).stdout
 INSPECT_STDERR=inspect_$(FILE_INFIX).stderr
 INSPECT_EXE_FILE=inspect_$(FILE_INFIX)_$(INSPECT_EXE)
-MAP_FILE=$(PROG).map
-TEMP_DIR=temp_$(FILE_INFIX).tmp # We need this for parallel jobs otherwise the located libraries may become corrupt
+# We need this for parallel jobs otherwise the located libraries may become corrupt
+TEMP_DIR=temp_$(FILE_INFIX).tmp
 
-LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;           \
-	echo  "TIME STAMP                     : $$(date)" >> $(LOG_FILE) ;            \
-	echo  "TARGET                         : $@" >> $(LOG_FILE) ;                  \
-	echo  "PHASE                          : $(1)" >> $(LOG_FILE) ;                \
-	echo  "COMMAND                        : $(2)" >> $(LOG_FILE) ;                \
-	echo  "COMMAND OUTPUT (STDOUT/STDERR) : See following lines" >> $(LOG_FILE) ; \
-	echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;              \
-	$(2) 1>> $(LOG_FILE) 2>&1
+# A "function" which should be called from makefiles. The horrid SED
+# stuff exists in the case that the actual command - itself - contains
+# commas. Make is ruthless, a comma will mean that that is the end of
+# the argument. This "function" allows wrapping an argument in double
+# parens `(( ... ))' that can then include a comma. This is useful in
+# the following case:
+#
+# $(call LOG_CMD, Final Linking of the Executable,(($(CC) $(LDFLAGS) -Wl,-Map=map.out)))
+# Notice that the last argument contains a comma:
+LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#"                              >> $(LOG_FILE) ;    \
+	echo  "TIME STAMP                     : $$(date)"                               >> $(LOG_FILE) ;    \
+	echo  "TARGET                         : $@$(3)"                                 >> $(LOG_FILE) ;    \
+	echo  "PHASE                          : $(1)"                                   >> $(LOG_FILE) ;    \
+	echo  "COMMAND                        : $$(echo '$(2)' | sed 's/^((\|))$$//g')" >> $(LOG_FILE) ;    \
+	echo  "COMMAND OUTPUT (STDOUT/STDERR) : See following lines"                    >> $(LOG_FILE) ;    \
+	echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#"                                 >> $(LOG_FILE) ;    \
+	$$(echo '$(2)' | sed 's/^((\|))$$//g')                                         1>> $(LOG_FILE) 2>&1
 
 # Default to create a .o file from a .c using the log command above.
 %.o: %.c
@@ -67,12 +76,18 @@ LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#" >> $(LOG_FILE) ;     
 %.o: %.cpp
 	$(call LOG_CMD,Compile Unit,$(CXX) $(CFLAGS) -c -o $@ $<)
 
-# For test that do not care about a particular variant:
+# For test that do not care about a particular variant just provide a
+# dummy test that passes.
+#
+# Unfortunately, we need to do some crazy patching due to double
+# expansion. Once for the call and then again when the rule actually
+# gets executed - otherwise, we lose the dollar signs; hence, the needed
+# subst function
 define DUMMY_TEST
 DUMMY=1
 $(PROG):
 	echo "    (Re)Built test/variant DUMMY \"$(FILE_INFIX)\""
-	$(call LOG_CMD,DUMMY_TEST,cp ../$(DUMMY_EXE) $(PROG))
+	$(subst $$,$$$$,$(call LOG_CMD,DUMMY_TEST,cp ../$(DUMMY_EXE) $(PROG),$(PROG) ($(DUMMY_EXE))))
 endef
 
 # Unfortunately, the compiler libraries for newlib are not in a folder
@@ -161,7 +176,7 @@ ifeq ($(C_LIB),clib4)
 endif
 #
 	cp ../$(INSPECT_EXE) $(INSPECT_EXE_FILE) # We know that the inspection exe is one level up.
-	$(LHA_ADD) $@ $^ $(LOG_FILE) $(INSPECT_EXPECTED) $(INSPECT_EXE_FILE) $(MAP_FILE) $(EXTRA_FILES)
+	$(LHA_ADD) $@ $^ $(LOG_FILE) $(INSPECT_EXPECTED) $(INSPECT_EXE_FILE) $(EXTRA_FILES)
 	rm -f $(INSPECT_EXE_FILE)
 	rm -rf $(TEMP_DIR)
 
