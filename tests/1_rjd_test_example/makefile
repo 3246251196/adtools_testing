@@ -21,10 +21,18 @@ CXXFLAGS+=-Wall -Werror -pedantic -std=c++11
 THREAD_IMPL?=native
 LDFLAGS+=-athread=$(THREAD_IMPL)
 
+MAP_FILE=out.map
+
+# Files that are also included in the variant LHA file
+EXTRA_FILES+=$(MAP_FILE)
+
 # $(PROG) is the only necessary rule.
 # Note the use of $(call) to write to the log file
 $(PROG): main_$(FILE_INFIX).o
-	$(call LOG_CMD,Link,$(CXX) $(LDFLAGS) -o $@ $^)
+	# Notice that the last argument must be wrapped in double parens
+	# IF it includes a comma, otherwise make will treat the comma as
+	# the end of the argument!
+	$(call LOG_CMD,Link,(($(CXX) $(LDFLAGS) -Wl,-Map=$(MAP_FILE) -o $@ $^)))
 	$(call LOG_CMD,Readelf,$(READELF) -d $(PROG))
 
 main_$(FILE_INFIX).o: main.cpp
