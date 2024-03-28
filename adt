@@ -1,6 +1,7 @@
 #!/bin/bash --
 set -o pipefail
 
+
 do_build=0
 just_preq=0
 do_clone_only=0
@@ -22,6 +23,7 @@ adtools_repo_branch=master
 just_continue=0
 no_cache=0
 DEBUG_MAKE=0
+append_mode=0
 
 readonly ORIG_DIR="$(pwd)"
 readonly ADTOOLS_DIR=adt_adtools
@@ -85,6 +87,7 @@ session_prefix="${session_prefix}"
 gcc_path="${gcc_path}"
 adtools_repo_loc="${adtools_repo_loc}"
 adtools_repo_branch="${adtools_repo_branch}"
+append_mode="${append_mode}"
 
 # ADTOOLS_MOD_SCRIPT="${ADTOOLS_MOD_SCRIPT}"
 SDK_VERSION="${SDK_VERSION}"
@@ -145,7 +148,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>]
   ===
   TESTS:
-  -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"] [-h]
+  -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"] [-h] [-a]
   ===
   CLEAN:
   -c | -C
@@ -273,6 +276,8 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
        [h] debug make : Enable some more debugging information in the case of
                         errors when running the makefile for a test
        !! NOTE !!     : This option is NOT cached
+       [a] append mode: When running the tests do not delete the final LHA
+                        file and do not clean up all tests before re-running
        [c] clean_tests: Performs a clean on all tests
        [C] clean_build: Performs a clean on the in-place ADTOOLS which will
                         also remove the built cross-compiler binaries. In the
@@ -603,7 +608,15 @@ function TESTS
 {
     # Arbitrary check
     which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross-compiler on the path."\
-" You may have forgotten to set the prefix with option -p or build the cross compiler or specify the -u option or use the -x option to retain your previously cached settings" 50
+" You may have forgotten to set the prefix with option -p or build the cross compiler or specify the"\
+"-u option or use the -x option to retain your previously cached settings" 50
+
+    # The default action is to delete the lha, clean the tests and re-run
+    if [[ "${append_mode}" == 0 ]]
+    then
+	rm -f "${FINAL_LHA}"
+	make -s -C "${TESTS_DIR}" clean
+    fi
 
     _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
     _info "If errors occur the look at the relevant log file in the test directory"
@@ -625,6 +638,13 @@ function TESTS
     _info "      more information"
     _info ""
     _info "NOTE! You MUST clean out the tests if you want to re-build them all again: \"./adt -c\""
+
+    # And, finally, clean up if not in append mode
+    if [[ "${append_mode}" == 0 ]]
+    then
+	rm -f "${FINAL_LHA}"
+	make -s -C "${TESTS_DIR}" clean
+    fi
 }
 
 if (( $# == 0 ))
@@ -634,7 +654,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbjqr:g:n:s:m:tS:l:z:hcC opt
+while getopts xp:o:uk:iydbjqr:g:n:s:m:tS:l:z:hacC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -742,6 +762,9 @@ do
     h)
 	DEBUG_MAKE=1
 	export DEBUG_MAKE
+	;;
+    a)
+	append_mode=1
 	;;
     c)
         do_clean_tests=1
