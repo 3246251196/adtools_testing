@@ -169,6 +169,11 @@ example can be seen in "12_dlopen_binutils_test".
 The most basic example of an integrated test can be found in
 "0_rjd_simplest_example".
 
+#### Debugging a makefile
+In case that the test or variant of a test is not building due to
+makefile errors, the "-h" option can be used when building the tests in
+the hope of generating some error output which can solve the problem.
+
 #### Automated inspections
 Inspections can be added to tests by simply providing commented lines in
 the makefile of the test being added. See "1_rjd_test_example" for an

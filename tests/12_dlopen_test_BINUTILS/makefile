@@ -2,7 +2,7 @@ include ../common.mak
 
 # We do not care about static variants. Just create a dummy passing test:
 ifeq ($(DYN),)
-$(eval $(call DUMMY_TEST))
+$(eval $(call DUMMY_TEST,DYNAMIC VARIANTS ONLY))
 else
 CFLAGS+=-Wall -Wpedantic
 THREAD_IMPL?=native
@@ -26,7 +26,6 @@ $(LIBCAT): cat.c
 
 $(LIBDOG): dog.c
 	$(call LOG_CMD,Creating Shared Object,$(CC) -shared -fPIC $< $(CFLAGS) -o $@)
-endif
 
 # Expected output:
 
@@ -39,3 +38,6 @@ endif
 #@ Pochi is a print_name
 #@ .
 #@ Closing handle
+
+endif
+

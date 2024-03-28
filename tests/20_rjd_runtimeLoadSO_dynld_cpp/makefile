@@ -2,10 +2,10 @@ include ../common.mak
 
 # This test is just for clib4 dynamic
 ifneq ($(C_LIB),clib4)
-$(eval $(call DUMMY_TEST))
+$(eval $(call DUMMY_TEST,CLIB4 DYNAMIC ONLY))
 else
 ifeq ($(DYN),)
-$(eval $(call DUMMY_TEST))
+$(eval $(call DUMMY_TEST,CLIB4 DYNAMIC ONLY))
 else
 
 NEED_DEP+=librelo.so

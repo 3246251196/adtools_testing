@@ -22,8 +22,9 @@ $(SO): $(patsubst lib%.so,%.o,$(SO))
 
 $(patsubst lib%.so,%.o,$(SO)): $(patsubst lib%.so,%.c,$(SO))
 	$(call LOG_CMD,Creating FPIC object,$(CC) -c -o $@ $< -fPIC $(CFLAGS))
-else
-$(eval $(call DUMMY_TEST))
-endif
 
 #@ Count: 100000000
+
+else
+$(eval $(call DUMMY_TEST,CLIB4 ONLY))
+endif

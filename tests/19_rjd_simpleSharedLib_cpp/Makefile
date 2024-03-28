@@ -23,5 +23,5 @@ $(patsubst lib%.so,%.o,$(SO)): $(patsubst lib%.so,%.cpp,$(SO))
 
 #@ Count: 100000000
 else
-$(eval $(call DUMMY_TEST))
+$(eval $(call DUMMY_TEST,CLIB4 ONLY))
 endif

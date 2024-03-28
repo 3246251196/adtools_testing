@@ -1,7 +1,7 @@
 include ../common.mak
 
 # We are only interested in GCC version 6
-ifeq ($(shell $(CC) --version | grep '6.4.0' && echo $$?),0)
+ifeq ($(shell $(CC) --version | grep -q '6.4.0' && echo $$?),0)
 
 ifneq ($(DYN),)
 THREAD_IMPL?=native
@@ -16,7 +16,7 @@ $(PROG): main.c
 	$(call LOG_CMD,Link,$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBS) $<)
 
 else
-$(eval $(call DUMMY_TEST))
+$(eval $(call DUMMY_TEST,GCC 6 ONLY))
 endif
 
 #@ signbit(0.0)       : 0
