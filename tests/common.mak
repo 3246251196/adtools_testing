@@ -70,7 +70,7 @@ LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#"                      
 	echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#"                                 >> $(LOG_FILE) ;    \
 	$$(echo '$(2)' | sed 's/^((\|))$$//g')                                         1>> $(LOG_FILE) 2>&1
 
-# Default to create a .o file from a .c using the log command above.
+# Default rules that can be overridden
 %.o: %.c
 	$(call LOG_CMD,Compile Unit,$(CC) $(CFLAGS) -c -o $@ $<)
 %.o: %.cpp

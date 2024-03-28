@@ -634,10 +634,7 @@ function TESTS
     _info ""
     _info "NOTE! Do not expect all builds to pass for tests. It may be expected that some fail. Inspect the logs for"
     _info "      more information"
-    _info ""
-    _info "NOTE! You MUST clean out the tests if you want to re-build them all again: \"./adt -c\""
 
-    rm -f "${FINAL_LHA}"
     make -s -C "${TESTS_DIR}" clean
 }
 

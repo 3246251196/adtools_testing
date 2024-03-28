@@ -11,7 +11,6 @@ It should be as easy as the following steps:
 - cd into the specific test case variant of interest and invoke
   "execute run_*.script", OR,
 - run the executable directly, yourself
-- ./adt -c will then clean out the tests directory, recursively
 
 ### Goal
 At the heart of it, this script does two things:

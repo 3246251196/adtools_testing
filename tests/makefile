@@ -14,7 +14,6 @@ PREFIX=$(subst /,_,$(subst .,_,$(CROSS_PREFIX)))
 # prefix.
 CP_ROOT=$(subst clib2,CLIB2,$(subst clib4,CLIB4,$(PREFIX)_cp_root))
 
-CLEAN_STAMP=$(PREFIX)_clean_stamp
 export INSPECT_EXE
 export DUMMY_EXE
 export LHA_ADD
@@ -97,7 +96,7 @@ endif
 .PHONY: all $(FINAL_LHA) clean
 all: $(FINAL_LHA)
 
-$(FINAL_LHA): $(INSPECT_EXE) $(DUMMY_EXE) $(CLEAN_STAMP)
+$(FINAL_LHA): $(INSPECT_EXE) $(DUMMY_EXE)
 ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "adt" script)
 endif
@@ -149,10 +148,6 @@ endif
 	rm -rf Standalone_Tests
 #
 	unlink $(CP_ROOT) 1>/dev/null 2>&1
-
-$(CLEAN_STAMP): $(BASE_DIR)
-	$(do_clean)
-	touch $@
 
 clean:
 	-$(do_clean)
