@@ -1,6 +1,9 @@
 #!/bin/bash --
 set -o pipefail
 
+# We may be called from a different directory to where we reside. We have to CD
+# into the resident directory first!
+cd $(dirname ${BASH_SOURCE[0]})
 
 do_build=0
 just_preq=0
@@ -146,7 +149,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>]
   ===
   TESTS:
-  -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"] [-h] [-a]
+  -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"] [-h]
   ===
   CLEAN:
   -c | -C
@@ -194,7 +197,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         path and the cross-compiler will be installed into that
                         location. For example, -o /usr/amiga/gcc. But,
                         everything else will remain self-contained and the
-                        cloning of ADTOOLS will still be self-contained only
+                        cloning of ADTOOLS will still be self-contained, only
                         the installation of the cross compiler will be put into
                         <PATH>
        !! NOTE !!     : Rather than supplying this option you can just set an
@@ -300,12 +303,16 @@ function SETUP_PATHS
     # needed to remove the "build" manually at the end!
     if [[ -n "${session_prefix}" ]]
     then
+	# Need to make this relative to the directory containing this script
+	#
+	# The user may have provided a some paths and we know that all prefixes
+	# must exist in the same directory as this script so just take the
+	# basename
+	session_prefix="$(basename "${session_prefix}")"
         if [[ ! -d "${session_prefix}build" ]]
         then
             if [[ -d "${session_prefix}" ]]
             then
-                # But, we need to get rid of any trailing slash if one exists
-	        session_prefix="$(basename "${session_prefix}")"
                 BUILD_DIR="${session_prefix}"
             else
                 # If the above fails and we get here then the user has
