@@ -86,7 +86,7 @@ LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#"                      
 define DUMMY_TEST
 DUMMY=1
 $(PROG):
-	echo "    (Re)Built test/variant DUMMY \"$(FILE_INFIX)\""
+	echo "    (Re)Built DUMMY test/variant \"$(FILE_INFIX)\" [$(1)]"
 	$(subst $$,$$$$,$(call LOG_CMD,DUMMY_TEST,cp ../$(DUMMY_EXE) $(PROG),$(PROG) ($(DUMMY_EXE))))
 endef
 

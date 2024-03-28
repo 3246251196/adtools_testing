@@ -21,6 +21,7 @@ adtools_repo_loc="https://github.com/sba1/adtools.git"
 adtools_repo_branch=master
 just_continue=0
 no_cache=0
+DEBUG_MAKE=0
 
 readonly ORIG_DIR="$(pwd)"
 readonly ADTOOLS_DIR=adt_adtools
@@ -139,7 +140,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>]
   ===
   TESTS:
-  -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"]
+  -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"] [-h]
   ===
   CLEAN:
   -c | -C
@@ -263,6 +264,9 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
        !! NOTE !!     : This option is NOT cached
        [z] LINK TYPE :  Provide a list of the link type for which you want to
                         test (DEFAULT: static dynamic)
+       !! NOTE !!     : This option is NOT cached
+       [h] debug make : Enable some more debugging information in the case of
+                        errors when running the makefile for a test
        !! NOTE !!     : This option is NOT cached
        [c] clean_tests: Performs a clean on all tests
        [C] clean_build: Performs a clean on the in-place ADTOOLS which will
@@ -623,7 +627,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbjqr:g:n:s:m:tS:l:z:cC opt
+while getopts xp:o:uk:iydbjqr:g:n:s:m:tS:l:z:hcC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -727,6 +731,10 @@ do
 	    _error "-z can only take \"dynamic\" and/or \"static\" as arguments" 104
 	fi
 	export LINKER_TYPE_LIST
+	;;
+    h)
+	DEBUG_MAKE=1
+	export DEBUG_MAKE
 	;;
     c)
         do_clean_tests=1

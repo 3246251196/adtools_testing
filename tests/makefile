@@ -75,6 +75,13 @@ tests=$(shell grep -l 'include ../common.mak' *$(PATTERN1)/[Mm]akefile | cut -f1
 # All Standlone tests:
 sa_tests=$(filter-out $(tests),$(shell find -maxdepth 1 -mindepth 1 -type d $(PATTERN2) -exec basename {} \;))
 
+# Handle debugging
+ifeq ($(DEBUG_MAKE),1)
+OUTPUT_STYLE=2>&1 | tee -a $(TMP_LOG_RESULTS_FILE) ;
+else
+OUTPUT_STYLE=1>>$(TMP_LOG_RESULTS_FILE) 2>&1 &
+endif
+
 .PHONY: all $(FINAL_LHA) clean
 all: $(FINAL_LHA)
 
@@ -83,18 +90,18 @@ ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "adt" script)
 endif
 	ln -s -f "$(CROSS_PREFIX)" $(CP_ROOT) 1>/dev/null 2>&1
-	for C_LIB in $(C_LIB_LIST) ;                                                        \
-	do                                                                                  \
-		for DYN in $(LINKER_TYPE_LIST) ;                                            \
-		do                                                                          \
-			$(EXPORT) ;                                                         \
-			for TEST in $(tests) ;                                              \
-			do                                                                  \
-				$(MAKE) -C "$${TEST}" all 1>>$(TMP_LOG_RESULTS_FILE) 2>&1 & \
-				pids+=( $$! ) ;                                             \
-			done ;                                                              \
-		done ;                                                                      \
-	done ;                                                                              \
+	for C_LIB in $(C_LIB_LIST) ;                                      \
+	do                                                                \
+		for DYN in $(LINKER_TYPE_LIST) ;                          \
+		do                                                        \
+			$(EXPORT) ;                                       \
+			for TEST in $(tests) ;                            \
+			do                                                \
+				$(MAKE) -C "$${TEST}" all $(OUTPUT_STYLE) \
+				pids+=( $$! ) ;                           \
+			done ;                                            \
+		done ;                                                    \
+	done ;                                                            \
 	for p in $${pids[@]} ; do wait $$p ; done
 	sort -o $(TMP_LOG_RESULTS_FILE) $(TMP_LOG_RESULTS_FILE)
 	cat $(TMP_LOG_RESULTS_FILE)
