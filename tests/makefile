@@ -22,7 +22,19 @@ export CP_ROOT
 
 # Prepare the dimensionality of the testing which defaults to the cross product
 # of C_LIB_LIST and LINKER_TYPE_LIST.
-C_LIB_LIST?="newlib" "clib2" "clib4"
+C_LIB_LIST?="newlib" "clib2" "?clib4?"
+# We should remove clib4 in the case that the compiler does not support it and
+# the user has not specified a list of c libraries
+#
+# By now, the relevant compiler should be on the path
+ifeq ($(filter "?clib4?",$(C_LIB_LIST)),"?clib4?")
+ifneq ($(shell echo "" | ppc-amigaos-gcc -mcrt=clib4 -c -o /dev/null -xc++ - 1>/dev/null 2>&1 && echo $$?),0)
+C_LIB_LIST:=$(subst "?clib4?",,$(C_LIB_LIST))
+else
+C_LIB_LIST:=$(subst "?clib4?","clib4",$(C_LIB_LIST))
+endif
+endif
+
 LINKER_TYPE_LIST?="-use-dynld" ""
 
 # Nothing more than a long string of a bash export command that is used when
@@ -90,6 +102,8 @@ ifeq ($(SCRIPT_INVOCATION),)
 	$(error This makefile should only be invoked by the "adt" script)
 endif
 	ln -s -f "$(CROSS_PREFIX)" $(CP_ROOT) 1>/dev/null 2>&1
+
+
 	for C_LIB in $(C_LIB_LIST) ;                                      \
 	do                                                                \
 		for DYN in $(LINKER_TYPE_LIST) ;                          \
