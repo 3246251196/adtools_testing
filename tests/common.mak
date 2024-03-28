@@ -86,7 +86,7 @@ LOG_CMD = -echo "\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#"                      
 define DUMMY_TEST
 DUMMY=1
 $(PROG):
-	echo "    (Re)Built DUMMY test/variant \"$(FILE_INFIX)\" [$(1)]"
+	echo "### MAKE: (Re)Built DUMMY test/variant \"$(FILE_INFIX)\" [$(1)]"
 	$(subst $$,$$$$,$(call LOG_CMD,DUMMY_TEST,cp ../$(DUMMY_EXE) $(PROG),$(PROG) ($(DUMMY_EXE))))
 endef
 
@@ -112,9 +112,9 @@ all: $(LHA_FILE)
 	then                                                                                        \
 		if [[ -f '$(PROG)' $(if $(NEED_DEP),$(foreach DEP,$(NEED_DEP),&& -f '$(DEP)')) ]] ; \
 		then                                                                                \
-			echo "    (Re)Built test/variant       \"$(FILE_INFIX)\"" ;                 \
+			echo "### MAKE: (Re)Built test/variant       \"$(FILE_INFIX)\"" ;           \
 		else                                                                                \
-			echo "    Failed to build test/variant \"$(FILE_INFIX)\"" ;                 \
+			echo "### MAKE: Failed to build test/variant \"$(FILE_INFIX)\"" ;           \
 		fi ;                                                                                \
 	fi
 

@@ -39,6 +39,11 @@ BASE_DIR=
 CROSS_PREFIX=
 ADTOOLS_MOD_SCRIPT=
 
+function _sep
+{
+    echo "-------------------------------------------------------------------------------"
+}
+
 # $1: Message
 function _info
 {
@@ -600,11 +605,13 @@ function TESTS
     which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross-compiler on the path."\
 " You may have forgotten to set the prefix with option -p or build the cross compiler or specify the -u option or use the -x option to retain your previously cached settings" 50
 
-    _info "Building tests..."
     _info "Using cross-compiler: $(which ppc-amigaos-gcc)"
     _info "If errors occur the look at the relevant log file in the test directory"
+    _sep
+    _info "Building tests..."
     make -s -C "${TESTS_DIR}" all || _error "An error occurred while trying to build the tests" 120
     _info "Finished building tests..."
+    _sep
     _info "\"${FINAL_LHA}\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
     _info "By default, the script extracts everything, appropriately, and executes a script, \"user.script\""
     _info "which acts on each variant. The \"run_all.script\" is designed to be re-run again. Alternatively,"

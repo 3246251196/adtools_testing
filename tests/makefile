@@ -119,7 +119,7 @@ endif
 			&& $(LHA_ADD) ../$@ $(RUN_ALL_LINUX_SCRIPT)
 	rm $(TMP_LOG_RESULTS_FILE)
 # Now, attempt any standalone tests. Do not fail on error, and add them to the archive
-	echo "    Building Standalone tests. No logging is performed for Standalone tests; see their log.txt"
+	echo "### MAKE: Building any Standalone-Tests"
 	mkdir Standalone_Tests
 	-for TEST in $(sa_tests) ;                              \
 	do                                                      \
