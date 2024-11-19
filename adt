@@ -393,7 +393,7 @@ function CHECK_DEPENDS
     fi
 
     # Only supporting dpkg for now
-    if [[ $(dpkg-query --version 1>/dev/null 2>&1) ]]
+    if [[ $(dpkg-query --version 1>/dev/null 2>&1 && echo $?) ]]
     then
 	for package in "${_packages[@]}"
 	do
