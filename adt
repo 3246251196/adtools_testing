@@ -13,6 +13,7 @@ do_clean_tests=0
 TEST_PATTERN=
 use_this_adtools=0
 gcc_ver=11 # default
+coreutils_ver=5.2
 binutils_ver=2.23.2
 SDK_VERSION=54.16
 args=
@@ -42,6 +43,7 @@ FINAL_LHA=
 BASE_DIR=
 CROSS_PREFIX=
 ADTOOLS_MOD_SCRIPT=
+DO_NATIVE_COMPILER=0
 
 function _sep
 {
@@ -85,6 +87,7 @@ function generate_adt_last_proj
 use_this_adtools="${use_this_adtools}"
 gcc_ver="${gcc_ver}"
 binutils_ver="${binutils_ver}"
+coreutils_ver="${coreutils_ver}"
 session_prefix="${session_prefix}"
 gcc_path="${gcc_path}"
 adtools_repo_loc="${adtools_repo_loc}"
@@ -146,7 +149,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
  ACTIONS:
   ===
   BUILD ADTOOLS:
-  -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>]
+  -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] [-a [<COREUTILS_VER>]]
   ===
   TESTS:
   -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"] [-h]
@@ -258,6 +261,17 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         script should reside in the same directory as this
                         script (the adt script). There is also an example mod
                         script named "adtools_mod"
+       [a] nativebuild: After building the cross compiler, also build a
+                        native compiler. This will require a directory:
+                        `/gcc/' which is owned by the user:
+			sudo mkdir /gcc/
+			sudo chown <user>:<user> /gcc/
+			where user is the value of the command
+			`whoami'. The optional <COREUTILS_VER> is used
+			to specifiy the version of COREUTILS since this
+			is necessary for a native compiler distribution.
+			Finally, the distribution will be available as an LHA
+			file (DEFAULT: 5.2 [COREUTILS])
        [t] tests      : Builds all of the tests under the "tests" folder.
                         Logging of each build of each variant is appended to
                         the log file. This will implicitly clean out all the
@@ -287,8 +301,12 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         your current system.
 
  TL;DR:
-  If you want to just build an ADTOOLS cross-compiler then run the following:
+  If you just want to build an ADTOOLS cross-compiler then run the following:
      ./adt -b
+
+  If you just want to build an ADTOOLS native-compiler that can be tranferred
+  to the AmigaOne machine (note that this MUST also build a cross-compiler):
+     ./adt -b -a
 
   Then, if you want to build all of the tests:
      ./adt -t
@@ -376,6 +394,8 @@ function CHECK_DEPENDS
 	"bison"
 	"flex"
 	"texinfo"
+	"wdiff"
+	"python3-argcomplete"
     )
     # We print this out regardless of the package management system so
     # that in the case that dpkg is NOT being used, the user has an
@@ -431,7 +451,7 @@ function CHECK_DEPENDS
 
 function BUILD
 {
-    local INFO_STRING="[$(date)] Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", SDK version \"${SDK_VERSION}\", CROSS_PREFIX (installation location of the cross-compiler) \"${CROSS_PREFIX}\""
+    local INFO_STRING="[$(date)] Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", COREUTILS version \"${coreutils_ver}\" (only relevant when building a native compiler), SDK version \"${SDK_VERSION}\", CROSS_PREFIX (installation location of the cross-compiler) \"${CROSS_PREFIX}\""
 
     local _cloneLoc="${BASE_DIR}/${ADTOOLS_DIR}"
     if [[ -n "${gcc_path}" ]]
@@ -473,6 +493,14 @@ function BUILD
 	# branch hash is not found in upstream.
         git submodule init || _error "Unable to initialise submodules in ADTOOLS repo" 202 1
         git submodule update || _error "Unable to update submodules in ADTOOLS repo" 203 1
+	if (( DO_NATIVE_COMPILER ))
+	then
+	    if ! [[ -d /gcc/ && $(touch /gcc/tmp && rm /gcc/tmp && echo $?) ]]
+	    then
+		_error "Building a native compiler requires a directory, /gcc/ with write permissions" 211 1
+	    fi
+            gild/bin/gild checkout coreutils ${coreutils_ver} || _error "Unable to clone coreutils in ADTOOLS repo" 210 1
+	fi
         gild/bin/gild checkout binutils "${binutils_ver}" || _error "Unable to clone binutils in ADTOOLS repo" 204 1
         gild/bin/gild checkout gcc "${gcc_ver}" || _error "Unable to clone gcc in ADTOOLS repo" 205 1
 
@@ -604,6 +632,26 @@ function BUILD
     _info "Finished building ADTOOLS..."
     _info "Your build directory (where the ADTOOLS repository and its source was cloned to) is: \"${_cloneLoc}\""
     _info "Your installation directory (where the cross compiler was INSTALLED to) is: \"${CROSS_PREFIX}\""
+
+    if (( DO_NATIVE_COMPILER ))
+    then
+	BUILD_CMD="make -O -j${CORES} -C native-build/ native-install 2>&1 | "\
+"tee -a \"${LOG_FILE}\""
+	echo "####################" >> "${LOG_FILE}"
+	echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
+	echo "####################" >> "${LOG_FILE}"
+	eval "${BUILD_CMD} || _error \"The ADTOOLS native compiler build failed. See the log file: \"${LOG_FILE}\"\" 41"
+
+	BUILD_CMD="make -O -j${CORES} -C native-build/ native-dist 2>&1 | "\
+"tee -a \"${LOG_FILE}\""
+	echo "####################" >> "${LOG_FILE}"
+	echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
+	echo "####################" >> "${LOG_FILE}"
+	eval "${BUILD_CMD} || _error \"The ADTOOLS native compiler final distribution failed. See the log file: \"${LOG_FILE}\"\" 42"
+
+	echo "If there were no errors, the native compiler tools are have been compressed into the LHA at location: \"$(pwd)/native-build\""
+	ls -l native-build/*.lha
+    fi
 }
 
 function TESTS
@@ -645,7 +693,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbjqr:g:n:s:m:tS:l:z:hcC opt
+while getopts xp:o:uk:iydbjqr:g:n:s:m:atS:l:z:hcC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -706,6 +754,9 @@ do
         ;;
     m)
 	ADTOOLS_MOD_SCRIPT="${OPTARG}"
+	;;
+    a)
+	DO_NATIVE_COMPILER=1
 	;;
     t)
         do_tests=1
