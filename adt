@@ -392,6 +392,8 @@ function CHECK_DEPENDS
 	"flex"
 	"texinfo"
 	"wdiff"
+	"gcc"
+	"g++"
 	"python3-argcomplete"
     )
     # We print this out regardless of the package management system so
