@@ -149,7 +149,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
  ACTIONS:
   ===
   BUILD ADTOOLS:
-  -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] [-a [<COREUTILS_VER>]]
+  -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] [-a]
   ===
   TESTS:
   -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"] [-h]
@@ -267,11 +267,8 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
 			sudo mkdir /gcc/
 			sudo chown <user>:<user> /gcc/
 			where user is the value of the command
-			`whoami'. The optional <COREUTILS_VER> is used
-			to specifiy the version of COREUTILS since this
-			is necessary for a native compiler distribution.
-			Finally, the distribution will be available as an LHA
-			file (DEFAULT: 5.2 [COREUTILS])
+			`whoami'. The distribution will be available as an LHA
+			file
        [t] tests      : Builds all of the tests under the "tests" folder.
                         Logging of each build of each variant is appended to
                         the log file. This will implicitly clean out all the
@@ -628,11 +625,6 @@ function BUILD
     # Update the timestamp so that the test framework knows whether it should rebuild the tests.
     # Of course, this dir will be touched even if there was nothing to update in ADTOOLS.
     touch "${BASE_DIR}"
-
-    _info "Finished building ADTOOLS..."
-    _info "Your build directory (where the ADTOOLS repository and its source was cloned to) is: \"${_cloneLoc}\""
-    _info "Your installation directory (where the cross compiler was INSTALLED to) is: \"${CROSS_PREFIX}\""
-
     if (( DO_NATIVE_COMPILER ))
     then
 	BUILD_CMD="make -O -j${CORES} -C native-build/ native-install 2>&1 | "\
@@ -648,8 +640,15 @@ function BUILD
 	echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
 	echo "####################" >> "${LOG_FILE}"
 	eval "${BUILD_CMD} || _error \"The ADTOOLS native compiler final distribution failed. See the log file: \"${LOG_FILE}\"\" 42"
+    fi
 
-	echo "If there were no errors, the native compiler tools are have been compressed into the LHA at location: \"$(pwd)/native-build\""
+    _info "Finished building ADTOOLS. If there were no errors then:"
+    _info "The build directory (where the ADTOOLS repository and its source was cloned to) is: \"${_cloneLoc}\""
+    _info "The installation directory (where the cross compiler was INSTALLED to) is: \"${CROSS_PREFIX}\""
+
+    if (( DO_NATIVE_COMPILER ))
+    then
+	_info "The native compiler is at location: \"$(pwd)/native-build\""
 	ls -l native-build/*.lha
     fi
 }
