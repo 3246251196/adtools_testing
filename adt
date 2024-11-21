@@ -392,8 +392,6 @@ function CHECK_DEPENDS
 	"flex"
 	"texinfo"
 	"wdiff"
-	"gcc"
-	"g++"
 	"python3-argcomplete"
     )
     # We print this out regardless of the package management system so
@@ -594,6 +592,20 @@ function BUILD
 	    _error "No native compiler exists to build ADTOOLS. Both \"gcc\" and \"g++\" are needed and only the GNU COMPILER COLLECTION (GCC) is supported" 30
 	else
             _warn "Native Compiler architecture is \"${native_gcc}\" which is not supported but continuing anyway"
+	fi
+    fi
+
+    # Check the version of gcc:
+    if (( $(gcc --version | sed  -n 's/.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' | cut -f1 -d.) >= 14 ))
+    then
+	_warn "GCC version 14 (and probably above) are known to not build the cross compiler due to strict warnings as errors. Continue ([y]/n)?"
+	if (( !just_continue ))
+	then
+	    read _selection
+	    if [[ "${_selection}" != y ]]
+	    then
+		_error "Not continuing due to build machine using GCC 14 or above" 212 1
+	    fi
 	fi
     fi
 
