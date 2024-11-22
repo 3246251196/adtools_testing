@@ -393,7 +393,7 @@ function CHECK_DEPENDS
 	"texinfo"
 	"wdiff"
 	"python3-argcomplete"
- "python3-mako"
+	"python3-mako"
     )
     # We print this out regardless of the package management system so
     # that in the case that dpkg is NOT being used, the user has an
@@ -406,7 +406,7 @@ function CHECK_DEPENDS
 
     if [[ ! "$(lha --version 2>&1)" =~ "LHa for UNIX version" ]]
     then
-	_warn "Unexpected or no version of \"LHA\". Please use \"https://github.com/jca02266/lha\""
+	_warn "Unexpected or no version of \"LHA\". Please use \"https://github.com/jca02266/lha. Build it and install it.\""
 	_continue=0
     fi
 
@@ -415,11 +415,28 @@ function CHECK_DEPENDS
     then
 	for package in "${_packages[@]}"
 	do
-            if [[ $(dpkg-query --showformat '${db:Status-Status}' --show "${package}" 2>/dev/null) != installed ]]
+            if ! [[ $(dpkg-query --showformat '${db:Status-Status}' --show "${package}" 2>/dev/null) =~ installed ]]
             then
 		_warn "Package \"${package}\" does not seem to be installed and it is required to build ADTOOLS"
 		_continue=0
-            fi
+            else
+		if [[ "${package}" = "texinfo" ]]
+		then
+		    # Check the version of texinfo since at least version 7.1 is known to be too strict
+		    if (( $(dpkg -l | grep texinfo | grep -Eo "[0-9]+\.[0-9]+" | cut -f1 -d.) >= 7 ))
+		    then
+			_warn "textinfo version 7 and above may not succeed. Continue ([y]/n)?"
+			if (( !just_continue ))
+			then
+			    read _selection
+			    if [[ "${_selection}" != y ]]
+			    then
+				_error "Not continuing due to a too high version of textinfo" 213 1
+			    fi
+			fi
+		    fi
+		fi
+	    fi
 	done
     else
 	_warn "Prebuild dependency checking is only supported with \"dpkg\". Dependency checks ignored."
@@ -464,6 +481,53 @@ function BUILD
 	    # TODO: Return a value from the function instead and raise error here
 	    CHECK_DEPENDS
 	fi
+
+	local native_gcc=
+	# We also need g++
+	{ which gcc && which g++ ; } 1>/dev/null 2>&1
+	if (( !${?} ))
+	then
+	    native_gcc="$(gcc -dumpmachine)"
+            if [[ "${native_gcc}" == "x86_64-linux-gnu" ]]
+            then
+		native_gcc=
+            fi
+	else
+            native_gcc=error
+	fi
+
+	if [[ -n "${native_gcc}" ]]
+	then
+	    if [[ "${native_gcc}" == error ]]
+	    then
+		_error "No native compiler exists to build ADTOOLS. Both \"gcc\" and \"g++\" are needed and only the GNU COMPILER COLLECTION (GCC) is supported" 30
+	    else
+		_warn "Native Compiler architecture is \"${native_gcc}\" which is not supported but continuing anyway"
+	    fi
+	fi
+
+	# Check the version of gcc:
+	if (( $(gcc --version | sed  -n 's/.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' | cut -f1 -d.) >= 14 ))
+	then
+	    _warn "GCC version 14 (and probably above) are known to not build the cross compiler due to strict warnings as errors. Continue ([y]/n)?"
+	    if (( !just_continue ))
+	    then
+		read _selection
+		if [[ "${_selection}" != y ]]
+		then
+		    _error "Not continuing due to build machine using GCC 14 or above" 212
+		fi
+	    fi
+	fi
+
+	if (( DO_NATIVE_COMPILER ))
+	then
+	    if ! [[ -d /gcc/ && $(touch /gcc/tmp && rm /gcc/tmp && echo $?) ]]
+	    then
+		_error "Building a native compiler requires a directory, /gcc/ with write permissions" 211
+	    fi
+	fi
+
         _info "Building ADTOOLS..."
 
         mkdir "${BASE_DIR}"
@@ -491,16 +555,12 @@ function BUILD
 	# branch hash is not found in upstream.
         git submodule init || _error "Unable to initialise submodules in ADTOOLS repo" 202 1
         git submodule update || _error "Unable to update submodules in ADTOOLS repo" 203 1
-	if (( DO_NATIVE_COMPILER ))
-	then
-	    if ! [[ -d /gcc/ && $(touch /gcc/tmp && rm /gcc/tmp && echo $?) ]]
-	    then
-		_error "Building a native compiler requires a directory, /gcc/ with write permissions" 211 1
-	    fi
-            gild/bin/gild checkout coreutils ${coreutils_ver} || _error "Unable to clone coreutils in ADTOOLS repo" 210 1
-	fi
         gild/bin/gild checkout binutils "${binutils_ver}" || _error "Unable to clone binutils in ADTOOLS repo" 204 1
         gild/bin/gild checkout gcc "${gcc_ver}" || _error "Unable to clone gcc in ADTOOLS repo" 205 1
+	if (( DO_NATIVE_COMPILER ))
+	then
+            gild/bin/gild checkout coreutils ${coreutils_ver} || _error "Unable to clone coreutils in ADTOOLS repo" 210 1
+	fi
 
         # Performs the modification (if any) that are provided in the
         # following script
@@ -569,44 +629,6 @@ function BUILD
 		fi
 	    fi
 	    rm -f "${BASE_DIR}/${ADTOOLS_DIR}/native-build/gcc-cross-done-"*
-	fi
-    fi
-
-    native_gcc=
-    # We also need g++
-    { which gcc && which g++ ; } 1>/dev/null 2>&1
-    if (( !${?} ))
-    then
-	native_gcc="$(gcc -dumpmachine)"
-        if [[ "${native_gcc}" == "x86_64-linux-gnu" ]]
-        then
-            native_gcc=
-        fi
-    else
-        native_gcc=error
-    fi
-
-    if [[ -n "${native_gcc}" ]]
-    then
-	if [[ "${native_gcc}" == error ]]
-	then
-	    _error "No native compiler exists to build ADTOOLS. Both \"gcc\" and \"g++\" are needed and only the GNU COMPILER COLLECTION (GCC) is supported" 30
-	else
-            _warn "Native Compiler architecture is \"${native_gcc}\" which is not supported but continuing anyway"
-	fi
-    fi
-
-    # Check the version of gcc:
-    if (( $(gcc --version | sed  -n 's/.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' | cut -f1 -d.) >= 14 ))
-    then
-	_warn "GCC version 14 (and probably above) are known to not build the cross compiler due to strict warnings as errors. Continue ([y]/n)?"
-	if (( !just_continue ))
-	then
-	    read _selection
-	    if [[ "${_selection}" != y ]]
-	    then
-		_error "Not continuing due to build machine using GCC 14 or above" 212 1
-	    fi
 	fi
     fi
 
