@@ -696,6 +696,7 @@ function BUILD
 	_info "The native compiler is at location: \"$(pwd)/native-build\""
 	ls -l native-build/*.lha
     fi
+    _info "The full log file is at:  \"${LOG_FILE}\""
 }
 
 function TESTS
