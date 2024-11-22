@@ -393,6 +393,7 @@ function CHECK_DEPENDS
 	"texinfo"
 	"wdiff"
 	"python3-argcomplete"
+ "python3-mako"
     )
     # We print this out regardless of the package management system so
     # that in the case that dpkg is NOT being used, the user has an
