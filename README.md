@@ -1,5 +1,8 @@
 # adtools_testing
 
+## TL;DR
+Run ./adt --help and see the section TL;DR at the bottom.
+
 ## Using this repository
 ### Ideal scenario (TL;DR)
 It should be as easy as the following steps:

@@ -305,6 +305,11 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   to the AmigaOne machine (note that this MUST also build a cross-compiler):
      ./adt -b -a
 
+  If you just want to check that you have all the necessary dependencies to
+  build the cross-compiler / native-compiler (note that this does not check
+  the version of GCC and GCC 14 is known to generate errors due to warnings):
+     ./adt -j
+
   Then, if you want to build all of the tests:
      ./adt -t
 EOF
