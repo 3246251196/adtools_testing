@@ -420,6 +420,9 @@ function CHECK_DEPENDS
     then
 	for package in "${_packages[@]}"
 	do
+	    # You can have a 32-bit version and 64-bit version, meaning
+	    # that you can get something like installedinstalled. Let's
+	    # be lax about this check:
             if ! [[ $(dpkg-query --showformat '${db:Status-Status}' --show "${package}" 2>/dev/null) =~ installed ]]
             then
 		_warn "Package \"${package}\" does not seem to be installed and it is required to build ADTOOLS"
