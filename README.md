@@ -1,10 +1,13 @@
 # adtools_testing
 
 ## TL;DR
+Known to work with Ubuntu version 22. Consider creating a minimum
+CHROOT based on Ubuntu 22.
+
 Run ./adt --help and see the section TL;DR at the bottom.
 
 ## Using this repository
-### Ideal scenario (TL;DR)
+### Ideal scenario
 It should be as easy as the following steps:
 - ./adt -b (if you want to build a cross compiler)
 - ./adt -b -a (if you want to build a native compiler)
