@@ -425,6 +425,11 @@ function CHECK_DEPENDS
 	    # be lax about this check:
             if ! [[ $(dpkg-query --showformat '${db:Status-Status}' --show "${package}" 2>/dev/null) =~ installed ]]
             then
+                # Python3 packages may also be installed via pip
+                if [[ "$package" =~ python3 ]]
+                then
+                    python3 -m pip list 2>/dev/null | grep -q "${$package:8}" && continue
+                fi
 		_warn "Package \"${package}\" does not seem to be installed and it is required to build ADTOOLS"
 		_continue=0
             else
