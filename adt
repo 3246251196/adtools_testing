@@ -165,7 +165,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   [VAR[=VAL] ...]
   ^
   A string of environment variables with optional values that are  exported.
-  For example, "./adt -t THREAD_IMPL=pthread LIBS=-lpthread" results in 
+  For example, "./adt -t THREAD_IMPL=pthread LIBS=-lpthread" results in
   THREAD_IMPL and LIBS being exported for potential use in Makefiles. Note
   that EXPORT is not cached.
 
@@ -268,11 +268,11 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         script named "adtools_mod"
        [a] nativebuild: After building the cross compiler, also build a
                         native compiler. This will require a directory:
-                        `/gcc/' which is owned by the user:
+                        \`/gcc/' which is owned by the user:
 			sudo mkdir /gcc/
 			sudo chown <user>:<user> /gcc/
 			where user is the value of the command
-			`whoami'. The distribution will be available as an LHA
+			\`whoami'. The distribution will be available as an LHA
 			file
        [t] tests      : Builds all of the tests under the "tests" folder.
                         Logging of each build of each variant is appended to
