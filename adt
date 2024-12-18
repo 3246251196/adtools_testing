@@ -169,6 +169,11 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   and LIBS being exported for potential use in Makefiles. Note that EXPORT is
   not cached.
 
+ Note on EXPORT:
+  This is useful when you want to use a different CLIB4 branch, or set makefile
+  variables for the ADTOOLS makefile. For instance, CLIB4_SHA1 can be exported
+  to use a specific CLIB4 branch. See the TL;DR section below.
+
        [x] cached proj: Use the variables stored from the previous build action
                         session for this action. This is useful when a complex
                         build was invoked before containing many options so
@@ -304,6 +309,10 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   If you just want to build an ADTOOLS native-compiler that can be tranferred
   to the AmigaOne machine (note that this MUST also build a cross-compiler):
      ./adt -b -a
+
+  WRT. Export, if you want to build ADTOOLS using a specific CLIB4 branch -
+  say, the "development" branch with GCC 6:
+     ./adt -b -g 6 CLIB_SHA1=development
 
   If you just want to check that you have all the necessary dependencies to
   build the cross-compiler / native-compiler (note that this does not check
