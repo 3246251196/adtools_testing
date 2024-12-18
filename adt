@@ -165,9 +165,9 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   [VAR[=VAL] ...]
   ^
   A string of environment variables with optional values that are  exported.
-  For example, "./adt -t THREAD_IMPL=pthread LIBS=-lpthread"  ts in THREAD_IMPL
-  and LIBS being exported for potential use in Makefiles. Note that EXPORT is
-  not cached.
+  For example, "./adt -t THREAD_IMPL=pthread LIBS=-lpthread" results in 
+  THREAD_IMPL and LIBS being exported for potential use in Makefiles. Note
+  that EXPORT is not cached.
 
  Note on EXPORT:
   This is useful when you want to use a different CLIB4 branch, or set makefile
