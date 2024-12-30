@@ -488,7 +488,7 @@ function CHECK_DEPENDS
 
 function BUILD
 {
-    local INFO_STRING="[$(date)] Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", COREUTILS version \"${coreutils_ver}\" (only relevant when building a native compiler), SDK version \"${SDK_VERSION}\", CROSS_PREFIX (installation location of the cross-compiler) \"${CROSS_PREFIX}\""
+    local INFO_STRING="[$(date)] Building ADTOOLS from repository \"${adtools_repo_loc}\" (branch \"${adtools_repo_branch}\"), using GCC version \"${gcc_ver}\", BINUTILS version \"${binutils_ver}\", COREUTILS version \"${coreutils_ver}\" (only relevant when building a native compiler), SDK version \"${SDK_VERSION}\", CROSS_PREFIX (installation location of the cross-compiler) \"${CROSS_PREFIX}\". Built with environment variables: \"${args}\""
 
     local _cloneLoc="${BASE_DIR}/${ADTOOLS_DIR}"
     if [[ -n "${gcc_path}" ]]
