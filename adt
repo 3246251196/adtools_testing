@@ -741,8 +741,6 @@ function TESTS
     _info ""
     _info "NOTE! Do not expect all builds to pass for tests. It may be expected that some fail. Inspect the logs for"
     _info "      more information"
-
-    make -s -C "${TESTS_DIR}" clean
 }
 
 if (( $# == 0 ))
