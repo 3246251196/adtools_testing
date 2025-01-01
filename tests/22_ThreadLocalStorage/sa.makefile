@@ -1,7 +1,7 @@
 CRT=clib4
 CC=ppc-amigaos-gcc -mcrt=$(CRT)
 PROG:=tls
-CPPFLAGS=-DLARGE -DTHREAD
+CPPFLAGS=-DTHREAD
 
 $(PROG): tls.o
 #	$(CC) -S -o $@.S $(PROG).c

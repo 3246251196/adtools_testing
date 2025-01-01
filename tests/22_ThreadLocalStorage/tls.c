@@ -1,11 +1,7 @@
 #include <pthread.h>
 #include <stdio.h>
 
-#ifdef LARGE
-#define SIZE 1000000000
-#else
 #define SIZE 1000000
-#endif
 
 #ifdef THREAD
 #define THR __thread
@@ -19,7 +15,7 @@ void *fn( void* )
 {
   printf("Created thread addr of i: %p\n",&i);
   i = 0;
-  while(i++ < 1000000000);
+  while(i++ < SIZE);
   printf("Created thread val of i : %i\n",i);
 }
 
