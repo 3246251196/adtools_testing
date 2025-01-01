@@ -1,7 +1,19 @@
 #include <pthread.h>
 #include <stdio.h>
 
-__thread int i;
+#ifdef LARGE
+#define SIZE 1000000000
+#else
+#define SIZE 1000000
+#endif
+
+#ifdef THREAD
+#define THR __thread
+#else
+#define THR
+#endif
+
+THR int i;
 
 void *fn( void* )
 {
