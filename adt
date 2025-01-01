@@ -44,6 +44,8 @@ BASE_DIR=
 CROSS_PREFIX=
 ADTOOLS_MOD_SCRIPT=
 DO_NATIVE_COMPILER=0
+USE_FULL_SDK=0
+ENHANCER_LOC=""
 
 function _sep
 {
@@ -149,7 +151,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
  ACTIONS:
   ===
   BUILD ADTOOLS:
-  -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] [-a]
+  -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] [-a] [-X]
   ===
   TESTS:
   -t [-S <PAT>] [-l "<CLIB(s)>"] [-z "<LINK_TYPE>"] [-h]
@@ -274,6 +276,16 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
 			where user is the value of the command
 			\`whoami'. The distribution will be available as an LHA
 			file
+       [X] full SDK :   After building the cross compiler, install the full SDK
+                        into the build directory. By default, only the necessary
+                        components of the SDK are installed. This is limited to
+                        copying over all files/folder under Local and
+                        Include. If an environment variable named ENHANCER_LOC
+                        (this variable should include the file name of the
+                        Ehnancer archive file, itself) is also supplied in the
+                        EXPORTS then as well as extracting the SDK parts, the
+                        enhancer archive's SDK parts are also extracted and
+                        copied
        [t] tests      : Builds all of the tests under the "tests" folder.
                         Logging of each build of each variant is appended to
                         the log file. This will implicitly clean out all the
@@ -684,6 +696,7 @@ function BUILD
     # Update the timestamp so that the test framework knows whether it should rebuild the tests.
     # Of course, this dir will be touched even if there was nothing to update in ADTOOLS.
     touch "${BASE_DIR}"
+
     if (( DO_NATIVE_COMPILER ))
     then
 	BUILD_CMD="make -O -j${CORES} -C native-build/ native-install 2>&1 | "\
@@ -700,6 +713,50 @@ function BUILD
 	echo "####################" >> "${LOG_FILE}"
 	eval "${BUILD_CMD} || _error \"The ADTOOLS native compiler final distribution failed. See the log file: \"${LOG_FILE}\"\" 42"
     fi
+
+    if (( USE_FULL_SDK ))
+    then
+	_info "Extracting and installing the full SDK contents into: \"${CROSS_PREFIX}\""
+	local curr_dir="$(pwd)"
+	mkdir -p /tmp/__tmp.SDK/
+	cp "${_cloneLoc}"/native-build/downloads/SDK*.lha /tmp/__tmp.SDK/
+	cd /tmp/__tmp.SDK/
+	lha xf *.lha
+	cd SDK_Install
+	for l in *.lha ; do lha xf $l ; done
+	# We are only interested in those files under [Ll]ocal and
+	# [Ii]nclude. We assume that Local and Include are the only folder that
+	# have potential difference in capitalisation
+	#
+	# TODO: BTW, [Ss]ource also exists, but this is probably not an issue
+	cp -r local "${CROSS_PREFIX}"/ppc-amigaos/SDK/
+	cp -r Local/* "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/
+	cp -r include/* "${CROSS_PREFIX}"/ppc-amigaos/SDK/include/
+	cp -r Include/* "${CROSS_PREFIX}"/ppc-amigaos/SDK/include/
+	cd "${curr_dir}"
+	rm -rf /tmp/__tmp.SDK
+
+	# Also do the same thing for Enhancer, if it was supplied as an export
+	if [[ -n "${ENHANCER_LOC}" ]]
+	then
+	    _info "Extracting and installing the Enhancer SDK contents into: \"${CROSS_PREFIX}\""
+	    mkdir -p /tmp/__tmp.SDK/
+	    cp "${ENHANCER_LOC}" /tmp/__tmp.SDK/
+	    cd /tmp/__tmp.SDK/
+	    lha xf *.lha
+	    cd */Installation_Files/
+	    for d in $(find -mindepth 1 -maxdepth 1 -type d)
+	    do
+		test -d "$d/local" && cp -r "$d/local/*" "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/
+		test -d "$d/Local" && cp -r "$d/Local/*" "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/
+		test -d "$d/include" && cp -r "$d/include/*" "${CROSS_PREFIX}"/ppc-amigaos/SDK/include/
+		test -d "$d/Include" && cp -r "$d/Include/*" "${CROSS_PREFIX}"/ppc-amigaos/SDK/include/
+	    done
+	    cd "${curr_dir}"
+	    rm -rf /tmp/__tmp.SDK/
+	fi
+    fi
+
 
     _info "Finished building ADTOOLS. If there were no errors then:"
     _info "The build directory (where the ADTOOLS repository and its source was cloned to) is: \"${_cloneLoc}\""
@@ -750,7 +807,7 @@ then
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbjqr:g:n:s:m:atS:l:z:hcC opt
+while getopts xp:o:uk:iydbjqr:g:n:s:m:aXtS:l:z:hcC opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -814,6 +871,9 @@ do
 	;;
     a)
 	DO_NATIVE_COMPILER=1
+	;;
+    X)
+	USE_FULL_SDK=1
 	;;
     t)
         do_tests=1
