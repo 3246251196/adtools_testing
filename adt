@@ -755,8 +755,10 @@ function BUILD
 	    cd "${curr_dir}"
 	    rm -rf /tmp/__tmp.SDK/
 	fi
-    fi
 
+	test -d "${CROSS_PREFIX}/ppc-amigaos/SDK/local/source" && rm -rf "${CROSS_PREFIX}/ppc-amigaos/SDK/local/source"
+	test -d "${CROSS_PREFIX}/ppc-amigaos/SDK/local/Source" && rm -rf "${CROSS_PREFIX}/ppc-amigaos/SDK/local/Source"
+    fi
 
     _info "Finished building ADTOOLS. If there were no errors then:"
     _info "The build directory (where the ADTOOLS repository and its source was cloned to) is: \"${_cloneLoc}\""
