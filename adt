@@ -315,23 +315,31 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         your current system.
 
  TL;DR:
-  If you just want to build an ADTOOLS cross-compiler then run the following:
-     ./adt -b
+  1. If you just want to build an ADTOOLS cross-compiler then run the
+     following:
+       ./adt -b
 
-  If you just want to build an ADTOOLS native-compiler that can be tranferred
-  to the AmigaOne machine (note that this MUST also build a cross-compiler):
-     ./adt -b -a
+  2. If you just want to build an ADTOOLS native-compiler that can be
+     tranferred to the AmigaOne machine (note that this MUST also build a
+     cross-compiler):
+       ./adt -b -a
 
-  WRT. Export, if you want to build ADTOOLS using a specific CLIB4 branch -
-  say, the "development" branch with GCC 6:
-     ./adt -b -g 6 CLIB_SHA1=development
+  3. WRT. EXPORT, if you want to build ADTOOLS using a specific CLIB4 branch,
+     say, the "development" branch, with GCC 6:
+       ./adt -b -g 6 CLIB_SHA1=development
 
-  If you just want to check that you have all the necessary dependencies to
-  build the cross-compiler / native-compiler (note that this does not check
-  the version of GCC and GCC 14 is known to generate errors due to warnings):
-     ./adt -j
+  4. If you want to perform 1. but also have the full SDK headers and libraries
+     as well as the Enhancer headers and libraries, then:
+       ./adt -b -X ENHANCER_LOC=/home/user/Downloads/enhancer_software_2.2.lha
+     ENHANCER_LOC is not needed and without it just the SDK headers and
+     libraries are extracted
 
-  Then, if you want to build all of the tests:
+  5. If you just want to check that you have all the necessary dependencies to
+     build the cross-compiler / native-compiler. Note that this does not check
+     the version of GCC and GCC 14 is known to generate errors due to warnings:
+       ./adt -j
+
+  6. Then, if you want to build all of the tests:
      ./adt -t
 EOF
 }
