@@ -276,10 +276,11 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
 			where user is the value of the command
 			\`whoami'. The distribution will be available as an LHA
 			file
-       [X] full SDK :   After building the cross compiler, install the full SDK
-                        into the build directory. By default, only the necessary
-                        components of the SDK are installed. This is limited to
-                        copying over all files/folder under Local and
+       [X] full SDK   : After building the cross compiler, install the full SDK
+                        into the build directory. When building a compiler, only
+                        the necessary components of the SDK are installed, this
+                        option provides a way to install the remaining. This is
+                        limited to copying over all files/folder under Local and
                         Include. If an environment variable named ENHANCER_LOC
                         (this variable should include the file name of the
                         Ehnancer archive file, itself) is also supplied in the
@@ -724,14 +725,16 @@ function BUILD
 
     if (( USE_FULL_SDK ))
     then
-	_info "Extracting and installing the full SDK contents into: \"${CROSS_PREFIX}\""
+	_info "Installing the full SDK contents into: \"${CROSS_PREFIX}\""
 	local curr_dir="$(pwd)"
+	test -d  /tmp/__tmp.SDK/ && rm -rf /tmp/__tmp.SDK/
 	mkdir -p /tmp/__tmp.SDK/
 	cp "${_cloneLoc}"/native-build/downloads/SDK*.lha /tmp/__tmp.SDK/
 	cd /tmp/__tmp.SDK/
-	lha xf *.lha
+	lha xf -q2 *.lha
 	cd SDK_Install
-	for l in *.lha ; do lha xf $l ; done
+	# Assuming no spaces in names:
+	for l in *.lha ; do lha xf -q2 $l ; done
 	# We are only interested in those files under [Ll]ocal and
 	# [Ii]nclude. We assume that Local and Include are the only folder that
 	# have potential difference in capitalisation
@@ -747,25 +750,25 @@ function BUILD
 	# Also do the same thing for Enhancer, if it was supplied as an export
 	if [[ -n "${ENHANCER_LOC}" ]]
 	then
-	    _info "Extracting and installing the Enhancer SDK contents into: \"${CROSS_PREFIX}\""
+	    _info "Installing the Enhancer SDK contents into: \"${CROSS_PREFIX}\""
 	    mkdir -p /tmp/__tmp.SDK/
 	    cp "${ENHANCER_LOC}" /tmp/__tmp.SDK/
 	    cd /tmp/__tmp.SDK/
-	    lha xf *.lha
+	    lha xf -q2 *.lha
 	    cd */Installation_Files/
-	    for d in $(find -mindepth 1 -maxdepth 1 -type d)
+	    for d in $(find SDK -mindepth 1 -maxdepth 1 -type d)
 	    do
-		test -d "$d/local" && cp -r "$d/local/*" "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/
-		test -d "$d/Local" && cp -r "$d/Local/*" "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/
-		test -d "$d/include" && cp -r "$d/include/*" "${CROSS_PREFIX}"/ppc-amigaos/SDK/include/
-		test -d "$d/Include" && cp -r "$d/Include/*" "${CROSS_PREFIX}"/ppc-amigaos/SDK/include/
+		test -d "$d"/local && cp -r "$d"/local/* "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/
+		test -d "$d"/Local && cp -r "$d"/Local/* "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/
+		test -d "$d"/include && cp -r "$d"/include/* "${CROSS_PREFIX}"/ppc-amigaos/SDK/include/
+		test -d "$d/"Include && cp -r "$d"/Include/* "${CROSS_PREFIX}"/ppc-amigaos/SDK/include/
 	    done
 	    cd "${curr_dir}"
 	    rm -rf /tmp/__tmp.SDK/
 	fi
 
-	test -d "${CROSS_PREFIX}/ppc-amigaos/SDK/local/source" && rm -rf "${CROSS_PREFIX}/ppc-amigaos/SDK/local/source"
-	test -d "${CROSS_PREFIX}/ppc-amigaos/SDK/local/Source" && rm -rf "${CROSS_PREFIX}/ppc-amigaos/SDK/local/Source"
+	test -d "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/source && rm -rf "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/source
+	test -d "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/Source && rm -rf "${CROSS_PREFIX}"/ppc-amigaos/SDK/local/Source
     fi
 
     _info "Finished building ADTOOLS. If there were no errors then:"
