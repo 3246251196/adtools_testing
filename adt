@@ -314,7 +314,7 @@ Usage: adt [OPTIONS] ACTION [EXPORT]
        [j] Just preqs : Just check the prequisite libraries to build ADTOOLS.
                         This is useful to see which libraries may be needed on
                         your current system.
-       [B] Xfer SDK...: Creates an LHA file that is suitable for transfering to
+       [B] Xfer SDK   : Creates an LHA file that is suitable for transfering to
                         the AmigaOne machine. The LHA file will be named
                         "SDK.lha" and its source is the location of a cross
                         compiler specified with the -o option. Once transferred
