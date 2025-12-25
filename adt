@@ -27,6 +27,7 @@ adtools_repo_branch=master
 just_continue=0
 no_cache=0
 DEBUG_MAKE=0
+make_xcompiler_lha=0
 
 readonly ORIG_DIR="$(pwd)"
 readonly ADTOOLS_DIR=adt_adtools
@@ -65,21 +66,17 @@ function _warn
 }
 
 # $1: Message
-# $2: Unique Error Code
-# $3: If set to anything then also requests the user to manually remove ${BASE_DIR}
 function _error
 {
-    echo "### GURU MEDITATION ERROR (CODE: ${2}): ${1}" 1>&2
-    if [[ -n "${3}" ]]
-    then
-	_warn "For this error it is recommended to remove \"${BASE_DIR}\" before starting again"
-    fi
+    echo "### GURU MEDITATION ERROR: ${1}" 1>&2
     if (( session_was_cached ))
     then
 	_info "Cached settings:"
 	obtain_adt_last_proj DO_NOT_SOURCE
     fi
-    exit "${2}"
+    _info "Some errors can affect state when performing the same action again."\
+	  "It may be necessary to remove certain files or folder before repeating the same action"
+    exit 20
 }
 
 #
@@ -137,18 +134,18 @@ function obtain_adt_last_proj
 	_info "Settings End"
 	_info ""
     else
-	_error "No previous settings were cached" 103
+	_error "No previous settings were cached"
     fi
 }
 
 function _usage
 {
     cat << EOF
-Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always required)
+Usage: adt [OPTIONS] ACTION [EXPORT]
  OPTIONS:
   [-x] [ [-p <PREFIX>] | [-o <PATH>] ] [-u] [-k <NUM>] [-i] [-y] [-d]
 
- ACTIONS:
+ ACTIONS (and their options):
   ===
   BUILD ADTOOLS:
   -b [-q] [-r "<REPO [BRANCH]>"] [-g <VER>] [-n <VER>] [-s <VER>] [-m <FILE>] [-a] [-X]
@@ -161,6 +158,9 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   ===
   CHECK REQUISITES FOR BUILDING:
   -j
+  ===
+  CREATE LHA OF CROSS SDK TO TARGET AMIGA
+  -B
   ===
 
  EXPORT:
@@ -176,12 +176,12 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
   variables for the ADTOOLS makefile. For instance, CLIB4_SHA1 can be exported
   to use a specific CLIB4 branch. See the TL;DR section below.
 
-       [x] cached proj: Use the variables stored from the previous build action
-                        session for this action. This is useful when a complex
+       [x] cached proj: Use the variables stored from the previous build ACTION
+                        session for this ACTION. This is useful when a complex
                         build was invoked before containing many options so
                         that they do not need to be remembered. This cache file
-                        is only updated on a build action which requires a new
-                        build of ADTOOLS. For example, if a build action such
+                        is only updated on a build ACTION which requires a new
+                        build of ADTOOLS. For example, if a build ACTION such
                         as "-b -s 53.30 -g 10 -p beta10" was provided then
                         running the tests for that session is as easy as
                         "-x -t", or, making a modification to the cross
@@ -194,7 +194,7 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
                         of ADTOOLS and/or perform tests on another version. The
                         value should be the name of the ADTOOLS build directory
        !! NOTE !!     : It is important to use this option when invoking a
-                        build, test or clean action so as to ensure operation
+                        build, test or clean ACTION so as to ensure operation
                         on the expected session/prefix. Rather than supplying
                         this option you can just set an environment variable
                         named ADTOOLS_PREFIX which will have the same effect as
@@ -314,6 +314,21 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
        [j] Just preqs : Just check the prequisite libraries to build ADTOOLS.
                         This is useful to see which libraries may be needed on
                         your current system.
+       [B] Xfer SDK...: Creates an LHA file that is suitable for transfering to
+                        the AmigaOne machine. The LHA file will be named
+                        "SDK.lha" and its source is the location of a cross
+                        compiler specified with the -o option. Once transferred
+                        to the AmigaOne machine, it can then be extracted into
+                        the current AmigaOne's SDK:. This ACTION takes care of
+                        the necessary and different file structure that is
+                        required for the AmigaOne's SDK installation
+                        hierarchy. The resulting LHA file will contain a folder
+                        named SDK as its root folder.
+       !! NOTE !!  :    It is your responsibility to back up the SDK directory
+                        on the AmigaOne machine. Ideally, rename the current
+                        SDK, if there is one, and install "None" installation
+                        which will just create the minimal set. From there,
+                        extract SDK.lha into the newly installed SDK.
 
  TL;DR:
   1. If you just want to build an ADTOOLS cross-compiler then run the
@@ -340,8 +355,13 @@ Usage: adt [OPTIONS] [ACTIONS] [EXPORT] (one, and only one, action is always req
      the version of GCC and GCC 14 is known to generate errors due to warnings:
        ./adt -j
 
-  6. Then, if you want to build all of the tests:
-     ./adt -t
+  6. If you want to build all of the tests:
+       ./adt -t
+
+  7. To obtain a ready-to-decrompress LHA file of your current cross compiler
+     (including all its libraries, etc) to the target AmigaOne machine:
+       ./adt -o /path/to/my/gcc11xcompiler -B
+
 EOF
 }
 
@@ -399,7 +419,7 @@ function SETUP_PATHS
 	fi
 	if [[ -n "${session_prefix}" ]]
 	then
-            _error "The prefix (-p) option cannot be used in conjunction with a user defined gcc_path option (-o)" 101
+            _error "The prefix (-p) option cannot be used in conjunction with a user defined gcc_path option (-o)"
 	fi
 	CROSS_PREFIX="${gcc_path}"
 	BASE_DIR="${ORIG_DIR}/$(echo "${gcc_path}" | sed 's,/,_,g' )build"
@@ -474,7 +494,7 @@ function CHECK_DEPENDS
 			    read _selection
 			    if [[ "${_selection}" != y ]]
 			    then
-				_error "Not continuing due to a too high version of textinfo" 213 1
+				_error "Not continuing due to a too high version of textinfo" 213
 			    fi
 			fi
 		    fi
@@ -498,7 +518,7 @@ function CHECK_DEPENDS
 		read _selection
 		if [[ "${_selection}" != y ]]
 		then
-		    _error "Not continuing due to issues with the dependency checker" 207 1
+		    _error "Not continuing due to issues with the dependency checker" 207
 		fi
 	    fi
 	fi
@@ -543,7 +563,7 @@ function BUILD
 	then
 	    if [[ "${native_gcc}" == error ]]
 	    then
-		_error "No native compiler exists to build ADTOOLS. Both \"gcc\" and \"g++\" are needed and only the GNU COMPILER COLLECTION (GCC) is supported" 30
+		_error "No native compiler exists to build ADTOOLS. Both \"gcc\" and \"g++\" are needed and only the GNU COMPILER COLLECTION (GCC) is supported"
 	    else
 		_warn "Native Compiler architecture is \"${native_gcc}\" which is not supported but continuing anyway"
 	    fi
@@ -558,7 +578,7 @@ function BUILD
 		read _selection
 		if [[ "${_selection}" != y ]]
 		then
-		    _error "Not continuing due to build machine using GCC 14 or above" 212
+		    _error "Not continuing due to build machine using GCC 14 or above"
 		fi
 	    fi
 	fi
@@ -567,7 +587,7 @@ function BUILD
 	then
 	    if ! [[ -d /gcc/ && $(touch /gcc/tmp && rm /gcc/tmp && echo $?) ]]
 	    then
-		_error "Building a native compiler requires a directory, /gcc/ with write permissions" 211
+		_error "Building a native compiler requires a directory, /gcc/ with write permissions"
 	    fi
 	fi
 
@@ -575,11 +595,11 @@ function BUILD
 
         mkdir "${BASE_DIR}"
         cd "${BASE_DIR}"
-        git clone "${adtools_repo_loc}" "${ADTOOLS_DIR}" || _error "Unable to clone ADTOOLS repo" 201 1
+        git clone "${adtools_repo_loc}" "${ADTOOLS_DIR}" || _error "Unable to clone ADTOOLS repo"
         cd "${ADTOOLS_DIR}"
 	if [[ -n "${adtools_repo_branch}" ]]
 	then
-	    git checkout "${adtools_repo_branch}" || _error "Unable to checkout: \"${adtools_repo_branch}\"" 301 1
+	    git checkout "${adtools_repo_branch}" || _error "Unable to checkout: \"${adtools_repo_branch}\""
 	fi
 
 	# Check that the user has configured git email/username; especially
@@ -587,29 +607,29 @@ function BUILD
 	# information is not there and then binutils fails to build with someone
 	# nebulous errors!
 	git config user.email 1>/dev/null 2>&1 || \
-	    _error "Git has no user.email configured. This will lead to errors in building ADTOOLS" 208 1
+	    _error "Git has no user.email configured. This will lead to errors in building ADTOOLS"
 	git config user.name 1>/dev/null 2>&1 || \
-	    _error "Git has no user.name configured. This will lead to errors in building ADTOOLS" 209 1
+	    _error "Git has no user.name configured. This will lead to errors in building ADTOOLS"
 
 	# TODO: gild does not return a NON-ZERO exit status, so these
 	#       ORs are pretty useless unfortunately.
 	#
 	# Right now, GCC version 4.9 causes an issue since the remote
 	# branch hash is not found in upstream.
-        git submodule init || _error "Unable to initialise submodules in ADTOOLS repo" 202 1
-        git submodule update || _error "Unable to update submodules in ADTOOLS repo" 203 1
-        gild/bin/gild checkout binutils "${binutils_ver}" || _error "Unable to clone binutils in ADTOOLS repo" 204 1
-        gild/bin/gild checkout gcc "${gcc_ver}" || _error "Unable to clone gcc in ADTOOLS repo" 205 1
+        git submodule init || _error "Unable to initialise submodules in ADTOOLS repo"
+        git submodule update || _error "Unable to update submodules in ADTOOLS repo"
+        gild/bin/gild checkout binutils "${binutils_ver}" || _error "Unable to clone binutils in ADTOOLS repo"
+        gild/bin/gild checkout gcc "${gcc_ver}" || _error "Unable to clone gcc in ADTOOLS repo"
 	if (( DO_NATIVE_COMPILER ))
 	then
-            gild/bin/gild checkout coreutils ${coreutils_ver} || _error "Unable to clone coreutils in ADTOOLS repo" 210 1
+            gild/bin/gild checkout coreutils ${coreutils_ver} || _error "Unable to clone coreutils in ADTOOLS repo"
 	fi
 
         # Performs the modification (if any) that are provided in the
         # following script
 	if [[ -n "${ADTOOLS_MOD_SCRIPT}" ]]
 	then
-            "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}" || _error "Modification script to ADTOOLS failed" 206 1
+            "${ORIG_DIR}/${ADTOOLS_MOD_SCRIPT}" || _error "Modification script to ADTOOLS failed"
 	fi
 
         # Clear any of these variables in the unlikely event they are set. If not, then
@@ -642,7 +662,7 @@ function BUILD
     else
 	if (( do_clone_only ))
 	then
-	    _error "The -q option implies no building. No further action will be taken" 31
+	    _error "The -q option implies no building. No further action will be taken"
 	fi
 
         cd "${BASE_DIR}/${ADTOOLS_DIR}"
@@ -700,7 +720,7 @@ function BUILD
     echo "####################" >> "${LOG_FILE}"
     echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
     echo "####################" >> "${LOG_FILE}"
-    eval "${BUILD_CMD} || _error \"The ADTOOLS build failed. See the log file: \"${LOG_FILE}\"\" 40"
+    eval "${BUILD_CMD} || _error \"The ADTOOLS build failed. See the log file: \"${LOG_FILE}\"\""
 
     # Update the timestamp so that the test framework knows whether it should rebuild the tests.
     # Of course, this dir will be touched even if there was nothing to update in ADTOOLS.
@@ -713,14 +733,14 @@ function BUILD
 	echo "####################" >> "${LOG_FILE}"
 	echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
 	echo "####################" >> "${LOG_FILE}"
-	eval "${BUILD_CMD} || _error \"The ADTOOLS native compiler build failed. See the log file: \"${LOG_FILE}\"\" 41"
+	eval "${BUILD_CMD} || _error \"The ADTOOLS native compiler build failed. See the log file: \"${LOG_FILE}\"\""
 
 	BUILD_CMD="make -O -j${CORES} -C native-build/ native-dist 2>&1 | "\
 "tee -a \"${LOG_FILE}\""
 	echo "####################" >> "${LOG_FILE}"
 	echo "RUNNING COMMAND: ${BUILD_CMD}" >> "${LOG_FILE}"
 	echo "####################" >> "${LOG_FILE}"
-	eval "${BUILD_CMD} || _error \"The ADTOOLS native compiler final distribution failed. See the log file: \"${LOG_FILE}\"\" 42"
+	eval "${BUILD_CMD} || _error \"The ADTOOLS native compiler final distribution failed. See the log file: \"${LOG_FILE}\"\""
     fi
 
     if (( USE_FULL_SDK ))
@@ -788,7 +808,7 @@ function TESTS
     # Arbitrary check
     which ppc-amigaos-gcc 1>/dev/null 2>&1 || _error "Expected to find the cross-compiler on the path."\
 " You may have forgotten to set the prefix with option -p or build the cross compiler or specify the"\
-"-u option or use the -x option to retain your previously cached settings" 50
+"-u option or use the -x option to retain your previously cached settings"
 
     rm -f "${FINAL_LHA}"
     make -s -C "${TESTS_DIR}" clean
@@ -797,7 +817,7 @@ function TESTS
     _info "If errors occur the look at the relevant log file in the test directory"
     _sep
     _info "Building tests..."
-    make -s -C "${TESTS_DIR}" all || _error "An error occurred while trying to build the tests" 120
+    make -s -C "${TESTS_DIR}" all || _error "An error occurred while trying to build the tests"
     _info "Finished building tests..."
     _sep
     _info "\"${FINAL_LHA}\" can be copied to an AmigaOne machine. Extract it and run: \"execute run_all.script\"."
@@ -816,11 +836,11 @@ function TESTS
 if (( $# == 0 ))
 then
     _usage
-    _error "No options provided" 10
+    _error "No options provided"
 fi
 
 seen_non_x_opt=0
-while getopts xp:o:uk:iydbjqr:g:n:s:m:aXtS:l:z:hcC opt
+while getopts xp:o:uk:iydbjqr:g:n:s:m:aXtS:l:z:hcCB opt
 do
     if [[ "${opt}" != x ]] ; then seen_non_x_opt=1 ; fi
     case "${opt}" in
@@ -828,7 +848,7 @@ do
 	if (( seen_non_x_opt ))
 	then
 	    # This allows options from the cache file to be further overriden
-	    _error "-x must be the first option to this script" 102
+	    _error "-x must be the first option to this script"
 	fi
 	obtain_adt_last_proj
 	;;
@@ -911,7 +931,7 @@ do
 	fi
 	if [[ -z ${C_LIB_LIST} ]]
 	then
-	    _error "-l can only take \"newlib\" and/or \"clib2\" and/or \"clib4\" as arguments" 106
+	    _error "-l can only take \"newlib\" and/or \"clib2\" and/or \"clib4\" as arguments"
 	fi
 	export C_LIB_LIST
 	;;
@@ -927,7 +947,7 @@ do
 	fi
 	if [[ -z ${LINKER_TYPE_LIST} ]]
 	then
-	    _error "-z can only take \"dynamic\" and/or \"static\" as arguments" 104
+	    _error "-z can only take \"dynamic\" and/or \"static\" as arguments"
 	fi
 	export LINKER_TYPE_LIST
 	;;
@@ -941,12 +961,46 @@ do
     C)
         do_clean_build=1
         ;;
+    B)
+	make_xcompiler_lha=1
+	;;
     *)
 	_usage
-	_error "Invalid option" 105
+	_error "Invalid option"
 	;;
     esac
 done
+
+function MAKE_XCOMPILER_LHA
+{
+    if [[ -z "$gcc_path" ]] ;
+    then
+	_error "-o option required to specify which cross compiler to use"
+    fi
+
+    # TODO: Is there a way to force LHA to create a directory rather than
+    #       emulating it using CD?
+    test -d /tmp/SDK && _error "/tmp/SDK already exists. Remove it first"
+    test -f SDK.lha && _error "SDK.lha already exists. Remove it first"
+    _info "Creating SDK.lha may take several minutes..."
+    mkdir -p /tmp/SDK/gcc || _error
+    cp -ra "$gcc_path"/. /tmp/SDK/gcc || _error
+    mv /tmp/SDK/gcc/ppc-amigaos/SDK/* /tmp/SDK/ || _error
+    rm -rf /tmp/SDK/gcc/ppc-amigaos/SDK/ || _error
+    cd /tmp/ || _error
+    lha c -q SDK.lha SDK || _error
+    rm -rf SDK || _error
+    cd - &>/dev/null || _error
+    mv /tmp/SDK.lha . || _error
+    _info "Copy of cross compiler \"$gcc_path\" archived as \"SDK.lha\"."
+    _info "Ideally, backup your AmigaOne's existing SDK and then extract this one"
+}
+
+if (( make_xcompiler_lha ))
+then
+    MAKE_XCOMPILER_LHA
+    exit 0
+fi
 
 shift $((OPTIND - 1))
 args="${@}"
@@ -972,11 +1026,11 @@ SETUP_PATHS
 
 if (( do_build && do_tests ))
 then
-    _error "Building the tests and building ADTOOLS is mutually exclusive" 20
+    _error "Building the tests and building ADTOOLS is mutually exclusive"
 fi
 if (( !do_build && !do_tests && !do_clean_tests && !do_clean_build ))
 then
-    _error "No action performed" 80
+    _error "No action performed"
 fi
 if (( !do_clean_tests && !do_clean_build ))
 then
@@ -985,7 +1039,7 @@ then
 	this_adtools="$(dirname $(which ppc-amigaos-gcc) 2>/dev/null)"
 	if [[ -z "${this_adtools}" ]]
 	then
-	    _error "Desired ADTOOLS cross-compiler not found on PATH" 70
+	    _error "Desired ADTOOLS cross-compiler not found on PATH"
 	fi
 	CROSS_PREFIX="${this_adtools}/../"
         _info "The -u option was used. Assuming that \"CROSS_PREFIX=${CROSS_PREFIX}\""
@@ -1034,7 +1088,7 @@ then
 	this_adtools="$(dirname $(which ppc-amigaos-gcc) 2>/dev/null)"
 	if (( $? ))
 	then
-	    _error "Desired ADTOOLS cross-compiler not found on PATH" 71
+	    _error "Desired ADTOOLS cross-compiler not found on PATH"
 	fi
 	CROSS_PREFIX="${this_adtools}/../"
     fi
