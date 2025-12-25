@@ -28,6 +28,7 @@ just_continue=0
 no_cache=0
 DEBUG_MAKE=0
 make_xcompiler_lha=0
+just_local=0
 
 readonly ORIG_DIR="$(pwd)"
 readonly ADTOOLS_DIR=adt_adtools
@@ -160,7 +161,7 @@ Usage: adt [OPTIONS] ACTION [EXPORT]
   -j
   ===
   CREATE LHA OF CROSS SDK TO TARGET AMIGA
-  -B
+  -B [-L]
   ===
 
  EXPORT:
@@ -314,21 +315,27 @@ Usage: adt [OPTIONS] ACTION [EXPORT]
        [j] Just preqs : Just check the prequisite libraries to build ADTOOLS.
                         This is useful to see which libraries may be needed on
                         your current system.
-       [B] Xfer SDK   : Creates an LHA file that is suitable for transfering to
+       [B] Xfer SDK :   Creates an LHA file that is suitable for transfering to
                         the AmigaOne machine. The LHA file will be named
                         "SDK.lha" and its source is the location of a cross
-                        compiler specified with the -o option. Once transferred
-                        to the AmigaOne machine, it can then be extracted into
-                        the current AmigaOne's SDK:. This ACTION takes care of
-                        the necessary and different file structure that is
-                        required for the AmigaOne's SDK installation
-                        hierarchy. The resulting LHA file will contain a folder
-                        named SDK as its root folder.
+                        compiler specified with the -o option. When creating the
+                        archive, "local" is copied over, which contains all of
+                        the third-party libraries and headers per C-library as
+                        well as the C-library specific library and header
+                        files. Once transferred to the AmigaOne machine, it can
+                        then be extracted into the current AmigaOne's SDK:. This
+                        ACTION takes care of the necessary and different file
+                        structure that is required for the AmigaOne's SDK
+                        installation hierarchy. The resulting LHA file will
+                        contain a folder named SDK as its root folder.
        !! NOTE !!  :    It is your responsibility to back up the SDK directory
                         on the AmigaOne machine. Ideally, rename the current
-                        SDK, if there is one, and install "None" installation
-                        which will just create the minimal set. From there,
-                        extract SDK.lha into the newly installed SDK.
+                        SDK, if there is one, and install a new SDK with the
+                        GCC version that matches the cross compiler. Finally,
+                        extract "SDK.lha" to that installed locaation on the
+                        AmigaOne machine. "SDK.lha" will never include any
+                        compiler specific header files or compiler specific
+                        libraries.
 
  TL;DR:
   1. If you just want to build an ADTOOLS cross-compiler then run the
@@ -983,10 +990,8 @@ function MAKE_XCOMPILER_LHA
     test -d /tmp/SDK && _error "/tmp/SDK already exists. Remove it first"
     test -f SDK.lha && _error "SDK.lha already exists. Remove it first"
     _info "Creating SDK.lha may take several minutes..."
-    mkdir -p /tmp/SDK/gcc || _error
-    cp -ra "$gcc_path"/. /tmp/SDK/gcc || _error
-    mv /tmp/SDK/gcc/ppc-amigaos/SDK/* /tmp/SDK/ || _error
-    rm -rf /tmp/SDK/gcc/ppc-amigaos/SDK/ || _error
+    mkdir -p /tmp/SDK/ || _error
+    cp -ra "$gcc_path"/ppc-amigaos/SDK/. /tmp/SDK/ || _error
     cd /tmp/ || _error
     lha c -q SDK.lha SDK || _error
     rm -rf SDK || _error
